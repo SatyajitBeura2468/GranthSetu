@@ -66,7 +66,7 @@ The seed contains fake `DEV-*` members, profiles without Auth users, catalogue r
 
 ## Remote Development verification
 
-The current Development project was created only after account, organization, project-name, region, and cost checks. Its migration history must match the five repository migrations. Before any future push, inspect migration history, tables, constraints, RLS, privileges, policies, and synthetic row counts. Resolve drift by adding a reviewed migration; do not edit the Dashboard and leave the change uncaptured.
+The current Development project was created only after account, organization, project-name, region, and cost checks. Its migration history must exactly match the ordered set of version-controlled SQL migrations under `supabase/migrations/`. The repository migration set remains the source of truth; the hosted Development database must not contain unexplained migration drift. Before any future push, inspect migration history, tables, constraints, RLS, privileges, policies, and synthetic row counts. Resolve drift by adding a reviewed migration; do not edit the Dashboard and leave the change uncaptured.
 
 ## Secret handling
 
