@@ -70,7 +70,7 @@ async function createFixtureUsers() {
       email_confirm: true,
       user_metadata: identity.metadata,
     });
-    assert(!error && data.user, `could not create disposable Auth user ${identity.label}`);
+    assert(!error && data.user, `could not create disposable Auth user ${identity.label}: ${error?.message ?? "unknown error"}`);
     const user = { ...identity, email, id: data.user.id };
     createdUsers.push(user);
   }
@@ -80,8 +80,10 @@ async function createFixtureUsers() {
     display_name: user.displayName,
     status: user.status,
   }));
-  const { data, error } = await admin.from("profiles").insert(profiles).select("id,auth_user_id");
-  assert(!error && data?.length === profiles.length, "could not create disposable application profiles");
+  const { error: profileInsertError } = await admin.from("profiles").insert(profiles);
+  assert(!profileInsertError, `could not create disposable application profiles: ${profileInsertError?.message ?? "unknown error"}`);
+  const { data, error } = await admin.from("profiles").select("id,auth_user_id").in("auth_user_id", profiles.map((profile) => profile.auth_user_id));
+  assert(!error && data?.length === profiles.length, `could not read disposable application profiles: ${error?.message ?? "unknown error"}`);
   for (const profile of data) {
     const user = createdUsers.find((candidate) => candidate.id === profile.auth_user_id);
     user.profileId = profile.id;
