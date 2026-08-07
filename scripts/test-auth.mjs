@@ -187,8 +187,12 @@ try {
   assert(!deactivatedReadError && deactivatedMembers.length === 0, "profile deactivation was not immediate");
   await adminAClient.rpc("admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "active" });
 
+  await adminAClient.rpc("admin_revoke_role", { p_target_profile_id: adminB.profileId, p_role_key: "administrator" });
   await expectError(() => adminAClient.rpc("admin_revoke_role", { p_target_profile_id: adminA.profileId, p_role_key: "administrator" }), "last administrator role removal unexpectedly succeeded");
+  await adminAClient.rpc("admin_assign_role", { p_target_profile_id: adminB.profileId, p_role_key: "administrator" });
+  await adminAClient.rpc("admin_set_profile_status", { p_target_profile_id: adminB.profileId, p_status: "inactive" });
   await expectError(() => adminAClient.rpc("admin_set_profile_status", { p_target_profile_id: adminA.profileId, p_status: "inactive" }), "last administrator deactivation unexpectedly succeeded");
+  await adminAClient.rpc("admin_set_profile_status", { p_target_profile_id: adminB.profileId, p_status: "active" });
 
   const { data: auditAfter, error: auditAfterError } = await adminAClient.from("audit_events").select("action");
   assert(!auditAfterError && auditAfter.some((event) => event.action === "security.role_assigned") && auditAfter.some((event) => event.action === "security.role_revoked") && auditAfter.some((event) => event.action === "security.profile_status_changed"), "security actions were not audited");
