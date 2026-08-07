@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 // The suite uses only disposable local identities and synthetic rows.
-const url = process.env.SUPABASE_URL ?? "";
+const url = process.env.SUPABASE_URL ?? process.env.API_URL ?? "";
 const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY;
 if ((!url.includes("127.0.0.1") && !url.includes("localhost") && !url.includes("kong")) || !anonKey || !serviceKey) {
