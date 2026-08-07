@@ -2,50 +2,37 @@
 
 GranthSetu is the evolving library management platform for OAV Musiguda.
 
-## Current Repository Stage
+## Current stage
 
-This repository currently preserves the original OAV Musiguda LMS Pro v2 implementation as a historical development baseline.
+GranthSetu V3 platform foundation is under active development. The repository now contains a minimal Next.js App Router application, a health endpoint, strict TypeScript tooling, CI, Vercel-ready deployment structure, and Supabase-ready utilities.
 
-No architectural redesign has yet been applied to the preserved source.
+The V3 LMS is not finished. No books, members, issue/return workflows, reports, authentication flows, domain tables, or school data have been implemented.
 
-The untouched source is stored under:
+## Historical V2 baseline
 
-    legacy/original-v2/
+The original OAV Musiguda LMS Pro v2 frontend remains preserved and immutable under [`legacy/original-v2/`](legacy/original-v2/). It is a single-file Google Apps Script HTML frontend and remains available as a historical reference. The original server-side Apps Script source was not supplied.
 
-Future GranthSetu development will be performed separately so the original implementation remains permanently recoverable.
+Read the [current system baseline](docs/current-system-baseline.md) and [import manifest](legacy/original-v2/IMPORT_MANIFEST.md) for the preserved implementation and provenance.
 
-## Current LMS
+## V3 direction
 
-The supplied frontend includes functionality relating to:
+The intended architecture is:
 
-- dashboard statistics and recent activity
-- book inventory
-- member management
-- book issue transactions
-- book returns
-- circulation records
-- reporting and analytics
-- global search
-- application settings
+- Next.js App Router
+- React and strict TypeScript
+- Vercel with GitHub Preview Deployments
+- Supabase-ready server and browser utilities
+- PostgreSQL and domain schema designed in a later phase
 
-The preserved implementation is a Google Apps Script HTML frontend. Its server-side Apps Script project files were not supplied with this import.
+Preview/Development must remain isolated from any future production school database. Google Sheets and Google Apps Script are not the primary V3 runtime.
 
-## Technology
+## Foundation documentation
 
-The observed source uses:
-
-- HTML
-- CSS
-- JavaScript
-- Google Apps Script frontend integration through `google.script.run`
-- Google Material Icons loaded from Google Fonts
-
-No new framework, backend, database, or application architecture has been added.
+- [V3 platform ADR](docs/adr/0001-v3-platform-foundation.md)
+- [Deployment guide](docs/deployment.md)
+- [Security baseline](docs/security-baseline.md)
+- [Data migration plan](docs/data-migration-plan.md)
 
 ## Status
 
-Historical baseline imported.
-
-Modernisation and GranthSetu V3 development have not yet begun.
-
-See [the current system baseline](docs/current-system-baseline.md) and [the import manifest](legacy/original-v2/IMPORT_MANIFEST.md) for scope and provenance.
+V3 platform foundation under active development. Historical V2 preserved unchanged. The temporary homepage exists only to prove that the new application stack builds and deploys.
