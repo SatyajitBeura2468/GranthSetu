@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.SUPABASE_URL ?? "";
 const anonKey = process.env.SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if ((!url.includes("127.0.0.1") && !url.includes("localhost")) || !anonKey || !serviceKey) {
+if ((!url.includes("127.0.0.1") && !url.includes("localhost") && !url.includes("kong")) || !anonKey || !serviceKey) {
   throw new Error("Refusing circulation tests outside local Supabase.");
 }
 
