@@ -29,6 +29,9 @@ Preview/Development must remain isolated from any future production school datab
 ## Foundation documentation
 
 - [V3 platform ADR](docs/adr/0001-v3-platform-foundation.md)
+- [V3 domain model](docs/domain-model.md)
+- [V3 security and authorization model](docs/security-authorization-model.md)
+- [V3 domain/security ADR](docs/adr/0002-v3-domain-security-model.md)
 - [Deployment guide](docs/deployment.md)
 - [Security baseline](docs/security-baseline.md)
 - [Data migration plan](docs/data-migration-plan.md)
