@@ -29,8 +29,9 @@ export async function loginAction(_previousState: LoginState, formData: FormData
       return { error: GENERIC_LOGIN_ERROR };
     }
 
-    redirect(next);
   } catch {
     return { error: GENERIC_LOGIN_ERROR };
   }
+
+  redirect(next);
 }

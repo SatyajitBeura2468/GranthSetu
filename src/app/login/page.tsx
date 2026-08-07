@@ -5,11 +5,14 @@ import { sanitizeNextPath } from "@/lib/auth/redirects";
 import { LoginForm } from "@/app/login/login-form";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  let operator = null;
   try {
-    if (await getOperatorContext()) redirect("/operator");
+    operator = await getOperatorContext();
   } catch {
     // Public login remains renderable when Supabase is intentionally unconfigured.
   }
+
+  if (operator) redirect("/operator");
 
   const params = await searchParams;
   const next = sanitizeNextPath(params.next, "/operator");
