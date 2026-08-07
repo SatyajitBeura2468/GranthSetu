@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed for review. This ADR records the architecture phase only; it does not authorize database provisioning or implementation.
+Accepted for Development implementation. The approved architecture is now being implemented only in the isolated `granthsetu-dev` project; Production provisioning and application workflows remain out of scope.
 
 ## Context
 
@@ -32,7 +32,7 @@ The model requires more explicit records and migration mapping than V2, but supp
 
 ## Scope boundaries
 
-This ADR does not create a Supabase project, configure environment variables, create tables or executable migrations, implement auth/RLS, import data, change the V2 copy, or deploy production functionality.
+This ADR approval authorizes the Development implementation phase: version-controlled migrations, synthetic seed data, fail-closed RLS boundaries, and database tests in `granthsetu-dev`. It does not authorize Production infrastructure, real data import, authentication flows, complete role policies, business RPCs, or changes to the V2 copy.
 
 ## Deferred decisions
 

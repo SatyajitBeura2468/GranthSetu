@@ -24,3 +24,29 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.112.0
+      - name: Start local Supabase
+        run: supabase start
+      - name: Reset local database
+        run: supabase db reset
+      - name: Run pgTAP database tests
+        run: supabase test db
+      - name: Lint local database
+        run: supabase db lint --local --level error --fail-on error
+      - name: Verify generated public database types
+        shell: bash
+        run: |
+          supabase gen types typescript --local --schema public > /tmp/database.ts
+          diff -u src/types/database.ts /tmp/database.ts
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop

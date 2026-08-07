@@ -7,6 +7,7 @@
 - Vercel project ID: `prj_oRfwKM95K8o9fpdZxTCJaMB4A5jX`
 - Vercel team: `Satyajit Beura's Projects` (`teamsatyajitbeura`)
 - Production branch: `main`
+- Development database: Supabase project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) in `ap-south-1` (Mumbai)
 - Feature branches, including `feat/v3-platform-foundation`, are Preview branches.
 - A future reviewed pull request can reach Production only after an explicit merge to `main`.
 
@@ -28,7 +29,9 @@ The Vercel project is connected to the GitHub repository at the repository root 
 
 `.env.example` documents variable names only. Local secrets belong in an untracked `.env.local`. Vercel values belong in Vercel’s environment-variable store, scoped to the appropriate Local, Preview, or Production environment. Privileged Supabase secrets must remain server-only.
 
-Preview/Development must never point at a future Production Supabase project. No production Supabase project or school data is configured in this foundation.
+Preview/Development may point only at the isolated `granthsetu-dev` Supabase project. Vercel Production has no Supabase credentials and must not receive Development values. No Production Supabase project or school data is configured.
+
+Database migrations, local reset/testing, generated types, synthetic seed data, and the remote Development workflow are documented in [Database Development](database-development.md).
 
 ## Preview verification
 
