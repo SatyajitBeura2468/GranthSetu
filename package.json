@@ -12,6 +12,7 @@
     "db:stop": "npx supabase@2.112.0 stop",
     "db:reset": "npx supabase@2.112.0 db reset",
     "db:test": "npx supabase@2.112.0 test db",
+    "db:test:auth": "node scripts/test-auth.mjs",
     "db:lint": "npx supabase@2.112.0 db lint --local --schema public --level error --fail-on error",
     "db:types": "npx supabase@2.112.0 gen types typescript --local --schema public > src/types/database.ts"
   },

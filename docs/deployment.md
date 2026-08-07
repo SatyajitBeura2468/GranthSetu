@@ -8,7 +8,7 @@
 - Vercel team: `Satyajit Beura's Projects` (`teamsatyajitbeura`)
 - Production branch: `main`
 - Development database: Supabase project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) in `ap-south-1` (Mumbai)
-- Feature branches, including `feat/v3-platform-foundation`, are Preview branches.
+- Feature branches, including `feat/v3-operator-auth-authorization`, are Preview branches.
 - A future reviewed pull request can reach Production only after an explicit merge to `main`.
 
 ## Local commands
@@ -29,7 +29,7 @@ The Vercel project is connected to the GitHub repository at the repository root 
 
 `.env.example` documents variable names only. Local secrets belong in an untracked `.env.local`. Vercel values belong in Vercel’s environment-variable store, scoped to the appropriate Local, Preview, or Production environment. Privileged Supabase secrets must remain server-only.
 
-Preview/Development may point only at the isolated `granthsetu-dev` Supabase project. Vercel Production has no Supabase credentials and must not receive Development values. No Production Supabase project or school data is configured.
+Preview/Development may point only at the isolated `granthsetu-dev` Supabase project. Vercel Production has no Supabase credentials and must not receive Development values. `SUPABASE_SECRET_KEY`, when needed for Preview operator provisioning, is server-only and must be scoped only to this Development Preview. No Production Supabase project or school data is configured.
 
 Database migrations, local reset/testing, generated types, synthetic seed data, and the remote Development workflow are documented in [Database Development](database-development.md).
 
@@ -42,6 +42,10 @@ curl https://<preview-host>/api/health
 ```
 
 The response should report `status: "ok"`, service `granthsetu`, and stage `v3-platform-foundation`. It must not contain secrets.
+
+## Phase 4 verification boundary
+
+The Phase 4 branch must receive a fresh Preview deployment. Verify `/login`, `/forgot-password`, and protected-route redirects without creating a real user. A hosted operator invite/recovery smoke test must use an approved synthetic account and only after the hosted Auth signup-disabled, template, and redirect settings have been independently verified. Do not claim hosted Auth readiness from a source-only build.
 
 ## Verified foundation Preview
 

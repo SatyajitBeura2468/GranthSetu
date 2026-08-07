@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "local";
   const commit = process.env.VERCEL_GIT_COMMIT_SHA;
@@ -13,6 +15,7 @@ export default function Home() {
           Modern application infrastructure is being established. The library
           workflows will arrive through separately reviewed phases.
         </p>
+        <Link className="button" href="/login">Operator sign in</Link>
         <dl className="foundation-meta">
           <div><dt>Runtime</dt><dd>Next.js + React + TypeScript</dd></div>
           <div><dt>Environment</dt><dd>{environment}</dd></div>

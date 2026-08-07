@@ -40,6 +40,13 @@ jobs:
         run: supabase db reset
       - name: Run pgTAP database tests
         run: supabase test db
+      - name: Run Auth and RLS integration tests
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:auth
       - name: Lint local database
         run: supabase db lint --local --schema public --level error --fail-on error
       - name: Verify generated public database types

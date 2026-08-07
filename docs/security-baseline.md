@@ -1,6 +1,6 @@
 # GranthSetu V3 Security Baseline
 
-The Development database baseline is implemented, but complete authentication and authorization are still deferred. These are non-negotiable principles:
+The Development database baseline and Phase 4 operator authentication/authorization are implemented for the isolated Development project. These are non-negotiable principles:
 
 - Real student/member data never belongs in Git.
 - Secrets never belong in Git.
@@ -11,6 +11,9 @@ The Development database baseline is implemented, but complete authentication an
 - Anonymous and authenticated roles have no broad public-schema table privileges at this stage; the baseline fails closed.
 - Student self-service is deferred; only administrator and librarian roles are defined.
 - Future admin actions require authenticated, server-enforced authorization.
+- Public signup and anonymous sign-in are disabled; only administrator-provisioned operator Auth identities are eligible.
+- Roles are fixed database assignments (`administrator` and `librarian`) resolved through profiles and profile_roles, never user metadata.
+- RLS permits narrow authenticated SELECT access and denies direct browser writes; sensitive access changes run through audited administrator RPCs.
 - Future email operations run server-side.
 - Future circulation mutations are validated server-side.
 - Future audit logs are immutable from normal users.
@@ -18,4 +21,4 @@ The Development database baseline is implemented, but complete authentication an
 - Credentials and services follow least privilege.
 - Migrations are repeatable, reviewable, and reversible.
 
-The current repository contains no real school data, Supabase secret, database password, or Production connection. The isolated `granthsetu-dev` project is the only Development database target, and Vercel Production must remain without Supabase credentials.
+The current repository contains no real school data, Supabase secret, database password, or Production connection. The isolated `granthsetu-dev` project is the only Development database target, and Vercel Production must remain without Supabase credentials. Hosted Auth settings and an initial administrator require an independently verified authenticated setup step.
