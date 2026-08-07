@@ -906,22 +906,17 @@ export type Database = {
         Args: { p_display_name: string; p_target_auth_user_id: string }
         Returns: string
       }
-      current_operator_context: {
-        Args: never
-        Returns: {
-          display_name: string
-          profile_id: string
-          roles: string[]
-          status: string
-          user_id: string
-        }[]
-      }
       circulation_assess_overdue_fine: {
         Args: { p_loan_id: string; p_request_id: string }
         Returns: Json
       }
       circulation_issue_loan: {
-        Args: { p_book_copy_id: string; p_member_id: string; p_notes?: string; p_request_id: string }
+        Args: {
+          p_book_copy_id: string
+          p_member_id: string
+          p_notes?: string
+          p_request_id: string
+        }
         Returns: Json
       }
       circulation_renew_loan: {
@@ -933,12 +928,32 @@ export type Database = {
         Returns: Json
       }
       circulation_settle_fine: {
-        Args: { p_amount_minor: number; p_fine_id: string; p_note?: string; p_request_id: string }
+        Args: {
+          p_amount_minor: number
+          p_fine_id: string
+          p_note?: string
+          p_request_id: string
+        }
         Returns: Json
       }
       circulation_waive_fine: {
-        Args: { p_amount_minor: number; p_fine_id: string; p_reason: string; p_request_id: string }
+        Args: {
+          p_amount_minor: number
+          p_fine_id: string
+          p_reason: string
+          p_request_id: string
+        }
         Returns: Json
+      }
+      current_operator_context: {
+        Args: never
+        Returns: {
+          display_name: string
+          profile_id: string
+          roles: string[]
+          status: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
