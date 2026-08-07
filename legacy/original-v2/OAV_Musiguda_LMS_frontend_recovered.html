@@ -1,0 +1,3970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>OAV MUSIGUDA LMS Pro v2 - Library Management System</title>
+  
+  
+  <link href="https://fonts.googleapis.com/icon?family=Material&#43;Icons" rel="stylesheet">
+  
+  
+  <style>
+ 
+
+:root {
+   
+  --primary-color: #1a73e8;
+  --primary-hover: #1557b0;
+  --primary-light: #e8f0fe;
+  --secondary-color: #475569;
+  --secondary-hover: #334155;
+  --success-color: #0d9488;
+  --success-light: #ccfbf1;
+  --warning-color: #d97706;
+  --warning-light: #fef3c7;
+  --danger-color: #dc2626;
+  --danger-light: #fee2e2;
+  --info-color: #0284c7;
+  --info-light: #e0f2fe;
+
+   
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0f172a;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-light: #f8fafc;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+   
+  --sidebar-width: 260px;
+  --toolbar-height: 64px;
+  --footer-height: 40px;
+  --border-radius: 8px;
+  --transition-speed: 0.25s;
+}
+
+ 
+body.theme-dark {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #020617;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --primary-light: #1e293b;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+ 
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  overflow-x: hidden;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+ 
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+ 
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  transition: transform var(--transition-speed) ease-in-out;
+}
+
+.sidebar-header {
+  height: var(--toolbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+.brand-icon {
+  color: var(--primary-color);
+  font-size: 1.75rem;
+}
+
+.brand small {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+}
+
+.sidebar-nav li {
+  margin-bottom: 0.25rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-left: 4px solid transparent;
+  transition: all var(--transition-speed);
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background-color: rgba(26, 115, 232, 0.15);
+  border-left-color: var(--primary-color);
+}
+
+.sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  font-size: 2.25rem;
+  color: #94a3b8;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+ 
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-speed) ease, visibility var(--transition-speed) ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+ 
+.main-wrapper {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;  
+  min-height: 100vh;
+  transition: margin-left var(--transition-speed);
+}
+
+ 
+.top-toolbar {
+  height: var(--toolbar-height);
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quick-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.35rem 0.75rem;
+  width: 240px;
+  transition: width var(--transition-speed) ease;
+}
+
+.quick-search-bar .search-icon {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.quick-search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-main);
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+ 
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  position: relative;
+  overflow-x: auto;
+}
+
+.views-container {
+  display: block;
+}
+
+.view-section {
+  display: none;
+}
+
+.view-section.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+ 
+.app-footer {
+  min-height: var(--footer-height);
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-indicator::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success-color);
+}
+
+ 
+
+ 
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+ 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+  min-height: 40px;  
+}
+
+.btn-primary { background-color: var(--primary-color); color: #ffffff; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+
+.btn-secondary { background-color: var(--secondary-color); color: #ffffff; }
+.btn-secondary:hover { background-color: var(--secondary-hover); }
+
+.btn-outline { background-color: transparent; border-color: var(--border-color); color: var(--text-main); }
+.btn-outline:hover { background-color: var(--bg-main); }
+
+.btn-danger { background-color: var(--danger-color); color: #ffffff; }
+.btn-danger:hover { background-color: #b91c1c; }
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  min-height: 32px;
+}
+
+.icon-button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+  min-width: 44px;
+  min-height: 44px;  
+}
+
+.icon-button:hover {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+ 
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+ 
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.data-table th {
+  background-color: var(--bg-main);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.data-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+body.theme-dark .data-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+ 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.badge-success { background-color: var(--success-light); color: var(--success-color); }
+.badge-warning { background-color: var(--warning-light); color: var(--warning-color); }
+.badge-danger { background-color: var(--danger-light); color: var(--danger-color); }
+.badge-info { background-color: var(--info-light); color: var(--info-color); }
+
+ 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrapper.blue { background-color: var(--primary-light); color: var(--primary-color); }
+.stat-icon-wrapper.teal { background-color: var(--success-light); color: var(--success-color); }
+.stat-icon-wrapper.amber { background-color: var(--warning-light); color: var(--warning-color); }
+.stat-icon-wrapper.red { background-color: var(--danger-light); color: var(--danger-color); }
+
+.stat-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+ 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1rem;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-card {
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+ 
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: calc(100vw - 3rem);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-left: 4px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  max-width: 400px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-success { border-left-color: var(--success-color); }
+.toast-error { border-left-color: var(--danger-color); }
+.toast-warning { border-left-color: var(--warning-color); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+ 
+.page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.mobile-only {
+  display: none;
+}
+
+ 
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: inline-flex;
+  }
+
+   
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+   
+  .main-wrapper {
+    margin-left: 0;
+  }
+
+  .top-toolbar {
+    padding: 0 1rem;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .quick-search-bar {
+    width: 140px;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .form-row .form-group {
+    min-width: 100%;
+  }
+
+  .toast-container {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+
+  .toast {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-search-bar {
+    display: none;  
+  }
+
+  .app-footer {
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+  }
+}
+</style></head>
+<body class="theme-light">
+  
+  <div class="app-container">
+    
+    
+    <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+    
+    <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="material-icons brand-icon">local_library</span>
+          <span class="brand-name">OAV MUSIGUDA LMS <small>v2</small></span>
+        </div>
+        <button id="sidebar-toggle-btn" class="icon-button mobile-only" aria-label="Close Sidebar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <a href="#dashboard" class="nav-link active" data-page="dashboard">
+              <span class="material-icons">dashboard</span>
+              <span class="nav-label">Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="#books" class="nav-link" data-page="books">
+              <span class="material-icons">menu_book</span>
+              <span class="nav-label">Books Inventory</span>
+            </a>
+          </li>
+          <li>
+            <a href="#members" class="nav-link" data-page="members">
+              <span class="material-icons">people</span>
+              <span class="nav-label">Members Directory</span>
+            </a>
+          </li>
+          <li>
+            <a href="#issue" class="nav-link" data-page="issue">
+              <span class="material-icons">assignment_turned_in</span>
+              <span class="nav-label">Issue Books</span>
+            </a>
+          </li>
+          <li>
+            <a href="#return" class="nav-link" data-page="return">
+              <span class="material-icons">assignment_return</span>
+              <span class="nav-label">Return Books</span>
+            </a>
+          </li>
+          <li>
+            <a href="#reports" class="nav-link" data-page="reports">
+              <span class="material-icons">bar_chart</span>
+              <span class="nav-label">Reports & Analytics</span>
+            </a>
+          </li>
+          <li>
+            <a href="#search" class="nav-link" data-page="search">
+              <span class="material-icons">search</span>
+              <span class="nav-label">Global Search</span>
+            </a>
+          </li>
+          <li>
+            <a href="#settings" class="nav-link" data-page="settings">
+              <span class="material-icons">settings</span>
+              <span class="nav-label">System Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <span class="material-icons user-avatar">account_circle</span>
+          <div class="user-details">
+            <span id="user-display-name" class="user-name">Loading User...</span>
+            <span id="user-display-role" class="user-role">---</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    
+    <div class="main-wrapper">
+      
+      
+      <header class="top-toolbar">
+        <div class="toolbar-left">
+          <button id="mobile-menu-btn" class="icon-button mobile-only" aria-label="Open Navigation Menu">
+            <span class="material-icons">menu</span>
+          </button>
+          <h1 id="page-title" class="page-title">Dashboard</h1>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="quick-search-bar">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="quick-search-input" placeholder="Quick search..." autocomplete="off" aria-label="Quick search">
+          </div>
+          <button id="theme-toggle-btn" class="icon-button" title="Toggle Theme" aria-label="Toggle dark mode">
+            <span class="material-icons" id="theme-icon">dark_mode</span>
+          </button>
+        </div>
+      </header>
+
+      
+      <main class="main-content" id="main-content">
+        
+        <div id="page-loader" class="page-loader">
+          <div class="spinner"></div>
+          <p>Loading application content...</p>
+        </div>
+
+        
+        <div id="views-container" class="views-container">
+          
+          
+<section id="view-dashboard" class="view-section">
+  
+  
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon-wrapper blue">
+        <span class="material-icons">menu_book</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="dash-total-books">0</span>
+        <span class="stat-label">Total Books Inventory</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper teal">
+        <span class="material-icons">people</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="dash-active-members">0</span>
+        <span class="stat-label">Active Registered Members</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper amber">
+        <span class="material-icons">assignment_turned_in</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="dash-issued-books">0</span>
+        <span class="stat-label">Books Currently Issued</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon-wrapper red">
+        <span class="material-icons">warning</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="dash-overdue-books">0</span>
+        <span class="stat-label">Overdue Items</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="form-row" style="margin-bottom: 1.5rem;">
+    
+    <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--primary-color);">bolt</span>
+          Quick Operations
+        </h3>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
+        <button class="btn btn-outline" style="flex-direction: column; padding: 1rem 0.5rem; gap: 0.5rem;" onclick="LMS.Common.navigateTo('issue')">
+          <span class="material-icons" style="font-size: 1.5rem; color: var(--primary-color);">assignment_turned_in</span>
+          <span>Issue Book</span>
+        </button>
+        <button class="btn btn-outline" style="flex-direction: column; padding: 1rem 0.5rem; gap: 0.5rem;" onclick="LMS.Common.navigateTo('return')">
+          <span class="material-icons" style="font-size: 1.5rem; color: var(--success-color);">assignment_return</span>
+          <span>Return Book</span>
+        </button>
+        <button class="btn btn-outline" style="flex-direction: column; padding: 1rem 0.5rem; gap: 0.5rem;" onclick="LMS.Dashboard.openAddBookModal()">
+          <span class="material-icons" style="font-size: 1.5rem; color: var(--info-color);">add_box</span>
+          <span>Add New Book</span>
+        </button>
+        <button class="btn btn-outline" style="flex-direction: column; padding: 1rem 0.5rem; gap: 0.5rem;" onclick="LMS.Dashboard.openAddMemberModal()">
+          <span class="material-icons" style="font-size: 1.5rem; color: var(--warning-color);">person_add</span>
+          <span>Register Member</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <span class="material-icons" style="color: var(--primary-color);">history</span>
+        Recent Circulation Activity
+      </h3>
+      <button class="btn btn-outline btn-sm" onclick="LMS.Dashboard.loadDashboardData()">
+        <span class="material-icons" style="font-size: 1rem;">refresh</span>
+        <span>Refresh</span>
+      </button>
+    </div>
+    
+    <div class="table-responsive">
+      <data-table class="data-table">
+        <thead>
+          <tr>
+            <th>Transaction ID</th>
+            <th>Book Title</th>
+            <th>Member Name</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="dash-recent-activity-tbody">
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              Loading recent circulation activity...
+            </td>
+          </tr>
+        </tbody>
+      </data-table>
+    </div>
+  </div>
+
+</section>          
+<section id="view-books" class="view-section">
+
+  
+  <div class="card" style="margin-bottom: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 280px;">
+        <div class="quick-search-bar" style="width: 100%; max-width: 320px; display: flex;">
+          <span class="material-icons search-icon">search</span>
+          <input type="text" id="books-search-input" placeholder="Search title, author, ISBN..." onkeyup="LMS.Books.filterBooks()">
+        </div>
+
+        <select id="books-category-filter" class="form-control" style="width: 180px;" onchange="LMS.Books.filterBooks()">
+          <option value="">All Categories</option>
+          
+        </select>
+      </div>
+
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-outline" onclick="LMS.Books.loadBooks()">
+          <span class="material-icons">refresh</span>
+          <span>Refresh</span>
+        </button>
+        <button class="btn btn-primary" onclick="LMS.Books.openAddBookModal()">
+          <span class="material-icons">add</span>
+          <span>Add New Book</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Book ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Category</th>
+            <th style="text-align: center;">Total Copies</th>
+            <th style="text-align: center;">Available</th>
+            <th>Status</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="books-table-tbody">
+          <tr>
+            <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              Loading books inventory...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+      <span id="books-pagination-info" style="font-size: 0.85rem; color: var(--text-muted);">
+        Showing 0 books
+      </span>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="books-prev-page" class="btn btn-outline btn-sm" disabled onclick="LMS.Books.changePage(-1)">
+          <span class="material-icons">chevron_left</span>
+          <span>Previous</span>
+        </button>
+        <button id="books-next-page" class="btn btn-outline btn-sm" disabled onclick="LMS.Books.changePage(1)">
+          <span>Next</span>
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</section>          
+<section id="view-members" class="view-section">
+
+  
+  <div class="card" style="margin-bottom: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 280px;">
+        <div class="quick-search-bar" style="width: 100%; max-width: 320px; display: flex;">
+          <span class="material-icons search-icon">search</span>
+          <input type="text" id="members-search-input" placeholder="Search name, email, phone..." onkeyup="LMS.Members.filterMembers()">
+        </div>
+
+        <select id="members-type-filter" class="form-control" style="width: 160px;" onchange="LMS.Members.filterMembers()">
+          <option value="">All Member Types</option>
+          <option value="Student">Student</option>
+          <option value="Faculty">Faculty</option>
+          <option value="Staff">Staff</option>
+        </select>
+
+        <select id="members-status-filter" class="form-control" style="width: 140px;" onchange="LMS.Members.filterMembers()">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-outline" onclick="LMS.Members.loadMembers()">
+          <span class="material-icons">refresh</span>
+          <span>Refresh</span>
+        </button>
+        <button class="btn btn-primary" onclick="LMS.Members.openAddMemberModal()">
+          <span class="material-icons">person_add</span>
+          <span>Register Member</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Member ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Registered Date</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="members-table-tbody">
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              Loading members directory...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+      <span id="members-pagination-info" style="font-size: 0.85rem; color: var(--text-muted);">
+        Showing 0 members
+      </span>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="members-prev-page" class="btn btn-outline btn-sm" disabled onclick="LMS.Members.changePage(-1)">
+          <span class="material-icons">chevron_left</span>
+          <span>Previous</span>
+        </button>
+        <button id="members-next-page" class="btn btn-outline btn-sm" disabled onclick="LMS.Members.changePage(1)">
+          <span>Next</span>
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</section>          
+<section id="view-issue" class="view-section">
+
+  <div class="form-row" style="align-items: flex-start; gap: 1.5rem;">
+
+    
+    <div class="card" style="flex: 1.2; min-width: 320px;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--primary-color);">assignment_turned_in</span>
+          Issue Book to Member
+        </h3>
+      </div>
+
+      <form id="issue-book-form">
+        
+        
+        <div class="form-group">
+          <label class="form-label">Select Active Member *</label>
+          <select id="issue-member-select" class="form-control" required onchange="LMS.Issue.onMemberSelected(this.value)">
+            <option value="">-- Choose Member --</option>
+            
+          </select>
+          <div id="issue-member-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); display: none;"></div>
+        </div>
+
+        
+        <div class="form-group">
+          <label class="form-label">Select Available Book *</label>
+          <select id="issue-book-select" class="form-control" required onchange="LMS.Issue.onBookSelected(this.value)">
+            <option value="">-- Choose Book --</option>
+            
+          </select>
+          <div id="issue-book-info" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); display: none;"></div>
+        </div>
+
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Loan Duration (Days)</label>
+            <input type="number" id="issue-loan-days" class="form-control" value="20" min="1" max="90" onchange="LMS.Issue.calculateDueDate()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Calculated Due Date</label>
+            <input type="text" id="issue-calculated-duedate" class="form-control" readonly placeholder="YYYY-MM-DD" style="background-color: var(--bg-muted);">
+          </div>
+        </div>
+
+        
+        <div class="form-group">
+          <label class="form-label">Remarks / Internal Notes (Optional)</label>
+          <input type="text" id="issue-remarks" class="form-control" placeholder="e.g. Special permission granted">
+        </div>
+
+        
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Issue.resetForm()">Reset</button>
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">check_circle</span>
+            <span>Confirm & Issue</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    
+    <div style="flex: 0.8; min-width: 280px; display: flex; flex-direction: column; gap: 1rem;">
+      
+      
+      <div class="card" id="issue-summary-card" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons" style="color: var(--info-color);">account_box</span>
+            Selected Member Summary
+          </h3>
+        </div>
+        <div id="issue-summary-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-color);">
+          
+        </div>
+      </div>
+
+      
+      <div class="card" style="background-color: var(--bg-surface);">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons" style="color: var(--warning-color);">info</span>
+            Circulation Guidelines
+          </h3>
+        </div>
+        <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+          <li>Default lending period is <strong>20 days</strong> unless customized.</li>
+          <li>Members with <strong>overdue items</strong> or unpaid fines cannot issue new books.</li>
+          <li>Maximum allowed checkouts per member is <strong>2 items</strong> simultaneously.</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>          
+<section id="view-return" class="view-section">
+
+  <div class="form-row" style="align-items: flex-start; gap: 1.5rem;">
+
+    
+    <div class="card" style="flex: 1.2; min-width: 320px;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--primary-color);">assignment_return</span>
+          Issued Books Pending Return
+        </h3>
+        <button class="btn btn-outline btn-sm" onclick="LMS.Return.loadIssuedTransactions()">
+          <span class="material-icons">refresh</span>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      
+      <div style="margin-bottom: 1rem;">
+        <div class="quick-search-bar" style="width: 100%; display: flex;">
+          <span class="material-icons search-icon">search</span>
+          <input type="text" id="return-search-input" placeholder="Search by Transaction ID, Member Name, or Book Title..." onkeyup="LMS.Return.filterTransactions()">
+        </div>
+      </div>
+
+      
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tx ID</th>
+              <th>Book Title</th>
+              <th>Member Name</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="return-table-tbody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                Loading issued books...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    
+    <div style="flex: 0.8; min-width: 280px;">
+      <div class="card" id="return-process-card" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons" style="color: var(--success-color);">fact_check</span>
+            Process Return
+          </h3>
+        </div>
+
+        <form id="return-book-form">
+          <input type="hidden" id="return-tx-id">
+
+          <div style="background-color: var(--bg-main); padding: 0.75rem 1rem; border-radius: var(--border-radius); margin-bottom: 1rem; font-size: 0.875rem;">
+            <div style="margin-bottom: 0.35rem;"><strong>Book:</strong> <span id="return-book-title-lbl">-</span></div>
+            <div style="margin-bottom: 0.35rem;"><strong>Member:</strong> <span id="return-member-lbl">-</span></div>
+            <div style="margin-bottom: 0.35rem;"><strong>Issue Date:</strong> <span id="return-issuedate-lbl">-</span></div>
+            <div><strong>Due Date:</strong> <span id="return-duedate-lbl">-</span></div>
+          </div>
+
+          
+          <div class="form-group">
+            <label class="form-label">Calculated Fine Amount ($)</label>
+            <input type="number" id="return-calculated-fine" class="form-control" step="0.01" min="0" value="0.00">
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Overdue days fine computed automatically based on system settings.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fine Status</label>
+            <select id="return-fine-status" class="form-control">
+              <option value="Paid">Paid</option>
+              <option value="Waived">Waived / Forgiven</option>
+              <option value="Pending">Unpaid / Account Balance</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Return Notes</label>
+            <input type="text" id="return-notes" class="form-control" placeholder="e.g. Good condition, minor wear">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+            <button type="button" class="btn btn-outline" onclick="LMS.Return.cancelProcessing()">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background-color: var(--success-color); border-color: var(--success-color);">
+              <span class="material-icons">check</span>
+              <span>Complete Return</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      
+      <div class="card" id="return-placeholder-card" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+        <span class="material-icons" style="font-size: 3rem; margin-bottom: 0.5rem; color: var(--border-color);">assignment_return</span>
+        <p>Select an issued transaction from the list on the left to inspect details and process return.</p>
+      </div>
+    </div>
+
+  </div>
+
+</section>          
+<section id="view-reports" class="view-section">
+
+  
+  <div class="card" style="margin-bottom: 1.25rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; flex: 1; min-width: 280px;">
+        <div style="min-width: 200px;">
+          <select id="reports-type-select" class="form-control" onchange="LMS.Reports.onReportTypeChange(this.value)">
+            <option value="circulation">Circulation History Log</option>
+            <option value="overdue">Overdue Books & Fines</option>
+            <option value="popular">Most Popular Books</option>
+            <option value="members">Member Activity Summary</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="date" id="reports-start-date" class="form-control" style="width: 150px;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">to</span>
+          <input type="date" id="reports-end-date" class="form-control" style="width: 150px;">
+        </div>
+
+        <button class="btn btn-outline" onclick="LMS.Reports.generateReport()">
+          <span class="material-icons">filter_alt</span>
+          <span>Apply Filter</span>
+        </button>
+      </div>
+
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-outline" onclick="LMS.Reports.printReport()">
+          <span class="material-icons">print</span>
+          <span>Print</span>
+        </button>
+        <button class="btn btn-primary" onclick="LMS.Reports.exportCSV()">
+          <span class="material-icons">download</span>
+          <span>Export CSV</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <div class="stats-grid" id="reports-metrics-container" style="margin-bottom: 1.25rem;">
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: rgba(67, 97, 238, 0.1); color: var(--primary-color);">
+        <span class="material-icons">assessment</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="reports-stat-total">0</span>
+        <span class="stat-label" id="reports-stat-total-label">Total Records</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: rgba(46, 204, 113, 0.1); color: var(--success-color);">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="reports-stat-secondary">0</span>
+        <span class="stat-label" id="reports-stat-secondary-label">Active Items</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: rgba(231, 76, 60, 0.1); color: var(--danger-color);">
+        <span class="material-icons">currency_rupee</span>
+      </div>
+      <div class="stat-details">
+        <span class="stat-value" id="reports-stat-tertiary">₹0.00</span>
+        <span class="stat-label" id="reports-stat-tertiary-label">Total Fines</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card" id="printable-report-area">
+    <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+      <div>
+        <h3 class="card-title" id="report-title-display">Circulation History Log</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;" id="report-subtitle-display">
+          Generated on: <span id="report-generated-date">-</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="table-responsive" style="margin-top: 1rem;">
+      <table class="data-table" id="reports-table">
+        <thead id="reports-table-thead">
+          
+        </thead>
+        <tbody id="reports-table-tbody">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              Select filters and click "Apply Filter" to generate report data.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>          
+<section id="view-search" class="view-section">
+
+  
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+      <h3 class="card-title">
+        <span class="material-icons" style="color: var(--primary-color);">search</span>
+        Global Database Search
+      </h3>
+    </div>
+    
+    <div style="display: flex; gap: 0.75rem; align-items: center; max-width: 700px; margin-top: 0.5rem;">
+      <div class="quick-search-bar" style="flex: 1; display: flex; width: 100%;">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="global-search-input" placeholder="Search across Books, Members, and Transactions..." onkeyup="LMS.Search.handleSearchKeyup(event)">
+      </div>
+      <button class="btn btn-primary" onclick="LMS.Search.executeGlobalSearch()">
+        <span>Search</span>
+      </button>
+    </div>
+  </div>
+
+  
+  <div id="search-results-wrapper" style="display: none;">
+    <div style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+      Found <strong id="search-total-count" style="color: var(--text-main);">0</strong> matching record(s) for query "<span id="search-query-display"></span>"
+    </div>
+
+    
+    <div class="card" id="search-books-card" style="margin-bottom: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--primary-color);">menu_book</span>
+          Matching Books (<span id="search-books-count">0</span>)
+        </h3>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Book ID</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>ISBN</th>
+              <th>Category</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="search-books-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    
+    <div class="card" id="search-members-card" style="margin-bottom: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--success-color);">people</span>
+          Matching Members (<span id="search-members-count">0</span>)
+        </h3>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="search-members-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    
+    <div class="card" id="search-transactions-card" style="margin-bottom: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--warning-color);">receipt_long</span>
+          Matching Transactions (<span id="search-tx-count">0</span>)
+        </h3>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Book Title</th>
+              <th>Member Name</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="search-tx-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  
+  <div class="card" id="search-empty-placeholder" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+    <span class="material-icons" style="font-size: 3.5rem; color: var(--border-color); margin-bottom: 0.5rem;">manage_search</span>
+    <p>Type a title, author, member name, email, or ID above and press Enter or click Search.</p>
+  </div>
+
+</section>          
+<section id="view-settings" class="view-section">
+
+  <div class="form-row" style="align-items: flex-start; gap: 1.5rem;">
+
+    
+    <div class="card" style="flex: 1.2; min-width: 320px;">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons" style="color: var(--primary-color);">settings</span>
+          Library System Parameters
+        </h3>
+      </div>
+
+      <form id="settings-form" onsubmit="LMS.Settings.saveSettings(event)">
+        
+        
+        <h4 style="margin-bottom: 1rem; color: var(--text-color); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          General Information
+        </h4>
+
+        <div class="form-group">
+          <label class="form-label">Library Name</label>
+          <input type="text" id="setting-library-name" class="form-control" placeholder="e.g. Central University Library">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input type="email" id="setting-contact-email" class="form-control" placeholder="admin@library.org">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="text" id="setting-contact-phone" class="form-control" placeholder="&#43;1 (555) 019-2834">
+          </div>
+        </div>
+
+        
+        <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-color); font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+          Circulation Policy & Fines
+        </h4>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Default Loan Period (Days)</label>
+            <input type="number" id="setting-default-loan-days" class="form-control" min="1" max="90" value="20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Items Per Member</label>
+            <input type="number" id="setting-max-checkout-limit" class="form-control" min="1" max="20" value="2">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Daily Overdue Fine ($)</label>
+            <input type="number" id="setting-daily-fine-rate" class="form-control" step="0.05" min="0" value="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Grace Period (Days)</label>
+            <input type="number" id="setting-grace-period-days" class="form-control" min="0" max="10" value="0">
+          </div>
+        </div>
+
+        
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Settings.loadSettings()">Reset Changes</button>
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">save</span>
+            <span>Save Configuration</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    
+    <div style="flex: 0.8; min-width: 280px; display: flex; flex-direction: column; gap: 1rem;">
+      
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons" style="color: var(--info-color);">cloud_sync</span>
+            Data Maintenance
+          </h3>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+          Manage manual synchronization and backing up backend Google Sheets data tables.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button class="btn btn-outline" style="justify-content: flex-start;" onclick="LMS.Settings.syncData()">
+            <span class="material-icons">sync</span>
+            <span>Force Data Sync</span>
+          </button>
+          <button class="btn btn-outline" style="justify-content: flex-start;" onclick="LMS.Settings.testConnection()">
+            <span class="material-icons">network_check</span>
+            <span>Test Apps Script Connection</span>
+          </button>
+        </div>
+      </div>
+
+      
+      <div class="card" style="background-color: var(--bg-surface);">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons" style="color: var(--success-color);">info</span>
+            System Status
+          </h3>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.8;">
+          <div><strong>Application:</strong> LMS Pro v2.0</div>
+          <div><strong>Environment:</strong> Google Apps Script Web App</div>
+          <div><strong>Status:</strong> <span class="badge badge-success">Online</span></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>        </div>
+      </main>
+
+      
+      <footer class="app-footer">
+        <span>&copy; OAV MUSIGUDA LMS Pro v2</span>
+        <span id="system-status" class="status-indicator online">Online</span>
+      </footer>
+    </div>
+  </div>
+
+  
+  <div id="toast-container" class="toast-container"></div>
+
+  
+  <div id="global-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">Modal Header</h3>
+        <button id="modal-close-btn" class="icon-button" aria-label="Close Modal">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="modal-body" class="modal-body">
+        
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    currentUser: null,
+    activePage: 'dashboard',
+    theme: 'light'
+  };
+
+  
+
+  function init() {
+    initTheme();
+    initNavigation();
+    initGlobalEvents();
+    fetchCurrentUser();
+  }
+
+  
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('lms_theme') || 'light';
+    setTheme(savedTheme);
+  }
+
+  
+
+  function setTheme(themeName) {
+    state.theme = themeName;
+    document.body.classList.remove('theme-light', 'theme-dark');
+    document.body.classList.add(`theme-${themeName}`);
+    localStorage.setItem('lms_theme', themeName);
+
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = themeName === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+  }
+
+  
+
+  function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; 
+  }
+
+  
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  
+
+  function initNavigation() {
+    window.addEventListener('hashchange', handleHashChange);
+    
+    
+    const initialHash = window.location.hash.replace('#', '');
+    navigateTo(initialHash || 'dashboard');
+
+    
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', openSidebar);
+    }
+
+    if (sidebarToggleBtn) {
+      sidebarToggleBtn.addEventListener('click', closeSidebar);
+    }
+
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+  }
+
+  
+
+  function initGlobalEvents() {
+    
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const nextTheme = state.theme === 'light' ? 'dark' : 'light';
+        setTheme(nextTheme);
+      });
+    }
+
+    
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalOverlay = document.getElementById('global-modal');
+    if (modalCloseBtn && modalOverlay) {
+      modalCloseBtn.addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+      });
+    }
+
+    
+    const quickSearchInput = document.getElementById('quick-search-input');
+    if (quickSearchInput) {
+      quickSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const query = quickSearchInput.value.trim();
+          if (query) {
+            window.location.hash = `search?q=${encodeURIComponent(query)}`;
+            quickSearchInput.value = '';
+          }
+        }
+      });
+    }
+  }
+
+  
+
+  function handleHashChange() {
+    const rawHash = window.location.hash.replace('#', '');
+    const [pageRoute, queryString] = rawHash.split('?');
+    navigateTo(pageRoute || 'dashboard', queryString);
+  }
+
+  
+
+  function navigateTo(pageId, queryString = '') {
+    const targetSection = document.getElementById(`view-${pageId}`);
+    if (!targetSection) {
+      console.warn(`View section '${pageId}' does not exist.`);
+      return;
+    }
+
+    
+    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+    navLinks.forEach(link => {
+      const page = link.getAttribute('data-page');
+      if (page === pageId) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+
+    
+    const allSections = document.querySelectorAll('.view-section');
+    allSections.forEach(sec => sec.classList.remove('active'));
+    targetSection.classList.add('active');
+
+    
+    const pageTitleElem = document.getElementById('page-title');
+    if (pageTitleElem) {
+      pageTitleElem.textContent = formatPageTitle(pageId);
+    }
+
+    state.activePage = pageId;
+
+    
+    closeSidebar();
+
+    
+    const moduleName = pageId.charAt(0).toUpperCase() + pageId.slice(1);
+    if (LMS[moduleName] && typeof LMS[moduleName].onPageLoad === 'function') {
+      LMS[moduleName].onPageLoad(queryString);
+    }
+  }
+
+  
+
+  function formatPageTitle(pageId) {
+    const titleMap = {
+      dashboard: 'Dashboard Overview',
+      books: 'Books Inventory',
+      members: 'Members Directory',
+      issue: 'Issue Book Transaction',
+      return: 'Return Book & Fine Management',
+      reports: 'Reports & Analytics',
+      search: 'Global Search',
+      settings: 'System Settings'
+    };
+    return titleMap[pageId] || 'LMS Pro v2';
+  }
+
+  
+
+  function fetchCurrentUser() {
+    callServer('apiGetCurrentUser', [], (response) => {
+      if (response && response.success) {
+        state.currentUser = response.data;
+        const nameElem = document.getElementById('user-display-name');
+        const roleElem = document.getElementById('user-display-role');
+        if (nameElem) nameElem.textContent = response.data.Name || response.data.Email;
+        if (roleElem) roleElem.textContent = response.data.Role || 'Staff';
+      }
+    });
+  }
+
+  
+
+  function callServer(functionName, args = [], successCallback = null, errorCallback = null) {
+    showLoader(true);
+
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      showLoader(false);
+      console.warn(`Environment check: 'google.script.run' is unavailable. Simulated call to '${functionName}'.`);
+      if (typeof errorCallback === 'function') {
+        errorCallback(new Error('Google Apps Script context unavailable.'));
+      }
+      return;
+    }
+
+    let runner = google.script.run
+      .withSuccessHandler((result) => {
+        showLoader(false);
+        if (result && !result.success) {
+          showToast(result.message || 'An error occurred during execution.', 'error');
+        }
+        if (typeof successCallback === 'function') {
+          successCallback(result);
+        }
+      })
+      .withFailureHandler((error) => {
+        showLoader(false);
+        const errMsg = error.message || error.toString();
+        showToast(`Server Error: ${errMsg}`, 'error');
+        if (typeof errorCallback === 'function') {
+          errorCallback(error);
+        }
+      });
+
+    if (runner[functionName]) {
+      runner[functionName](...args);
+    } else {
+      showLoader(false);
+      console.error(`Server function '${functionName}' not found on backend API.`);
+      showToast(`Function '${functionName}' not defined on server.`, 'error');
+    }
+  }
+
+  
+
+  function showLoader(visible) {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.style.display = visible ? 'flex' : 'none';
+    }
+  }
+
+  
+
+  function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const iconMap = {
+      info: 'info',
+      success: 'check_circle',
+      warning: 'warning',
+      error: 'error'
+    };
+
+    toast.innerHTML = `
+      <span class="material-icons">${iconMap[type] || 'info'}</span>
+      <span>${escapeHtml(message)}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  
+
+  function openModal(title, content) {
+    const modal = document.getElementById('global-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+
+    if (!modal || !modalTitle || !modalBody) return;
+
+    modalTitle.textContent = title;
+    if (typeof content === 'string') {
+      modalBody.innerHTML = content;
+    } else {
+      modalBody.innerHTML = '';
+      modalBody.appendChild(content);
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  
+
+  function closeModal() {
+    const modal = document.getElementById('global-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  
+  LMS.Common = {
+    init: init,
+    navigateTo: navigateTo,
+    openSidebar: openSidebar,
+    closeSidebar: closeSidebar,
+    callServer: callServer,
+    showLoader: showLoader,
+    showToast: showToast,
+    openModal: openModal,
+    closeModal: closeModal,
+    escapeHtml: escapeHtml,
+    getCurrentUser: () => state.currentUser
+  };
+
+  
+  document.addEventListener('DOMContentLoaded', init);
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+
+  function onPageLoad() {
+    loadDashboardData();
+  }
+
+  
+
+  function loadDashboardData() {
+    LMS.Common.callServer('getDashboardData', [], function (response) {
+      if (response && response.success && response.data) {
+        renderMetrics(response.data.metrics);
+        renderRecentActivity(response.data.recentTransactions);
+      } else {
+        renderMetrics({ totalBooks: 0, activeMembers: 0, issuedBooks: 0, overdueBooks: 0 });
+        renderRecentActivity([]);
+      }
+    });
+  }
+
+  
+
+  function renderMetrics(metrics) {
+    if (!metrics) return;
+    
+    const setVal = function (id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Number(val || 0).toLocaleString();
+    };
+
+    setVal('dash-total-books', metrics.totalBooks);
+    setVal('dash-active-members', metrics.activeMembers);
+    setVal('dash-issued-books', metrics.issuedBooks);
+    setVal('dash-overdue-books', metrics.overdueBooks);
+  }
+
+  
+
+  function renderRecentActivity(transactions) {
+    const tbody = document.getElementById('dash-recent-activity-tbody');
+    if (!tbody) return;
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No recent activity recorded.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    let html = '';
+    transactions.forEach(function (tx) {
+      let badgeClass = 'badge-info';
+      if (tx.Status === 'Issued') badgeClass = 'badge-warning';
+      if (tx.Status === 'Returned') badgeClass = 'badge-success';
+      if (tx.Status === 'Overdue') badgeClass = 'badge-danger';
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(tx.TransactionID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(tx.BookTitle || tx.BookID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.MemberName || tx.MemberID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.IssueDate)}</td>
+          <td>${LMS.Common.escapeHtml(tx.DueDate)}</td>
+          <td><span class="badge ${badgeClass}">${LMS.Common.escapeHtml(tx.Status)}</span></td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  /**
+   * Opens Quick Action Modal for Adding a Book directly from Dashboard.
+   */
+  function openAddBookModal() {
+    const modalContent = `
+      <form id="dash-quick-add-book-form">
+        <div class="form-group">
+          <label class="form-label">Book Title *</label>
+          <input type="text" id="qbook-title" class="form-control" required placeholder="e.g. Clean Code">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Author *</label>
+            <input type="text" id="qbook-author" class="form-control" required placeholder="e.g. Robert C. Martin">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ISBN *</label>
+            <input type="text" id="qbook-isbn" class="form-control" required placeholder="978-...">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" id="qbook-category" class="form-control" placeholder="Technology">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Copies Quantity</label>
+            <input type="number" id="qbook-copies" class="form-control" value="1" min="1">
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Common.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Book</button>
+        </div>
+      </form>`;
+
+    LMS.Common.openModal('Quick Add Book', modalContent);
+
+    const form = document.getElementById('dash-quick-add-book-form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const payload = {
+          title: document.getElementById('qbook-title').value.trim(),
+          author: document.getElementById('qbook-author').value.trim(),
+          isbn: document.getElementById('qbook-isbn').value.trim(),
+          category: document.getElementById('qbook-category').value.trim() || 'General',
+          copies: parseInt(document.getElementById('qbook-copies').value, 10) || 1
+        };
+
+        LMS.Common.callServer('saveBook', [payload], function (res) {
+          if (res && res.success) {
+            LMS.Common.showToast('Book added successfully!', 'success');
+            LMS.Common.closeModal();
+            loadDashboardData();
+          }
+        });
+      });
+    }
+  }
+
+  /**
+   * Opens Quick Action Modal for Registering a Member directly from Dashboard.
+   */
+  function openAddMemberModal() {
+    const modalContent = `
+      <form id="dash-quick-add-member-form">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="qmember-name" class="form-control" required placeholder="e.g. Jane Doe">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" id="qmember-email" class="form-control" required placeholder="jane@example.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" id="qmember-phone" class="form-control" placeholder="+1 555-0192">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Member Type</label>
+            <select id="qmember-type" class="form-control">
+              <option value="Student">Student</option>
+              <option value="Faculty">Faculty</option>
+              <option value="Staff">Staff</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Common.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register Member</button>
+        </div>
+      </form>`;
+
+    LMS.Common.openModal('Quick Register Member', modalContent);
+
+    const form = document.getElementById('dash-quick-add-member-form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const payload = {
+          name: document.getElementById('qmember-name').value.trim(),
+          email: document.getElementById('qmember-email').value.trim(),
+          phone: document.getElementById('qmember-phone').value.trim(),
+          type: document.getElementById('qmember-type').value
+        };
+
+        LMS.Common.callServer('saveMember', [payload], function (res) {
+          if (res && res.success) {
+            LMS.Common.showToast('Member registered successfully!', 'success');
+            LMS.Common.closeModal();
+            loadDashboardData();
+          }
+        });
+      });
+    }
+  }
+
+  
+  LMS.Dashboard = {
+    onPageLoad: onPageLoad,
+    loadDashboardData: loadDashboardData,
+    openAddBookModal: openAddBookModal,
+    openAddMemberModal: openAddMemberModal
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    allBooks: [],
+    filteredBooks: [],
+    currentPage: 1,
+    pageSize: 10
+  };
+
+  
+
+  function onPageLoad() {
+    loadBooks();
+  }
+
+  
+
+  function loadBooks() {
+    LMS.Common.callServer('getBooks', [], function (response) {
+      if (response && response.success && Array.isArray(response.data)) {
+        state.allBooks = response.data;
+        populateCategoryFilter(response.data);
+        filterBooks();
+      } else {
+        state.allBooks = [];
+        state.filteredBooks = [];
+        renderTable();
+      }
+    });
+  }
+
+  
+
+  function populateCategoryFilter(books) {
+    const filterSelect = document.getElementById('books-category-filter');
+    if (!filterSelect) return;
+
+    const currentVal = filterSelect.value;
+    const categories = Array.from(new Set(books.map(b => b.Category).filter(Boolean))).sort();
+
+    let optionsHtml = '<option value="">All Categories</option>';
+    categories.forEach(cat => {
+      optionsHtml += `<option value="${LMS.Common.escapeHtml(cat)}">${LMS.Common.escapeHtml(cat)}</option>`;
+    });
+
+    filterSelect.innerHTML = optionsHtml;
+    filterSelect.value = currentVal;
+  }
+
+  /**
+   * Filters local dataset based on search term and selected category.
+   */
+  function filterBooks() {
+    const searchInput = document.getElementById('books-search-input');
+    const categorySelect = document.getElementById('books-category-filter');
+
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedCategory = categorySelect ? categorySelect.value : '';
+
+    state.filteredBooks = state.allBooks.filter(book => {
+      const matchesQuery = !query || 
+        (book.Title && book.Title.toLowerCase().includes(query)) ||
+        (book.Author && book.Author.toLowerCase().includes(query)) ||
+        (book.ISBN && book.ISBN.toLowerCase().includes(query)) ||
+        (book.BookID && book.BookID.toLowerCase().includes(query));
+
+      const matchesCategory = !selectedCategory || book.Category === selectedCategory;
+
+      return matchesQuery && matchesCategory;
+    });
+
+    state.currentPage = 1;
+    renderTable();
+  }
+
+  /**
+   * Renders filtered books table for the current page.
+   */
+  function renderTable() {
+    const tbody = document.getElementById('books-table-tbody');
+    if (!tbody) return;
+
+    if (state.filteredBooks.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No books found matching criteria.
+          </td>
+        </tr>`;
+      updatePaginationControls(0, 0, 0);
+      return;
+    }
+
+    const startIndex = (state.currentPage - 1) * state.pageSize;
+    const endIndex = Math.min(startIndex + state.pageSize, state.filteredBooks.length);
+    const pagedBooks = state.filteredBooks.slice(startIndex, endIndex);
+
+    let html = '';
+    pagedBooks.forEach(book => {
+      const total = parseInt(book.TotalCopies, 10) || 0;
+      const available = parseInt(book.AvailableCopies, 10) || 0;
+      
+      let badgeClass = 'badge-success';
+      let statusText = 'Available';
+      if (available === 0) {
+        badgeClass = 'badge-danger';
+        statusText = 'Out of Stock';
+      } else if (available < total) {
+        badgeClass = 'badge-warning';
+        statusText = 'Partially Issued';
+      }
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(book.BookID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(book.Title)}</td>
+          <td>${LMS.Common.escapeHtml(book.Author)}</td>
+          <td>${LMS.Common.escapeHtml(book.ISBN)}</td>
+          <td>${LMS.Common.escapeHtml(book.Category || 'General')}</td>
+          <td style="text-align: center;">${total}</td>
+          <td style="text-align: center;"><strong>${available}</strong></td>
+          <td><span class="badge ${badgeClass}">${statusText}</span></td>
+          <td style="text-align: right;">
+            <button class="btn btn-outline btn-sm" onclick="LMS.Books.openEditBookModal('${LMS.Common.escapeHtml(book.BookID)}')" title="Edit Book">
+              <span class="material-icons" style="font-size: 1rem;">edit</span>
+            </button>
+            <button class="btn btn-outline btn-sm" style="color: var(--danger-color);" onclick="LMS.Books.confirmDeleteBook('${LMS.Common.escapeHtml(book.BookID)}')" title="Delete Book">
+              <span class="material-icons" style="font-size: 1rem;">delete</span>
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+    updatePaginationControls(startIndex + 1, endIndex, state.filteredBooks.length);
+  }
+
+  
+
+  function updatePaginationControls(start, end, total) {
+    const infoElem = document.getElementById('books-pagination-info');
+    const prevBtn = document.getElementById('books-prev-page');
+    const nextBtn = document.getElementById('books-next-page');
+
+    if (infoElem) {
+      infoElem.textContent = total > 0 ? `Showing ${start}-${end} of ${total} books` : 'Showing 0 books';
+    }
+
+    const maxPages = Math.ceil(total / state.pageSize) || 1;
+
+    if (prevBtn) prevBtn.disabled = state.currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = state.currentPage >= maxPages;
+  }
+
+  
+
+  function changePage(direction) {
+    const maxPages = Math.ceil(state.filteredBooks.length / state.pageSize) || 1;
+    const newPage = state.currentPage + direction;
+
+    if (newPage >= 1 && newPage <= maxPages) {
+      state.currentPage = newPage;
+      renderTable();
+    }
+  }
+
+  
+
+  function openAddBookModal() {
+    renderBookFormModal('Add New Book', null);
+  }
+
+  
+
+  function openEditBookModal(bookId) {
+    const book = state.allBooks.find(b => b.BookID === bookId);
+    if (!book) {
+      LMS.Common.showToast('Book details not found.', 'error');
+      return;
+    }
+    renderBookFormModal('Edit Book', book);
+  }
+
+  
+
+  function renderBookFormModal(title, bookData) {
+    const isEdit = !!bookData;
+    const modalContent = `
+      <form id="book-form">
+        ${isEdit ? `<input type="hidden" id="book-id" value="${LMS.Common.escapeHtml(bookData.BookID)}">` : ''}
+        <div class="form-group">
+          <label class="form-label">Book Title *</label>
+          <input type="text" id="book-title" class="form-control" required value="${isEdit ? LMS.Common.escapeHtml(bookData.Title) : ''}">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Author *</label>
+            <input type="text" id="book-author" class="form-control" required value="${isEdit ? LMS.Common.escapeHtml(bookData.Author) : ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ISBN *</label>
+            <input type="text" id="book-isbn" class="form-control" required value="${isEdit ? LMS.Common.escapeHtml(bookData.ISBN) : ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" id="book-category" class="form-control" placeholder="e.g. Science, Fiction" value="${isEdit ? LMS.Common.escapeHtml(bookData.Category || '') : ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Copies *</label>
+            <input type="number" id="book-copies" class="form-control" min="1" required value="${isEdit ? bookData.TotalCopies : '1'}">
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Common.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Update Book' : 'Save Book'}</button>
+        </div>
+      </form>`;
+
+    LMS.Common.openModal(title, modalContent);
+
+    const form = document.getElementById('book-form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveBookHandler(isEdit);
+      });
+    }
+  }
+
+  
+
+  function saveBookHandler(isEdit) {
+    const payload = {
+      title: document.getElementById('book-title').value.trim(),
+      author: document.getElementById('book-author').value.trim(),
+      isbn: document.getElementById('book-isbn').value.trim(),
+      category: document.getElementById('book-category').value.trim() || 'General',
+      copies: parseInt(document.getElementById('book-copies').value, 10) || 1
+    };
+
+    if (isEdit) {
+      payload.bookId = document.getElementById('book-id').value;
+    }
+
+    LMS.Common.callServer('saveBook', [payload], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast(`Book successfully ${isEdit ? 'updated' : 'added'}!`, 'success');
+        LMS.Common.closeModal();
+        loadBooks();
+      }
+    });
+  }
+
+  
+
+  function confirmDeleteBook(bookId) {
+    const content = `
+      <p style="margin-bottom: 1.25rem; color: var(--text-color);">
+        Are you sure you want to delete book <strong>${LMS.Common.escapeHtml(bookId)}</strong>? This action cannot be undone.
+      </p>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button class="btn btn-outline" onclick="LMS.Common.closeModal()">Cancel</button>
+        <button class="btn btn-primary" style="background-color: var(--danger-color); border-color: var(--danger-color);" onclick="LMS.Books.deleteBook('${LMS.Common.escapeHtml(bookId)}')">Delete</button>
+      </div>`;
+
+    LMS.Common.openModal('Confirm Deletion', content);
+  }
+
+  /**
+   * Executes book row removal server side.
+   */
+  function deleteBook(bookId) {
+    LMS.Common.callServer('deleteBook', [bookId], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast('Book deleted successfully.', 'success');
+        LMS.Common.closeModal();
+        loadBooks();
+      }
+    });
+  }
+
+  // Public Interface
+  LMS.Books = {
+    onPageLoad: onPageLoad,
+    loadBooks: loadBooks,
+    filterBooks: filterBooks,
+    changePage: changePage,
+    openAddBookModal: openAddBookModal,
+    openEditBookModal: openEditBookModal,
+    confirmDeleteBook: confirmDeleteBook,
+    deleteBook: deleteBook
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    allMembers: [],
+    filteredMembers: [],
+    currentPage: 1,
+    pageSize: 10
+  };
+
+  
+
+  function onPageLoad() {
+    loadMembers();
+  }
+
+  
+
+  function loadMembers() {
+    LMS.Common.callServer('getMembers', [], function (response) {
+      if (response && response.success && Array.isArray(response.data)) {
+        state.allMembers = response.data;
+        filterMembers();
+      } else {
+        state.allMembers = [];
+        state.filteredMembers = [];
+        renderTable();
+      }
+    });
+  }
+
+  
+
+  function filterMembers() {
+    const searchInput = document.getElementById('members-search-input');
+    const typeSelect = document.getElementById('members-type-filter');
+    const statusSelect = document.getElementById('members-status-filter');
+
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const selectedType = typeSelect ? typeSelect.value : '';
+    const selectedStatus = statusSelect ? statusSelect.value : '';
+
+    state.filteredMembers = state.allMembers.filter(member => {
+      const matchesQuery = !query || 
+        (member.Name && member.Name.toLowerCase().includes(query)) ||
+        (member.Email && member.Email.toLowerCase().includes(query)) ||
+        (member.Phone && member.Phone.toLowerCase().includes(query)) ||
+        (member.MemberID && member.MemberID.toLowerCase().includes(query));
+
+      const matchesType = !selectedType || member.Type === selectedType;
+      const matchesStatus = !selectedStatus || member.Status === selectedStatus;
+
+      return matchesQuery && matchesType && matchesStatus;
+    });
+
+    state.currentPage = 1;
+    renderTable();
+  }
+
+  
+
+  function renderTable() {
+    const tbody = document.getElementById('members-table-tbody');
+    if (!tbody) return;
+
+    if (state.filteredMembers.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No members found matching search criteria.
+          </td>
+        </tr>`;
+      updatePaginationControls(0, 0, 0);
+      return;
+    }
+
+    const startIndex = (state.currentPage - 1) * state.pageSize;
+    const endIndex = Math.min(startIndex + state.pageSize, state.filteredMembers.length);
+    const pagedMembers = state.filteredMembers.slice(startIndex, endIndex);
+
+    let html = '';
+    pagedMembers.forEach(member => {
+      const isInactive = member.Status === 'Inactive';
+      const badgeClass = isInactive ? 'badge-danger' : 'badge-success';
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(member.MemberID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(member.Name)}</td>
+          <td>${LMS.Common.escapeHtml(member.Email)}</td>
+          <td>${LMS.Common.escapeHtml(member.Phone || '-')}</td>
+          <td>${LMS.Common.escapeHtml(member.Type || 'Student')}</td>
+          <td><span class="badge ${badgeClass}">${LMS.Common.escapeHtml(member.Status || 'Active')}</span></td>
+          <td>${LMS.Common.escapeHtml(member.RegistrationDate || '-')}</td>
+          <td style="text-align: right;">
+            <button class="btn btn-outline btn-sm" onclick="LMS.Members.openEditMemberModal('${LMS.Common.escapeHtml(member.MemberID)}')" title="Edit Member">
+              <span class="material-icons" style="font-size: 1rem;">edit</span>
+            </button>
+            <button class="btn btn-outline btn-sm" style="color: ${isInactive ? 'var(--success-color)' : 'var(--danger-color)'};" onclick="LMS.Members.toggleMemberStatus('${LMS.Common.escapeHtml(member.MemberID)}', '${LMS.Common.escapeHtml(member.Status || 'Active')}')" title="${isInactive ? 'Activate Member' : 'Deactivate Member'}">
+              <span class="material-icons" style="font-size: 1rem;">${isInactive ? 'check_circle' : 'block'}</span>
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+    updatePaginationControls(startIndex + 1, endIndex, state.filteredMembers.length);
+  }
+
+  /**
+   * Updates pagination display info and active state of prev/next buttons.
+   */
+  function updatePaginationControls(start, end, total) {
+    const infoElem = document.getElementById('members-pagination-info');
+    const prevBtn = document.getElementById('members-prev-page');
+    const nextBtn = document.getElementById('members-next-page');
+
+    if (infoElem) {
+      infoElem.textContent = total > 0 ? `Showing ${start}-${end} of ${total} members` : 'Showing 0 members';
+    }
+
+    const maxPages = Math.ceil(total / state.pageSize) || 1;
+
+    if (prevBtn) prevBtn.disabled = state.currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = state.currentPage >= maxPages;
+  }
+
+  
+
+  function changePage(direction) {
+    const maxPages = Math.ceil(state.filteredMembers.length / state.pageSize) || 1;
+    const newPage = state.currentPage + direction;
+
+    if (newPage >= 1 && newPage <= maxPages) {
+      state.currentPage = newPage;
+      renderTable();
+    }
+  }
+
+  
+
+  function openAddMemberModal() {
+    renderMemberFormModal('Register New Member', null);
+  }
+
+  
+
+  function openEditMemberModal(memberId) {
+    const member = state.allMembers.find(m => m.MemberID === memberId);
+    if (!member) {
+      LMS.Common.showToast('Member details not found.', 'error');
+      return;
+    }
+    renderMemberFormModal('Edit Member Details', member);
+  }
+
+  
+
+  function renderMemberFormModal(title, memberData) {
+    const isEdit = !!memberData;
+    const modalContent = `
+      <form id="member-form">
+        ${isEdit ? `<input type="hidden" id="member-id" value="${LMS.Common.escapeHtml(memberData.MemberID)}">` : ''}
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="member-name" class="form-control" required value="${isEdit ? LMS.Common.escapeHtml(memberData.Name) : ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" id="member-email" class="form-control" required value="${isEdit ? LMS.Common.escapeHtml(memberData.Email) : ''}">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="text" id="member-phone" class="form-control" value="${isEdit ? LMS.Common.escapeHtml(memberData.Phone || '') : ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Member Type *</label>
+            <select id="member-type" class="form-control" required>
+              <option value="Student" ${isEdit && memberData.Type === 'Student' ? 'selected' : ''}>Student</option>
+              <option value="Faculty" ${isEdit && memberData.Type === 'Faculty' ? 'selected' : ''}>Faculty</option>
+              <option value="Staff" ${isEdit && memberData.Type === 'Staff' ? 'selected' : ''}>Staff</option>
+            </select>
+          </div>
+        </div>
+        ${isEdit ? `
+        <div class="form-group">
+          <label class="form-label">Account Status</label>
+          <select id="member-status" class="form-control">
+            <option value="Active" ${memberData.Status === 'Active' ? 'selected' : ''}>Active</option>
+            <option value="Inactive" ${memberData.Status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+          </select>
+        </div>` : ''}
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-outline" onclick="LMS.Common.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Update Member' : 'Register Member'}</button>
+        </div>
+      </form>`;
+
+    LMS.Common.openModal(title, modalContent);
+
+    const form = document.getElementById('member-form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveMemberHandler(isEdit);
+      });
+    }
+  }
+
+  
+
+  function saveMemberHandler(isEdit) {
+    const payload = {
+      name: document.getElementById('member-name').value.trim(),
+      email: document.getElementById('member-email').value.trim(),
+      phone: document.getElementById('member-phone').value.trim(),
+      type: document.getElementById('member-type').value
+    };
+
+    if (isEdit) {
+      payload.memberId = document.getElementById('member-id').value;
+      payload.status = document.getElementById('member-status').value;
+    }
+
+    LMS.Common.callServer('saveMember', [payload], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast(`Member successfully ${isEdit ? 'updated' : 'registered'}!`, 'success');
+        LMS.Common.closeModal();
+        loadMembers();
+      }
+    });
+  }
+
+  
+
+  function toggleMemberStatus(memberId, currentStatus) {
+    const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+    const member = state.allMembers.find(m => m.MemberID === memberId);
+
+    if (!member) return;
+
+    const payload = {
+      memberId: member.MemberID,
+      name: member.Name,
+      email: member.Email,
+      phone: member.Phone,
+      type: member.Type,
+      status: newStatus
+    };
+
+    LMS.Common.callServer('saveMember', [payload], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast(`Member marked as ${newStatus}.`, 'info');
+        loadMembers();
+      }
+    });
+  }
+
+  
+  LMS.Members = {
+    onPageLoad: onPageLoad,
+    loadMembers: loadMembers,
+    filterMembers: filterMembers,
+    changePage: changePage,
+    openAddMemberModal: openAddMemberModal,
+    openEditMemberModal: openEditMemberModal,
+    toggleMemberStatus: toggleMemberStatus
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    members: [],
+    books: []
+  };
+
+  
+
+  function onPageLoad() {
+    initForm();
+    calculateDueDate();
+  }
+
+  
+
+  function initForm() {
+    LMS.Common.callServer('getMembers', [], function (resMembers) {
+      if (resMembers && resMembers.success) {
+        state.members = (resMembers.data || []).filter(m => m.Status === 'Active');
+        populateMemberDropdown();
+      }
+    });
+
+    LMS.Common.callServer('getBooks', [], function (resBooks) {
+      if (resBooks && resBooks.success) {
+        state.books = (resBooks.data || []).filter(b => (parseInt(b.AvailableCopies, 10) || 0) > 0);
+        populateBookDropdown();
+      }
+    });
+
+    const form = document.getElementById('issue-book-form');
+    if (form) {
+      form.onsubmit = handleIssueSubmit;
+    }
+  }
+
+  
+
+  function populateMemberDropdown() {
+    const select = document.getElementById('issue-member-select');
+    if (!select) return;
+
+    let html = '<option value="">-- Choose Member --</option>';
+    state.members.forEach(m => {
+      html += `<option value="${LMS.Common.escapeHtml(m.MemberID)}">${LMS.Common.escapeHtml(m.Name)} (${LMS.Common.escapeHtml(m.MemberID)})</option>`;
+    });
+
+    select.innerHTML = html;
+  }
+
+  /**
+   * Fills the book selection dropdown with available titles.
+   */
+  function populateBookDropdown() {
+    const select = document.getElementById('issue-book-select');
+    if (!select) return;
+
+    let html = '<option value="">-- Choose Book --</option>';
+    state.books.forEach(b => {
+      html += `<option value="${LMS.Common.escapeHtml(b.BookID)}">${LMS.Common.escapeHtml(b.Title)} (Available: ${b.AvailableCopies})</option>`;
+    });
+
+    select.innerHTML = html;
+  }
+
+  /**
+   * Triggered when a member is selected. Displays current checkout state summary.
+   */
+  function onMemberSelected(memberId) {
+    const infoDiv = document.getElementById('issue-member-info');
+    const summaryCard = document.getElementById('issue-summary-card');
+    const summaryBody = document.getElementById('issue-summary-body');
+
+    if (!memberId) {
+      if (infoDiv) infoDiv.style.display = 'none';
+      if (summaryCard) summaryCard.style.display = 'none';
+      return;
+    }
+
+    const member = state.members.find(m => m.MemberID === memberId);
+    if (!member) return;
+
+    if (infoDiv) {
+      infoDiv.innerHTML = `Email: <strong>${LMS.Common.escapeHtml(member.Email)}</strong> | Type: <strong>${LMS.Common.escapeHtml(member.Type || 'Student')}</strong>`;
+      infoDiv.style.display = 'block';
+    }
+
+    if (summaryCard && summaryBody) {
+      summaryBody.innerHTML = `
+        <div style="margin-bottom: 0.5rem;"><strong>Name:</strong> ${LMS.Common.escapeHtml(member.Name)}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>ID:</strong> ${LMS.Common.escapeHtml(member.MemberID)}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Type:</strong> ${LMS.Common.escapeHtml(member.Type || 'Student')}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Status:</strong> <span class="badge badge-success">${LMS.Common.escapeHtml(member.Status)}</span></div>
+      `;
+      summaryCard.style.display = 'block';
+    }
+  }
+
+  /**
+   * Triggered when a book is selected.
+   */
+  function onBookSelected(bookId) {
+    const infoDiv = document.getElementById('issue-book-info');
+    if (!bookId) {
+      if (infoDiv) infoDiv.style.display = 'none';
+      return;
+    }
+
+    const book = state.books.find(b => b.BookID === bookId);
+    if (!book) return;
+
+    if (infoDiv) {
+      infoDiv.innerHTML = `Author: <strong>${LMS.Common.escapeHtml(book.Author)}</strong> | ISBN: <strong>${LMS.Common.escapeHtml(book.ISBN)}</strong> | Available Copies: <strong>${book.AvailableCopies}</strong>`;
+      infoDiv.style.display = 'block';
+    }
+  }
+
+  /**
+   * Calculates estimated due date based on duration days.
+   */
+  function calculateDueDate() {
+    const daysInput = document.getElementById('issue-loan-days');
+    const dueDateInput = document.getElementById('issue-calculated-duedate');
+    
+    let days = parseInt(daysInput ? daysInput.value : 14, 10);
+    if (isNaN(days) || days < 1) days = 14;
+
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + days);
+
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+
+    if (dueDateInput) {
+      dueDateInput.value = `${year}-${month}-${day}`;
+    }
+  }
+
+  /**
+   * Submits issue transaction to the server.
+   */
+  function handleIssueSubmit(e) {
+    e.preventDefault();
+
+    const memberId = document.getElementById('issue-member-select').value;
+    const bookId = document.getElementById('issue-book-select').value;
+    const loanDays = parseInt(document.getElementById('issue-loan-days').value, 10) || 14;
+    const remarks = document.getElementById('issue-remarks').value.trim();
+
+    if (!memberId || !bookId) {
+      LMS.Common.showToast('Please select both a member and a book.', 'warning');
+      return;
+    }
+
+    const payload = {
+      memberId: memberId,
+      bookId: bookId,
+      loanDays: loanDays,
+      remarks: remarks
+    };
+
+    LMS.Common.callServer('issueBook', [payload], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast('Book successfully issued!', 'success');
+        resetForm();
+        initForm();
+      }
+    });
+  }
+
+  /**
+   * Resets form values and summary cards.
+   */
+  function resetForm() {
+    const form = document.getElementById('issue-book-form');
+    if (form) form.reset();
+
+    const daysInput = document.getElementById('issue-loan-days');
+    if (daysInput) daysInput.value = 14;
+
+    onMemberSelected('');
+    onBookSelected('');
+    calculateDueDate();
+  }
+
+  // Public Interface
+  LMS.Issue = {
+    onPageLoad: onPageLoad,
+    onMemberSelected: onMemberSelected,
+    onBookSelected: onBookSelected,
+    calculateDueDate: calculateDueDate,
+    resetForm: resetForm
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    transactions: [],
+    filteredTransactions: [],
+    selectedTx: null,
+    dailyFineRate: 0.0 
+  };
+
+  
+
+  function onPageLoad() {
+    loadIssuedTransactions();
+    fetchFineSetting();
+  }
+
+  
+
+  function fetchFineSetting() {
+    LMS.Common.callServer('getSettings', [], function (res) {
+      if (res && res.success && res.data) {
+        const rate = parseFloat(res.data.DailyFineRate);
+        if (!isNaN(rate)) {
+          state.dailyFineRate = rate;
+        }
+      }
+    });
+  }
+
+  
+
+  function loadIssuedTransactions() {
+    LMS.Common.callServer('getTransactions', [], function (response) {
+      if (response && response.success && Array.isArray(response.data)) {
+        state.transactions = response.data.filter(tx => tx.Status === 'Issued' || tx.Status === 'Overdue');
+        filterTransactions();
+      } else {
+        state.transactions = [];
+        state.filteredTransactions = [];
+        renderTable();
+      }
+    });
+  }
+
+  
+
+  function filterTransactions() {
+    const searchInput = document.getElementById('return-search-input');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    state.filteredTransactions = state.transactions.filter(tx => {
+      return !query ||
+        (tx.TransactionID && tx.TransactionID.toLowerCase().includes(query)) ||
+        (tx.BookTitle && tx.BookTitle.toLowerCase().includes(query)) ||
+        (tx.BookID && tx.BookID.toLowerCase().includes(query)) ||
+        (tx.MemberName && tx.MemberName.toLowerCase().includes(query)) ||
+        (tx.MemberID && tx.MemberID.toLowerCase().includes(query));
+    });
+
+    renderTable();
+  }
+
+  
+
+  function renderTable() {
+    const tbody = document.getElementById('return-table-tbody');
+    if (!tbody) return;
+
+    if (state.filteredTransactions.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No pending issued books found.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    let html = '';
+    state.filteredTransactions.forEach(tx => {
+      const isOverdue = tx.Status === 'Overdue' || new Date(tx.DueDate) < new Date();
+      const badgeClass = isOverdue ? 'badge-danger' : 'badge-warning';
+      const statusLabel = isOverdue ? 'Overdue' : 'Issued';
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(tx.TransactionID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(tx.BookTitle || tx.BookID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.MemberName || tx.MemberID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.DueDate)}</td>
+          <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+          <td style="text-align: right;">
+            <button class="btn btn-primary btn-sm" onclick="LMS.Return.selectTransactionForReturn('${LMS.Common.escapeHtml(tx.TransactionID)}')">
+              Select
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  
+
+  function selectTransactionForReturn(txId) {
+    const tx = state.transactions.find(t => t.TransactionID === txId);
+    if (!tx) {
+      LMS.Common.showToast('Transaction details not found.', 'error');
+      return;
+    }
+
+    state.selectedTx = tx;
+
+    const processCard = document.getElementById('return-process-card');
+    const placeholderCard = document.getElementById('return-placeholder-card');
+
+    if (processCard) processCard.style.display = 'block';
+    if (placeholderCard) placeholderCard.style.display = 'none';
+
+    document.getElementById('return-tx-id').value = tx.TransactionID;
+    document.getElementById('return-book-title-lbl').textContent = tx.BookTitle || tx.BookID;
+    document.getElementById('return-member-lbl').textContent = tx.MemberName || tx.MemberID;
+    document.getElementById('return-issuedate-lbl').textContent = tx.IssueDate;
+    document.getElementById('return-duedate-lbl').textContent = tx.DueDate;
+
+    
+    const fine = computeFine(tx.DueDate);
+    const fineInput = document.getElementById('return-calculated-fine');
+    if (fineInput) {
+      fineInput.value = fine.toFixed(2);
+    }
+
+    const form = document.getElementById('return-book-form');
+    if (form) {
+      form.onsubmit = handleReturnSubmit;
+    }
+  }
+
+  
+
+  function computeFine(dueDateStr) {
+    if (!dueDateStr) return 0;
+
+    const dueDate = new Date(dueDateStr);
+    const today = new Date();
+
+    
+    dueDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = today - dueDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      return diffDays * state.dailyFineRate;
+    }
+
+    return 0;
+  }
+
+  
+
+  function handleReturnSubmit(e) {
+    e.preventDefault();
+
+    if (!state.selectedTx) return;
+
+    const fineAmount = parseFloat(document.getElementById('return-calculated-fine').value) || 0;
+    const fineStatus = document.getElementById('return-fine-status').value;
+    const notes = document.getElementById('return-notes').value.trim();
+
+    const payload = {
+      transactionId: state.selectedTx.TransactionID,
+      bookId: state.selectedTx.BookID,
+      memberId: state.selectedTx.MemberID,
+      fineAmount: fineAmount,
+      fineStatus: fineStatus,
+      notes: notes
+    };
+
+    LMS.Common.callServer('returnBook', [payload], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast('Book successfully returned!', 'success');
+        cancelProcessing();
+        loadIssuedTransactions();
+      }
+    });
+  }
+
+  
+
+  function cancelProcessing() {
+    state.selectedTx = null;
+    const processCard = document.getElementById('return-process-card');
+    const placeholderCard = document.getElementById('return-placeholder-card');
+    const form = document.getElementById('return-book-form');
+
+    if (form) form.reset();
+    if (processCard) processCard.style.display = 'none';
+    if (placeholderCard) placeholderCard.style.display = 'block';
+  }
+
+  
+  LMS.Return = {
+    onPageLoad: onPageLoad,
+    loadIssuedTransactions: loadIssuedTransactions,
+    filterTransactions: filterTransactions,
+    selectTransactionForReturn: selectTransactionForReturn,
+    cancelProcessing: cancelProcessing
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    currentReportType: 'circulation',
+    reportData: [],
+    rawTransactions: [],
+    rawBooks: [],
+    rawMembers: []
+  };
+
+  
+
+  function onPageLoad() {
+    initDateInputs();
+    fetchAllDataAndGenerate();
+  }
+
+  
+
+  function initDateInputs() {
+    const startInput = document.getElementById('reports-start-date');
+    const endInput = document.getElementById('reports-end-date');
+
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    if (startInput && !startInput.value) {
+      startInput.value = firstDay.toISOString().split('T')[0];
+    }
+    if (endInput && !endInput.value) {
+      endInput.value = today.toISOString().split('T')[0];
+    }
+  }
+
+  
+
+  function fetchAllDataAndGenerate() {
+    let pending = 3;
+
+    LMS.Common.callServer('getTransactions', [], function (res) {
+      if (res && res.success) state.rawTransactions = res.data || [];
+      if (--pending === 0) generateReport();
+    });
+
+    LMS.Common.callServer('getBooks', [], function (res) {
+      if (res && res.success) state.rawBooks = res.data || [];
+      if (--pending === 0) generateReport();
+    });
+
+    LMS.Common.callServer('getMembers', [], function (res) {
+      if (res && res.success) state.rawMembers = res.data || [];
+      if (--pending === 0) generateReport();
+    });
+  }
+
+  
+
+  function onReportTypeChange(newType) {
+    state.currentReportType = newType;
+    generateReport();
+  }
+
+  
+
+  function generateReport() {
+    const startDate = document.getElementById('reports-start-date').value;
+    const endDate = document.getElementById('reports-end-date').value;
+
+    document.getElementById('report-generated-date').textContent = new Date().toLocaleString();
+
+    switch (state.currentReportType) {
+      case 'overdue':
+        buildOverdueReport(startDate, endDate);
+        break;
+      case 'popular':
+        buildPopularReport(startDate, endDate);
+        break;
+      case 'members':
+        buildMemberActivityReport(startDate, endDate);
+        break;
+      case 'circulation':
+      default:
+        buildCirculationReport(startDate, endDate);
+        break;
+    }
+  }
+
+  
+
+  function buildCirculationReport(start, end) {
+    document.getElementById('report-title-display').textContent = 'Circulation History Log';
+
+    const filtered = state.rawTransactions.filter(tx => {
+      if (!tx.IssueDate) return true;
+      const d = tx.IssueDate;
+      return (!start || d >= start) && (!end || d <= end);
+    });
+
+    state.reportData = filtered;
+
+    
+    const totalIssued = filtered.length;
+    const totalReturned = filtered.filter(t => t.Status === 'Returned').length;
+    const totalFines = filtered.reduce((sum, t) => sum + (parseFloat(t.FineAmount) || 0), 0);
+
+    updateMetrics('Total Checkouts', totalIssued, 'Returned Items', totalReturned, 'Fines Collected', '₹' + totalFines.toFixed(2));
+
+    
+    const thead = document.getElementById('reports-table-thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Tx ID</th>
+        <th>Book Title</th>
+        <th>Member</th>
+        <th>Issue Date</th>
+        <th>Due Date</th>
+        <th>Return Date</th>
+        <th>Status</th>
+      </tr>`;
+
+    
+    const tbody = document.getElementById('reports-table-tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No circulation activity found for date range.</td></tr>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(tx => {
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(tx.TransactionID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(tx.BookTitle || tx.BookID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.MemberName || tx.MemberID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.IssueDate)}</td>
+          <td>${LMS.Common.escapeHtml(tx.DueDate)}</td>
+          <td>${LMS.Common.escapeHtml(tx.ReturnDate || '-')}</td>
+          <td><span class="badge ${tx.Status === 'Returned' ? 'badge-success' : 'badge-warning'}">${LMS.Common.escapeHtml(tx.Status)}</span></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  
+
+  function buildOverdueReport(start, end) {
+    document.getElementById('report-title-display').textContent = 'Overdue Books & Fines Report';
+
+    const today = new Date().toISOString().split('T')[0];
+    const filtered = state.rawTransactions.filter(tx => {
+      const isOverdueStatus = tx.Status === 'Overdue';
+      const isPastDue = tx.Status === 'Issued' && tx.DueDate && tx.DueDate < today;
+      return isOverdueStatus || isPastDue;
+    });
+
+    state.reportData = filtered;
+
+    const totalOverdue = filtered.length;
+    const totalUnpaidFines = filtered.reduce((sum, t) => sum + (parseFloat(t.FineAmount) || 0), 0);
+
+    updateMetrics('Overdue Items', totalOverdue, 'High Priority', filtered.filter(t => (parseFloat(t.FineAmount) || 0) > 5).length, 'Est. Outstanding Fines', '₹' + totalUnpaidFines.toFixed(2));
+
+    const thead = document.getElementById('reports-table-thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Tx ID</th>
+        <th>Book Title</th>
+        <th>Borrower Name</th>
+        <th>Due Date</th>
+        <th>Days Overdue</th>
+        <th>Fine Amount</th>
+      </tr>`;
+
+    const tbody = document.getElementById('reports-table-tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No overdue books currently recorded.</td></tr>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(tx => {
+      const due = new Date(tx.DueDate);
+      const now = new Date();
+      const diffDays = Math.max(0, Math.ceil((now - due) / (1000 * 60 * 60 * 24)));
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(tx.TransactionID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(tx.BookTitle || tx.BookID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.MemberName || tx.MemberID)}</td>
+          <td>${LMS.Common.escapeHtml(tx.DueDate)}</td>
+          <td><span class="badge badge-danger">${diffDays} Days</span></td>
+          <td>$${(parseFloat(tx.FineAmount) || 0).toFixed(2)}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  /**
+   * Builds Most Popular Books Aggregation Report.
+   */
+  function buildPopularReport(start, end) {
+    document.getElementById('report-title-display').textContent = 'Most Popular Books Report';
+
+    const counts = {};
+    state.rawTransactions.forEach(tx => {
+      if (!tx.BookID) return;
+      counts[tx.BookID] = (counts[tx.BookID] || 0) + 1;
+    });
+
+    const popularList = state.rawBooks.map(b => ({
+      ...b,
+      checkoutCount: counts[b.BookID] || 0
+    })).sort((a, b) => b.checkoutCount - a.checkoutCount);
+
+    state.reportData = popularList;
+
+    updateMetrics('Total Unique Titles', popularList.length, 'Most Borrowed Count', popularList[0] ? popularList[0].checkoutCount : 0, 'Zero Checkout Items', popularList.filter(b => b.checkoutCount === 0).length);
+
+    const thead = document.getElementById('reports-table-thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Book ID</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Category</th>
+        <th>Total Copies</th>
+        <th>Checkout Count</th>
+      </tr>`;
+
+    const tbody = document.getElementById('reports-table-tbody');
+    let html = '';
+    popularList.forEach(b => {
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(b.BookID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(b.Title)}</td>
+          <td>${LMS.Common.escapeHtml(b.Author)}</td>
+          <td>${LMS.Common.escapeHtml(b.Category || '-')}</td>
+          <td>${b.TotalCopies || 0}</td>
+          <td><span class="badge badge-info">${b.checkoutCount} times</span></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  /**
+   * Builds Member Activity Summary Report.
+   */
+  function buildMemberActivityReport(start, end) {
+    document.getElementById('report-title-display').textContent = 'Member Activity Summary Report';
+
+    const memberCounts = {};
+    state.rawTransactions.forEach(tx => {
+      if (!tx.MemberID) return;
+      memberCounts[tx.MemberID] = (memberCounts[tx.MemberID] || 0) + 1;
+    });
+
+    const summaryList = state.rawMembers.map(m => ({
+      ...m,
+      activityCount: memberCounts[m.MemberID] || 0
+    })).sort((a, b) => b.activityCount - a.activityCount);
+
+    state.reportData = summaryList;
+
+    updateMetrics('Total Members', summaryList.length, 'Active Borrowers', summaryList.filter(m => m.activityCount > 0).length, 'Inactive Accounts', summaryList.filter(m => m.Status === 'Inactive').length);
+
+    const thead = document.getElementById('reports-table-thead');
+    thead.innerHTML = `
+      <tr>
+        <th>Member ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Total Borrowed</th>
+      </tr>`;
+
+    const tbody = document.getElementById('reports-table-tbody');
+    let html = '';
+    summaryList.forEach(m => {
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(m.MemberID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(m.Name)}</td>
+          <td>${LMS.Common.escapeHtml(m.Email)}</td>
+          <td>${LMS.Common.escapeHtml(m.Type || 'Student')}</td>
+          <td><span class="badge ${m.Status === 'Inactive' ? 'badge-danger' : 'badge-success'}">${LMS.Common.escapeHtml(m.Status)}</span></td>
+          <td><strong>${m.activityCount}</strong></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  
+
+  function updateMetrics(l1, v1, l2, v2, l3, v3) {
+    document.getElementById('reports-stat-total-label').textContent = l1;
+    document.getElementById('reports-stat-total').textContent = v1;
+
+    document.getElementById('reports-stat-secondary-label').textContent = l2;
+    document.getElementById('reports-stat-secondary').textContent = v2;
+
+    document.getElementById('reports-stat-tertiary-label').textContent = l3;
+    document.getElementById('reports-stat-tertiary').textContent = v3;
+  }
+
+  
+
+  function exportCSV() {
+    if (!state.reportData || state.reportData.length === 0) {
+      LMS.Common.showToast('No data available to export.', 'warning');
+      return;
+    }
+
+    const headers = Object.keys(state.reportData[0]);
+    let csvStr = headers.join(',') + '\n';
+
+    state.reportData.forEach(row => {
+      const line = headers.map(h => {
+        let val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+        val = val.replace(/"/g, '""');
+        return `"${val}"`;
+      }).join(',');
+      csvStr += line + '\n';
+    });
+
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `LMS_Report_${state.currentReportType}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  
+
+  function printReport() {
+    window.print();
+  }
+
+  
+  LMS.Reports = {
+    onPageLoad: onPageLoad,
+    onReportTypeChange: onReportTypeChange,
+    generateReport: generateReport,
+    exportCSV: exportCSV,
+    printReport: printReport
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+
+  function onPageLoad(queryString) {
+    if (queryString) {
+      const params = new URLSearchParams(queryString);
+      const q = params.get('q');
+      if (q) {
+        const input = document.getElementById('global-search-input');
+        if (input) input.value = q;
+        executeGlobalSearch(q);
+        return;
+      }
+    }
+  }
+
+  
+
+  function handleSearchKeyup(e) {
+    if (e.key === 'Enter') {
+      executeGlobalSearch();
+    }
+  }
+
+  
+
+  function executeGlobalSearch(forcedQuery) {
+    const input = document.getElementById('global-search-input');
+    const query = (forcedQuery !== undefined ? forcedQuery : (input ? input.value : '')).trim();
+
+    if (!query) {
+      LMS.Common.showToast('Please enter a search query.', 'warning');
+      return;
+    }
+
+    
+    LMS.Common.callServer('apiGlobalSearch', [query], function (res) {
+      if (res && res.success && res.data) {
+        renderSearchResults(query, res.data);
+      } else {
+        renderSearchResults(query, { books: [], members: [], transactions: [], totalMatches: 0 });
+      }
+    });
+  }
+
+  
+
+  function renderSearchResults(query, data) {
+    const wrapper = document.getElementById('search-results-wrapper');
+    const placeholder = document.getElementById('search-empty-placeholder');
+    const queryDisplay = document.getElementById('search-query-display');
+    const totalCount = document.getElementById('search-total-count');
+
+    if (queryDisplay) queryDisplay.textContent = query;
+    if (totalCount) totalCount.textContent = data.totalMatches || 0;
+
+    if (wrapper) wrapper.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+
+    renderBooks(data.books || []);
+    renderMembers(data.members || []);
+    renderTransactions(data.transactions || []);
+  }
+
+  
+
+  function renderBooks(books) {
+    const card = document.getElementById('search-books-card');
+    const count = document.getElementById('search-books-count');
+    const tbody = document.getElementById('search-books-tbody');
+
+    if (count) count.textContent = books.length;
+
+    if (books.length === 0) {
+      if (card) card.style.display = 'none';
+      return;
+    }
+
+    if (card) card.style.display = 'block';
+    let html = '';
+    books.forEach(b => {
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(b['Book ID'] || b.BookID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(b.Title)}</td>
+          <td>${LMS.Common.escapeHtml(b.Author)}</td>
+          <td>${LMS.Common.escapeHtml(b.ISBN)}</td>
+          <td>${LMS.Common.escapeHtml(b.Category || '-')}</td>
+          <td><span class="badge ${b.Status === 'Available' ? 'badge-success' : 'badge-danger'}">${LMS.Common.escapeHtml(b.Status)}</span></td>
+        </tr>`;
+    });
+    if (tbody) tbody.innerHTML = html;
+  }
+
+  /**
+   * Renders matching members table.
+   */
+  function renderMembers(members) {
+    const card = document.getElementById('search-members-card');
+    const count = document.getElementById('search-members-count');
+    const tbody = document.getElementById('search-members-tbody');
+
+    if (count) count.textContent = members.length;
+
+    if (members.length === 0) {
+      if (card) card.style.display = 'none';
+      return;
+    }
+
+    if (card) card.style.display = 'block';
+    let html = '';
+    members.forEach(m => {
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(m['Member ID'] || m.MemberID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(m.Name)}</td>
+          <td>${LMS.Common.escapeHtml(m.Email)}</td>
+          <td>${LMS.Common.escapeHtml(m.Phone || '-')}</td>
+          <td>${LMS.Common.escapeHtml(m.Department || m.Type || 'Student')}</td>
+          <td><span class="badge ${m.Status === 'Active' ? 'badge-success' : 'badge-danger'}">${LMS.Common.escapeHtml(m.Status)}</span></td>
+        </tr>`;
+    });
+    if (tbody) tbody.innerHTML = html;
+  }
+
+  
+
+  function renderTransactions(transactions) {
+    const card = document.getElementById('search-transactions-card');
+    const count = document.getElementById('search-tx-count');
+    const tbody = document.getElementById('search-tx-tbody');
+
+    if (count) count.textContent = transactions.length;
+
+    if (transactions.length === 0) {
+      if (card) card.style.display = 'none';
+      return;
+    }
+
+    if (card) card.style.display = 'block';
+    let html = '';
+    transactions.forEach(t => {
+      let badge = 'badge-warning';
+      if (t.status === 'Returned') badge = 'badge-success';
+      if (t.status === 'Overdue') badge = 'badge-danger';
+
+      html += `
+        <tr>
+          <td><strong>${LMS.Common.escapeHtml(t.transactionId || t.TransactionID)}</strong></td>
+          <td>${LMS.Common.escapeHtml(t.bookTitle || t.BookID)}</td>
+          <td>${LMS.Common.escapeHtml(t.memberName || t.MemberID)}</td>
+          <td>${LMS.Common.escapeHtml(t.issueDate || t.IssueDate)}</td>
+          <td>${LMS.Common.escapeHtml(t.dueDate || t.DueDate)}</td>
+          <td><span class="badge ${badge}">${LMS.Common.escapeHtml(t.status || t.Status)}</span></td>
+        </tr>`;
+    });
+    if (tbody) tbody.innerHTML = html;
+  }
+
+  // Public Interface
+  LMS.Search = {
+    onPageLoad: onPageLoad,
+    handleSearchKeyup: handleSearchKeyup,
+    executeGlobalSearch: executeGlobalSearch
+  };
+
+})(window.LMS);
+</script>  <script>
+
+
+
+window.LMS = window.LMS || {};
+
+(function (LMS) {
+  'use strict';
+
+  
+  const state = {
+    settings: {
+      LibraryName: 'Central University Library',
+      ContactEmail: 'admin@library.org',
+      ContactPhone: '+1 (555) 019-2834',
+      DefaultLoanDays: '20',
+      MaxCheckoutLimit: '2',
+      DailyFineRate: '0.0',
+      GracePeriodDays: '0'
+    }
+  };
+
+  
+
+  function onPageLoad() {
+    loadSettings();
+  }
+
+  
+
+  function loadSettings() {
+    LMS.Common.callServer('getSettings', [], function (response) {
+      if (response && response.success && response.data) {
+        state.settings = Object.assign({}, state.settings, response.data);
+      }
+      populateForm();
+    });
+  }
+
+  
+
+  function populateForm() {
+    const s = state.settings;
+
+    setVal('setting-library-name', s.LibraryName || '');
+    setVal('setting-contact-email', s.ContactEmail || '');
+    setVal('setting-contact-phone', s.ContactPhone || '');
+    setVal('setting-default-loan-days', s.DefaultLoanDays || '20');
+    setVal('setting-max-checkout-limit', s.MaxCheckoutLimit || '2');
+    setVal('setting-daily-fine-rate', s.DailyFineRate || '0.0');
+    setVal('setting-grace-period-days', s.GracePeriodDays || '0');
+  }
+
+  
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  
+
+  function saveSettings(e) {
+    if (e) e.preventDefault();
+
+    const payload = {
+      LibraryName: document.getElementById('setting-library-name').value.trim(),
+      ContactEmail: document.getElementById('setting-contact-email').value.trim(),
+      ContactPhone: document.getElementById('setting-contact-phone').value.trim(),
+      DefaultLoanDays: document.getElementById('setting-default-loan-days').value,
+      MaxCheckoutLimit: document.getElementById('setting-max-checkout-limit').value,
+      DailyFineRate: document.getElementById('setting-daily-fine-rate').value,
+      GracePeriodDays: document.getElementById('setting-grace-period-days').value
+    };
+
+    LMS.Common.callServer('saveSettings', [payload], function (response) {
+      if (response && response.success) {
+        state.settings = payload;
+        LMS.Common.showToast('Settings saved successfully!', 'success');
+      }
+    });
+  }
+
+  
+
+  function syncData() {
+    LMS.Common.showToast('Synchronizing database caches...', 'info');
+    LMS.Common.callServer('syncAllData', [], function (res) {
+      if (res && res.success) {
+        LMS.Common.showToast('Database successfully synchronized.', 'success');
+      }
+    });
+  }
+
+  
+
+  function testConnection() {
+    LMS.Common.showToast('Testing server connection...', 'info');
+    const start = Date.now();
+    
+    LMS.Common.callServer('pingServer', [], function (res) {
+      const elapsed = Date.now() - start;
+      if (res && res.success) {
+        LMS.Common.showToast(`Connection active! Response time: ${elapsed}ms`, 'success');
+      } else {
+        LMS.Common.showToast('Connection test failed or timed out.', 'error');
+      }
+    });
+  }
+
+  
+  LMS.Settings = {
+    onPageLoad: onPageLoad,
+    loadSettings: loadSettings,
+    saveSettings: saveSettings,
+    syncData: syncData,
+    testConnection: testConnection
+  };
+
+})(window.LMS);
+</script></body>
+</html>

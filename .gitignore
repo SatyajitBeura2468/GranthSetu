@@ -141,3 +141,25 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets/
+private/
+*.pem
+*.key
+
+# HAR captures
+*.har
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
