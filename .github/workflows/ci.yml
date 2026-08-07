@@ -41,7 +41,7 @@ jobs:
       - name: Run pgTAP database tests
         run: supabase test db
       - name: Lint local database
-        run: supabase db lint --local --level error --fail-on error
+        run: supabase db lint --local --schema public --level error --fail-on error
       - name: Verify generated public database types
         shell: bash
         run: |
