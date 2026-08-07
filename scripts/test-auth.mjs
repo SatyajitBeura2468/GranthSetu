@@ -50,7 +50,7 @@ async function expectError(operation, message) {
 async function signIn(user) {
   const client = userClient();
   const { data, error } = await client.auth.signInWithPassword({ email: user.email, password });
-  assert(!error && data.session, `sign-in failed for ${user.label}`);
+  assert(!error && data.session, `sign-in failed for ${user.label}: ${error?.message ?? "unknown error"}`);
   clients.set(user.label, client);
   return client;
 }
