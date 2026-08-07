@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(27);
 
 select has_column('public', 'fines', 'fine_kind', 'fines record the controlled fine kind');
 select ok(to_regclass('public.audit_events_request_id_unique') is not null, 'request IDs are unique when present');
