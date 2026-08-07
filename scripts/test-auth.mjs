@@ -141,7 +141,7 @@ try {
   assert(!inactiveContextError && (!inactiveContext || inactiveContext.length === 0), "inactive profile received operator context");
 
   const { data: members, error: memberReadError } = await librarianClient.from("members").select("id");
-  assert(!memberReadError && members?.length >= 3, "librarian could not read approved member data");
+  assert(!memberReadError && members?.length >= 3, `librarian could not read approved member data: ${memberReadError?.message ?? `returned ${members?.length ?? 0} rows`}`);
   const { data: profilesForLibrarian, error: profileReadError } = await librarianClient.from("profiles").select("id");
   assert(!profileReadError && profilesForLibrarian.length === 0, "librarian received broad profile access");
   const { data: auditForLibrarian, error: auditReadError } = await librarianClient.from("audit_events").select("id");
