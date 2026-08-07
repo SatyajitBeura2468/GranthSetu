@@ -32,6 +32,8 @@ Preview/Development must remain isolated from any future production school datab
 - [V3 domain model](docs/domain-model.md)
 - [V3 security and authorization model](docs/security-authorization-model.md)
 - [V3 domain/security ADR](docs/adr/0002-v3-domain-security-model.md)
+- [Database development guide](docs/database-development.md)
+- [V3 development database ADR](docs/adr/0003-v3-development-database.md)
 - [Deployment guide](docs/deployment.md)
 - [Security baseline](docs/security-baseline.md)
 - [Data migration plan](docs/data-migration-plan.md)

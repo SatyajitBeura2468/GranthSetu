@@ -1,0 +1,12 @@
+create index book_copies_location_index on public.book_copies (location_id);
+create index books_publisher_index on public.books (publisher_id);
+create index fines_assessed_by_profile_index on public.fines (assessed_by_profile_id);
+create index library_settings_updated_by_profile_index on public.library_settings (updated_by_profile_id);
+create index loan_renewals_approved_by_profile_index on public.loan_renewals (approved_by_profile_id);
+create index loans_issued_by_profile_index on public.loans (issued_by_profile_id);
+create index loans_returned_by_profile_index on public.loans (returned_by_profile_id);
+create index profile_roles_assigned_by_profile_index on public.profile_roles (assigned_by_profile_id);
+create index profile_roles_role_index on public.profile_roles (role_id);
+create index student_enrollments_session_index on public.student_enrollments (academic_session_id);
+create index student_enrollments_grade_index on public.student_enrollments (grade_level_id);
+create index student_enrollments_section_index on public.student_enrollments (section_id);
