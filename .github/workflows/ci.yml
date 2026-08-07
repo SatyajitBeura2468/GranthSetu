@@ -60,6 +60,7 @@ jobs:
         shell: bash
         run: |
           supabase gen types typescript --local --schema public > /tmp/database.ts
+          sed -i '${/^$/d;}' /tmp/database.ts
           diff -u src/types/database.ts /tmp/database.ts
       - name: Stop local Supabase
         if: always()
