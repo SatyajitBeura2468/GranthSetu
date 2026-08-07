@@ -39,6 +39,8 @@ build/Release
 
 # Dependency directories
 node_modules/
+.next/
+.vercel/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
@@ -163,3 +165,6 @@ private/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+.vercel
+.env*
