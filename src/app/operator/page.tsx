@@ -12,7 +12,7 @@ export default async function OperatorPage() {
         <article className="operator-card"><span className="operator-card-label">Signed in as</span><strong>{context.displayName}</strong><span className="operator-muted">{context.roles.join(" · ")}</span></article>
         <article className="operator-card"><span className="operator-card-label">Access state</span><strong>Active</strong><span className="operator-muted">Database-authoritative role checks are enabled.</span></article>
       </div>
-      {hasRole(context, "administrator") ? <Link className="button" href="/operator/admin/operators">Manage operators</Link> : null}
+      <div className="operator-actions"><Link className="button" href="/operator/circulation">Open circulation</Link>{hasRole(context, "administrator") ? <Link className="button button-quiet" href="/operator/admin/operators">Manage operators</Link> : null}</div>
     </section>
   );
 }

@@ -353,6 +353,7 @@ export type Database = {
           created_at: string
           currency_code: string
           id: string
+          fine_kind: string
           loan_id: string
           reason: string | null
           settled_amount_minor: number
@@ -365,6 +366,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          fine_kind?: string
           loan_id: string
           reason?: string | null
           settled_amount_minor?: number
@@ -377,6 +379,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          fine_kind?: string
           loan_id?: string
           reason?: string | null
           settled_amount_minor?: number
@@ -912,6 +915,30 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      circulation_assess_overdue_fine: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_issue_loan: {
+        Args: { p_book_copy_id: string; p_member_id: string; p_notes?: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_renew_loan: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_return_loan: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_settle_fine: {
+        Args: { p_amount_minor: number; p_fine_id: string; p_note?: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_waive_fine: {
+        Args: { p_amount_minor: number; p_fine_id: string; p_reason: string; p_request_id: string }
+        Returns: Json
       }
     }
     Enums: {
