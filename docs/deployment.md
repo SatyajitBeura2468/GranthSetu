@@ -39,3 +39,11 @@ curl https://<preview-host>/api/health
 ```
 
 The response should report `status: "ok"`, service `granthsetu`, and stage `v3-platform-foundation`. It must not contain secrets.
+
+## Verified foundation Preview
+
+- Preview URL: `https://granthsetu-4q0dwr22v-teamsatyajitbeura.vercel.app`
+- Homepage: HTTP 200 and foundation content verified.
+- `/api/health`: HTTP 200 JSON verified with `environment: "preview"` and commit `c90776f8d5d94988d499cf061560e84677292171`.
+- GitHub repository connection: connected to `SatyajitBeura2468/GranthSetu`.
+- Production deployment: intentionally not created by this foundation workflow.
