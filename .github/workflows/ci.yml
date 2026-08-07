@@ -30,6 +30,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
@@ -40,12 +47,20 @@ jobs:
         run: supabase db reset
       - name: Run pgTAP database tests
         run: supabase test db
+      - name: Run Auth and RLS integration tests
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:auth
       - name: Lint local database
         run: supabase db lint --local --schema public --level error --fail-on error
       - name: Verify generated public database types
         shell: bash
         run: |
           supabase gen types typescript --local --schema public > /tmp/database.ts
+          sed -i '${/^$/d;}' /tmp/database.ts
           diff -u src/types/database.ts /tmp/database.ts
       - name: Stop local Supabase
         if: always()

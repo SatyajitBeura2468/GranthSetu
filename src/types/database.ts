@@ -879,7 +879,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_assign_role: {
+        Args: { p_role_key: string; p_target_profile_id: string }
+        Returns: boolean
+      }
+      admin_provision_operator_profile: {
+        Args: {
+          p_display_name: string
+          p_role_key: string
+          p_target_auth_user_id: string
+        }
+        Returns: string
+      }
+      admin_revoke_role: {
+        Args: { p_role_key: string; p_target_profile_id: string }
+        Returns: boolean
+      }
+      admin_set_profile_status: {
+        Args: { p_status: string; p_target_profile_id: string }
+        Returns: boolean
+      }
+      bootstrap_first_administrator: {
+        Args: { p_display_name: string; p_target_auth_user_id: string }
+        Returns: string
+      }
+      current_operator_context: {
+        Args: never
+        Returns: {
+          display_name: string
+          profile_id: string
+          roles: string[]
+          status: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1012,4 +1045,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

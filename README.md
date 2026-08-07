@@ -6,7 +6,7 @@ GranthSetu is the evolving library management platform for OAV Musiguda.
 
 GranthSetu V3 platform foundation is under active development. The repository now contains a minimal Next.js App Router application, a health endpoint, strict TypeScript tooling, CI, Vercel-ready deployment structure, and Supabase-ready utilities.
 
-The V3 LMS is not finished. No books, members, issue/return workflows, reports, authentication flows, domain tables, or school data have been implemented.
+The V3 LMS is not finished. Phase 4 now provides operator-only Supabase Auth, server-side session refresh, database-authoritative administrator/librarian authorization, recovery routes, and administrator-controlled operator access. Books, members, issue/return workflows, reports, and business mutation workflows remain future phases.
 
 ## Historical V2 baseline
 
@@ -36,8 +36,10 @@ Preview/Development must remain isolated from any future production school datab
 - [V3 development database ADR](docs/adr/0003-v3-development-database.md)
 - [Deployment guide](docs/deployment.md)
 - [Security baseline](docs/security-baseline.md)
+- [Operator authentication development guide](docs/authentication-development.md)
+- [Operator authentication ADR](docs/adr/0004-v3-operator-auth-authorization.md)
 - [Data migration plan](docs/data-migration-plan.md)
 
 ## Status
 
-V3 platform foundation under active development. Historical V2 preserved unchanged. The temporary homepage exists only to prove that the new application stack builds and deploys.
+V3 Phase 4 operator authentication and authorization under active development. Historical V2 preserved unchanged. Production Auth, real school data, and business workflows are not enabled.
