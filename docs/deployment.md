@@ -46,4 +46,7 @@ The response should report `status: "ok"`, service `granthsetu`, and stage `v3-p
 - Homepage: HTTP 200 and foundation content verified.
 - `/api/health`: HTTP 200 JSON verified with `environment: "preview"` and commit `c90776f8d5d94988d499cf061560e84677292171`.
 - GitHub repository connection: connected to `SatyajitBeura2468/GranthSetu`.
-- Production deployment: intentionally not created by this foundation workflow.
+- No successful Production Deployment was created intentionally; an initial automatic trigger failed before the framework preset was corrected and is not live.
+
+The subsequent Git-triggered Preview for the documentation commit was also `READY`:
+`https://granthsetu-git-feat-v3-platform-foundation-teamsatyajitbeura.vercel.app`, commit `40cdb68192396e1c90e2821541056b0f14dc6179`.
