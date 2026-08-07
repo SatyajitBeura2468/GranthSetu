@@ -352,8 +352,8 @@ export type Database = {
           assessed_by_profile_id: string
           created_at: string
           currency_code: string
-          id: string
           fine_kind: string
+          id: string
           loan_id: string
           reason: string | null
           settled_amount_minor: number
@@ -365,8 +365,8 @@ export type Database = {
           assessed_by_profile_id: string
           created_at?: string
           currency_code?: string
-          id?: string
           fine_kind?: string
+          id?: string
           loan_id: string
           reason?: string | null
           settled_amount_minor?: number
@@ -378,8 +378,8 @@ export type Database = {
           assessed_by_profile_id?: string
           created_at?: string
           currency_code?: string
-          id?: string
           fine_kind?: string
+          id?: string
           loan_id?: string
           reason?: string | null
           settled_amount_minor?: number
