@@ -25,7 +25,7 @@ create unique index if not exists audit_events_request_id_unique
 on public.audit_events (request_id)
 where request_id is not null;
 
-create unique index if not exists fines_one_automated_overdue_per_loan
+create unique index if not exists fines_loan_kind_unique
 on public.fines (loan_id)
 where fine_kind = 'overdue';
 
