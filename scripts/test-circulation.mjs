@@ -159,10 +159,12 @@ try {
   const authorizationCopy = await copy(book); const authorizationMember = await member("teacher");
   const beforeDeactivate = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: authorizationMember, p_book_copy_id: authorizationCopy, p_request_id: id() }); assert(!beforeDeactivate.error, "librarian baseline authorization failed"); createdLoans.push(beforeDeactivate.data.loan_id);
   await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "inactive" });
-  await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: await member("teacher"), p_book_copy_id: await copy(book), p_request_id: id() }), "deactivated librarian retained circulation access");
+  const deactivatedMember = await member("teacher"); const deactivatedCopy = await copy(book);
+  await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: deactivatedMember, p_book_copy_id: deactivatedCopy, p_request_id: id() }), "deactivated librarian retained circulation access");
   await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "active" });
   await rpc(adminOp.client, "admin_revoke_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
-  await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: await member("teacher"), p_book_copy_id: await copy(book), p_request_id: id() }), "revoked librarian retained circulation access");
+  const revokedMember = await member("teacher"); const revokedCopy = await copy(book);
+  await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: revokedMember, p_book_copy_id: revokedCopy, p_request_id: id() }), "revoked librarian retained circulation access");
   await rpc(adminOp.client, "admin_assign_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
 
   // Data API attack surface: all normal operator writes remain outside the browser boundary.
