@@ -84,7 +84,8 @@ try {
 
   await policy({ default_loan_period_days: { value: 14, kind: "integer" }, checkout_limit: { value: 3, kind: "integer" }, renewal_limit: { value: 1, kind: "integer" }, fines_enabled: { value: false, kind: "boolean" } });
   const book = (await rows("books", admin.from("books").select("id").eq("status", "active").limit(1).single())).id;
-  const archivedBook = (await rows("books", admin.from("books").select("id").eq("status", "archived").limit(1).single().catch(() => ({ data: null, error: null }))))?.id;
+  const archivedResult = await admin.from("books").select("id").eq("status", "archived").limit(1).maybeSingle();
+  const archivedBook = archivedResult.error ? null : archivedResult.data?.id;
   const activeMember = await member("teacher");
   const inactiveMember = await member("teacher", "inactive");
   const studentWithoutEnrollment = await member("student");
