@@ -16,13 +16,25 @@ create unique index if not exists student_enrollments_active_roll_unique
 
 -- Older deployments allowed one active row per member and academic session,
 -- so a member may already have active rows in multiple sessions. Preserve all
--- rows while retaining the newest enrollment deterministically: academic
--- session start date, then enrollment creation time, then stable row id.
+-- rows while retaining an operationally current enrollment first. This is the
+-- same eligibility predicate used by circulation issue and renewal policy:
+-- active enrollment + active session + current_date inside the session range.
+-- If multiple sessions are currently in range, prefer the latest current
+-- session chronology. Only when none is currently in range do we fall back to
+-- session chronology across historical/future rows, then creation time and
+-- stable row id. No enrollment data is copied or deleted.
 with ranked_active_enrollments as (
   select se.id,
     row_number() over (
       partition by se.member_id
-      order by s.starts_on desc, se.created_at desc, se.id desc
+      order by
+        (s.status = 'active' and current_date between s.starts_on and s.ends_on) desc,
+        case when s.status = 'active' and current_date between s.starts_on and s.ends_on then s.starts_on end desc,
+        case when s.status = 'active' and current_date between s.starts_on and s.ends_on then s.ends_on end desc,
+        s.starts_on desc,
+        s.ends_on desc,
+        se.created_at desc,
+        se.id desc
     ) as row_number
   from public.student_enrollments se
   join public.academic_sessions s on s.id = se.academic_session_id

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { issueLoanAction } from "./actions";
+import { reconcileIssueSelection } from "./issue-book-selection.mjs";
 
 type Member = {
   member_id: string;
@@ -52,6 +53,8 @@ export function IssueBookForm({ members, copies, ready, requestId, initialMember
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedCopyId, setSelectedCopyId] = useState<string | null>(null);
 
+  const visibleSelection = reconcileIssueSelection(selectedMemberId, selectedCopyId, members, copies, ready);
+
   function searchCandidates(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     router.push(buildSearchUrl(memberSearch, copySearch, loanSearch, fineSearch));
@@ -73,7 +76,7 @@ export function IssueBookForm({ members, copies, ready, requestId, initialMember
       <fieldset className="circulation-selection">
         <legend>Borrower candidates ({members.length})</legend>
         {members.length ? <div className="circulation-candidate-list" role="listbox" aria-label="Borrower candidates">
-          {members.map((member) => <button key={member.member_id} type="button" role="option" aria-selected={selectedMemberId === member.member_id} className={`circulation-candidate${selectedMemberId === member.member_id ? " is-selected" : ""}`} onClick={() => setSelectedMemberId(member.member_id)}>
+          {members.map((member) => <button key={member.member_id} type="button" role="option" aria-selected={visibleSelection.selectedMemberId === member.member_id} className={`circulation-candidate${visibleSelection.selectedMemberId === member.member_id ? " is-selected" : ""}`} onClick={() => setSelectedMemberId(member.member_id)}>
             <strong>{member.display_name}</strong><span>{member.member_identifier} · {member.member_kind}</span><span>{member.enrollment_label ?? "No current enrollment"}{member.roll_number ? ` · Roll ${member.roll_number}` : ""}</span>
           </button>)}
         </div> : <p className="operator-muted">No borrower candidates. Search again with a narrower or different term.</p>}
@@ -81,18 +84,18 @@ export function IssueBookForm({ members, copies, ready, requestId, initialMember
       <fieldset className="circulation-selection">
         <legend>Physical-copy candidates ({copies.length})</legend>
         {copies.length ? <div className="circulation-candidate-list" role="listbox" aria-label="Physical-copy candidates">
-          {copies.map((copy) => <button key={copy.copy_id} type="button" role="option" aria-selected={selectedCopyId === copy.copy_id} className={`circulation-candidate${selectedCopyId === copy.copy_id ? " is-selected" : ""}`} onClick={() => setSelectedCopyId(copy.copy_id)}>
+          {copies.map((copy) => <button key={copy.copy_id} type="button" role="option" aria-selected={visibleSelection.selectedCopyId === copy.copy_id} className={`circulation-candidate${visibleSelection.selectedCopyId === copy.copy_id ? " is-selected" : ""}`} onClick={() => setSelectedCopyId(copy.copy_id)}>
             <strong>{copy.title}</strong><span>{copy.accession_number}{copy.barcode ? ` · ${copy.barcode}` : ""}</span><span>{copy.author_names}{copy.isbn ? ` · ISBN ${copy.isbn}` : ""} · {copy.location_name ?? "Unassigned"}</span>
           </button>)}
         </div> : <p className="operator-muted">No available copies. Search again with a narrower or different term.</p>}
       </fieldset>
     </div>
     <form className="auth-form" action={issueLoanAction}>
-      <input type="hidden" name="memberId" value={selectedMemberId ?? ""} />
-      <input type="hidden" name="copyId" value={selectedCopyId ?? ""} />
+      <input type="hidden" name="memberId" value={visibleSelection.selectedMemberId ?? ""} />
+      <input type="hidden" name="copyId" value={visibleSelection.selectedCopyId ?? ""} />
       <input type="hidden" name="requestId" value={requestId} />
       <label className="auth-field">Notes<input name="notes" maxLength={2000} /></label>
-      <button className="button" type="submit" disabled={!ready || !selectedMemberId || !selectedCopyId}>Issue selected copy</button>
+      <button className="button" type="submit" disabled={!visibleSelection.canIssue}>Issue selected copy</button>
     </form>
   </article>;
 }
