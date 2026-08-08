@@ -54,6 +54,13 @@ jobs:
           source <(supabase status -o env)
           set +a
           npm run db:test:auth
+      - name: Run circulation integration tests
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:circulation
       - name: Lint local database
         run: supabase db lint --local --schema public --level error --fail-on error
       - name: Verify generated public database types

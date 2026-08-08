@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document defines future security boundaries. It does not implement Supabase Auth, PostgreSQL tables, RLS, policies, or application workflows. All authorization decisions described here must be enforced server-side and, where data is exposed through Supabase, at the database boundary as well.
+This document defines the security boundaries implemented through the current V3 phases. Phase 4 implements Supabase Auth, database-authoritative operator roles, and RLS. Phase 5 adds trusted circulation RPCs; the remaining product workflows are still future work. All authorization decisions are enforced server-side and, where data is exposed through Supabase, at the database boundary as well.
 
 ## Identity concepts
 
@@ -45,7 +45,7 @@ The matrix is a policy baseline. Each route, server action, RPC, and database po
 - Every mutation authenticates the actor, loads authoritative role/profile state, validates ownership and lifecycle state, and performs the operation atomically.
 - Tables in an exposed Supabase schema require RLS. Policies must express actual role and ownership rules, not merely `authenticated` access.
 - Future RLS should use trusted role assignments, not user-editable metadata. UPDATE policies require both row visibility and new-row checks.
-- Loan issue/return/renew, fine adjustments, role changes, settings changes, and archive/withdraw actions should be trusted server-side operations with narrow inputs.
+- Loan issue/return/renew, overdue fine assessment, settlement, waiver, role changes, settings changes, and archive/withdraw actions are trusted server-side operations with narrow inputs. Phase 5 circulation uses separate user-context RPCs and keeps direct authenticated table DML closed.
 - Privileged Supabase secret/service-role credentials remain server-only. No privileged value may use a `NEXT_PUBLIC_` name or enter browser bundles, logs, PRs, or Preview client code.
 - Public catalogue reads may expose only deliberately approved bibliographic and availability fields. Member names, contact fields, loan history, fines, audit data, and settings are not public catalogue data.
 - Views used for exposed data must preserve RLS semantics or live in a protected schema with explicit grants; do not assume a view is automatically safe.

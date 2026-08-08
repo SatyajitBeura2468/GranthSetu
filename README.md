@@ -6,7 +6,7 @@ GranthSetu is the evolving library management platform for OAV Musiguda.
 
 GranthSetu V3 platform foundation is under active development. The repository now contains a minimal Next.js App Router application, a health endpoint, strict TypeScript tooling, CI, Vercel-ready deployment structure, and Supabase-ready utilities.
 
-The V3 LMS is not finished. Phase 4 now provides operator-only Supabase Auth, server-side session refresh, database-authoritative administrator/librarian authorization, recovery routes, and administrator-controlled operator access. Books, members, issue/return workflows, reports, and business mutation workflows remain future phases.
+Phase 5 provides the trusted circulation engine. Phase 6/7 foundations now provide operator catalogue, reference, private cover-storage, inventory, member/enrollment, policy, search, dashboard, report/CSV, and administrator audit workflows through trusted database operations. The functional matrix and honest validation boundary are recorded in [`docs/v3-functional-completion.md`](docs/v3-functional-completion.md).
 
 ## Historical V2 baseline
 
@@ -40,6 +40,16 @@ Preview/Development must remain isolated from any future production school datab
 - [Operator authentication ADR](docs/adr/0004-v3-operator-auth-authorization.md)
 - [Data migration plan](docs/data-migration-plan.md)
 
+## Operator workflow
+
+- `/operator/catalogue` — books, authors, publishers, categories, subjects, and covers
+- `/operator/inventory` — physical copies, accession numbers, locations, and lifecycle state
+- `/operator/members` — member identity, status, and student enrollment
+- `/operator/circulation` — issue, return, renewal, fines, settlement, and waiver
+- `/operator/settings` — administrator-only policy and academic structure
+- `/operator/reports` — circulation, overdue, popular books, member activity, inventory, fines, and safe CSV exports
+- `/operator/admin/audit` — administrator-only append-oriented audit viewer
+
 ## Status
 
-V3 Phase 4 operator authentication and authorization under active development. Historical V2 preserved unchanged. Production Auth, real school data, and business workflows are not enabled.
+V3 functional foundation is implemented on the reviewed branches; visual polish, production/real-data migration, and deferred product features remain separate work. Historical V2 is preserved unchanged. Hosted Development verification was not performed because authenticated Supabase management access was unavailable.

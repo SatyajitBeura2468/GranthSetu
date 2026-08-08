@@ -269,6 +269,7 @@ export type Database = {
       books: {
         Row: {
           created_at: string
+          cover_storage_path: string | null
           description: string | null
           edition: string | null
           id: string
@@ -284,6 +285,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
@@ -299,6 +301,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
@@ -352,6 +355,7 @@ export type Database = {
           assessed_by_profile_id: string
           created_at: string
           currency_code: string
+          fine_kind: string
           id: string
           loan_id: string
           reason: string | null
@@ -364,6 +368,7 @@ export type Database = {
           assessed_by_profile_id: string
           created_at?: string
           currency_code?: string
+          fine_kind?: string
           id?: string
           loan_id: string
           reason?: string | null
@@ -376,6 +381,7 @@ export type Database = {
           assessed_by_profile_id?: string
           created_at?: string
           currency_code?: string
+          fine_kind?: string
           id?: string
           loan_id?: string
           reason?: string | null
@@ -902,6 +908,45 @@ export type Database = {
       bootstrap_first_administrator: {
         Args: { p_display_name: string; p_target_auth_user_id: string }
         Returns: string
+      }
+      circulation_assess_overdue_fine: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_issue_loan: {
+        Args: {
+          p_book_copy_id: string
+          p_member_id: string
+          p_notes?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      circulation_renew_loan: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_return_loan: {
+        Args: { p_loan_id: string; p_request_id: string }
+        Returns: Json
+      }
+      circulation_settle_fine: {
+        Args: {
+          p_amount_minor: number
+          p_fine_id: string
+          p_note?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      circulation_waive_fine: {
+        Args: {
+          p_amount_minor: number
+          p_fine_id: string
+          p_reason: string
+          p_request_id: string
+        }
+        Returns: Json
       }
       current_operator_context: {
         Args: never
