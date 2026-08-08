@@ -14,6 +14,7 @@
     "db:test": "npx supabase@2.112.0 test db",
     "db:test:auth": "node scripts/test-auth.mjs",
     "db:test:circulation": "node scripts/test-circulation.mjs",
+    "db:test:legacy-fines-upgrade": "node scripts/test-legacy-fines-upgrade.mjs",
     "db:lint": "npx supabase@2.112.0 db lint --local --schema public --level error --fail-on error",
     "db:types": "npx supabase@2.112.0 gen types typescript --local --schema public > src/types/database.ts"
   },

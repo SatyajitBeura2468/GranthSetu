@@ -1,9 +1,14 @@
 -- Phase 5 trusted circulation boundary.
 -- Policy values remain environment data; this migration does not invent school policy.
 
-alter table public.fines add column if not exists fine_kind text not null default 'overdue';
-alter table public.fines add constraint fines_kind_check check (fine_kind in ('overdue'));
-update public.fines set fine_kind = 'overdue' where fine_kind is null;
+-- Preserve pre-Phase-5 ambiguity. The old schema permitted multiple fine rows
+-- per loan and did not record their business category, so they cannot safely be
+-- guessed to be automated overdue assessments.
+alter table public.fines add column if not exists fine_kind text;
+update public.fines set fine_kind = 'legacy' where fine_kind is null;
+alter table public.fines alter column fine_kind set default 'overdue';
+alter table public.fines alter column fine_kind set not null;
+alter table public.fines add constraint fines_kind_check check (fine_kind in ('legacy', 'overdue'));
 
 do $$
 begin
@@ -20,8 +25,9 @@ create unique index if not exists audit_events_request_id_unique
 on public.audit_events (request_id)
 where request_id is not null;
 
-create unique index if not exists fines_loan_kind_unique
-on public.fines (loan_id, fine_kind);
+create unique index if not exists fines_one_automated_overdue_per_loan
+on public.fines (loan_id)
+where fine_kind = 'overdue';
 
 create index if not exists loan_renewals_loan_index on public.loan_renewals (loan_id);
 
@@ -351,5 +357,5 @@ revoke all on function public.circulation_settle_fine(uuid, bigint, uuid, text) 
 revoke all on function public.circulation_waive_fine(uuid, bigint, uuid, text) from public, anon, authenticated, service_role;
 grant execute on function public.circulation_issue_loan(uuid, uuid, uuid, text), public.circulation_return_loan(uuid, uuid), public.circulation_renew_loan(uuid, uuid), public.circulation_assess_overdue_fine(uuid, uuid), public.circulation_settle_fine(uuid, bigint, uuid, text), public.circulation_waive_fine(uuid, bigint, uuid, text) to authenticated;
 
-comment on column public.fines.fine_kind is 'Phase 5 currently supports overdue only; future fine categories require an approved migration.';
+comment on column public.fines.fine_kind is 'Legacy preserves pre-Phase-5 ambiguity; overdue is the automated Phase 5 assessment kind.';
 comment on index public.audit_events_request_id_unique is 'One successful mutating business request per idempotency UUID.';

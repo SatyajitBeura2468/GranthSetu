@@ -37,6 +37,10 @@ npm run db:types
 
 The CI database job runs the same disposable reset path. `scripts/test-circulation.mjs` is the integration-test entry point for synthetic Auth identities and is intentionally never connected to the hosted Development project.
 
+## Fine history compatibility
+
+Historical fines created before the trusted circulation engine are retained as `fine_kind = legacy` because the previous schema did not record a reliable business category. New automated overdue assessments use `fine_kind = overdue`; a partial unique index permits at most one automated overdue assessment per loan while allowing multiple legacy rows. This deliberately preserves historical ambiguity rather than guessing or deleting records.
+
 ## Deferred
 
 The calculation semantics, school settings, overdue-renewal permission, librarian waiver authority, full UI, notifications, reservations, acquisitions, student self-service, Production, and V2 migration are Phase 6 or later decisions.
