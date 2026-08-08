@@ -30,7 +30,8 @@ values ('default_loan_period_days', 'integer', 0);
 insert into public.members(id, member_identifier, member_kind, display_name, status)
 values
   ('91000000-0000-0000-0000-000000000001', 'PHASE71-UPGRADE-MEMBER', 'student', 'Phase 7.1 Upgrade Student', 'active'),
-  ('91000000-0000-0000-0000-000000000002', 'PHASE71-FALLBACK-MEMBER', 'student', 'Phase 7.1 Fallback Student', 'active');
+  ('91000000-0000-0000-0000-000000000002', 'PHASE71-FALLBACK-MEMBER', 'student', 'Phase 7.1 Fallback Student', 'active'),
+  ('91000000-0000-0000-0000-000000000003', 'PHASE71-ROLL-CONFLICT-MEMBER', 'student', 'Phase 7.1 Roll Conflict Student', 'active');
 insert into public.academic_sessions(id, session_code, display_label, starts_on, ends_on, status)
 values
   ('92000000-0000-0000-0000-000000000001', 'UPGRADE-HISTORICAL', 'Historical session', current_date - 500, current_date - 121, 'closed'),
@@ -48,11 +49,12 @@ values
   ('94000000-0000-0000-0000-000000000003', 'UPGRADE-C', 'Section C', 3);
 insert into public.student_enrollments(id, member_id, academic_session_id, grade_level_id, section_id, roll_number, status, created_at)
 values
-  ('95000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', '  OLD-17 ', 'active', '2025-04-02T09:00:00Z'),
-  ('95000000-0000-0000-0000-000000000002', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000002', '93000000-0000-0000-0000-000000000002', '94000000-0000-0000-0000-000000000002', 'CURRENT-18', 'active', '2026-04-02T09:00:00Z'),
+  ('95000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', '  SHARED-ROLL ', 'active', '2025-04-02T09:00:00Z'),
+  ('95000000-0000-0000-0000-000000000002', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000002', '93000000-0000-0000-0000-000000000002', '94000000-0000-0000-0000-000000000002', 'SHARED-ROLL', 'active', '2026-04-02T09:00:00Z'),
   ('95000000-0000-0000-0000-000000000003', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', 'FUTURE-19', 'active', '2026-05-02T09:00:00Z'),
-  ('95000000-0000-0000-0000-000000000004', '91000000-0000-0000-0000-000000000002', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', 'FALLBACK-OLD', 'active', '2025-04-02T09:00:00Z'),
-  ('95000000-0000-0000-0000-000000000005', '91000000-0000-0000-0000-000000000002', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', 'FALLBACK-FUTURE', 'active', '2026-05-02T09:00:00Z');
+  ('95000000-0000-0000-0000-000000000004', '91000000-0000-0000-0000-000000000002', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', 'FALLBACK-OLD-THIS-ROLL-VALUE-IS-LONGER-THAN-FORTY', 'active', '2025-04-02T09:00:00Z'),
+  ('95000000-0000-0000-0000-000000000005', '91000000-0000-0000-0000-000000000002', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', E'FALLBACK\\tFUTURE', 'active', '2026-05-02T09:00:00Z'),
+  ('95000000-0000-0000-0000-000000000006', '91000000-0000-0000-0000-000000000003', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', 'SHARED-ROLL', 'active', '2026-06-02T09:00:00Z');
 `;
 run("psql", [...psqlArgs, "-v", "ON_ERROR_STOP=1"], { input: fixtureSql, ...psqlOptions });
 run(supabaseCommand, [...cli, "db", "push", "--local", "--yes"]);
@@ -75,9 +77,9 @@ begin
   select count(*) into v_active from public.student_enrollments where member_id = '91000000-0000-0000-0000-000000000001' and status = 'active';
   if v_active <> 1 then raise exception 'expected exactly one active enrollment, got %', v_active; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000001';
-  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll <> 'OLD-17' then raise exception 'older enrollment history was not preserved or roll was not normalized'; end if;
+  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll <> 'SHARED-ROLL' then raise exception 'older enrollment history was not preserved or roll was not normalized'; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000002';
-  if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000002' or v_section <> '94000000-0000-0000-0000-000000000002' or v_roll <> 'CURRENT-18' then raise exception 'newest enrollment did not remain active with its original data'; end if;
+  if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000002' or v_section <> '94000000-0000-0000-0000-000000000002' or v_roll <> 'SHARED-ROLL' then raise exception 'newest enrollment did not remain active with its original data'; end if;
   if not exists (
     select 1
     from public.student_enrollments se
@@ -95,14 +97,17 @@ begin
   select count(*) into v_active from public.student_enrollments where member_id = '91000000-0000-0000-0000-000000000002' and status = 'active';
   if v_active <> 1 then raise exception 'fallback expected exactly one active enrollment, got %', v_active; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000004';
-  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll <> 'FALLBACK-OLD' then raise exception 'fallback historical enrollment data was not preserved'; end if;
+  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll is not null then raise exception 'fallback historical invalid roll was not quarantined'; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000005';
-  if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000003' or v_section <> '94000000-0000-0000-0000-000000000003' or v_roll <> 'FALLBACK-FUTURE' then raise exception 'fallback future enrollment did not win its documented chronology'; end if;
+  if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000003' or v_section <> '94000000-0000-0000-0000-000000000003' or v_roll is not null then raise exception 'fallback future enrollment did not quarantine its invalid roll'; end if;
+
+  select status, roll_number into v_status, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000006';
+  if v_status <> 'active' or v_roll is not null then raise exception 'duplicate roll quarantine erased the surviving preferred enrollment or failed to quarantine the conflict'; end if;
 
   if not exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'student_enrollments_one_active_per_member') then raise exception 'one-active-enrollment unique index was not created'; end if;
   begin
     insert into public.student_enrollments(id, member_id, academic_session_id, grade_level_id, section_id, roll_number, status)
-    values ('95000000-0000-0000-0000-000000000006', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', 'NEW-20', 'active');
+    values ('95000000-0000-0000-0000-000000000007', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', 'NEW-20', 'active');
     raise exception 'second simultaneous active enrollment was accepted';
   exception when unique_violation then null;
   end;

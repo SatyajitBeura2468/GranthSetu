@@ -6,34 +6,20 @@ alter index if exists public.fines_one_automated_overdue_per_loan rename to fine
 create unique index if not exists fines_loan_kind_unique on public.fines (loan_id) where fine_kind = 'overdue';
 
 alter table public.student_enrollments add column if not exists roll_number text;
--- Older deployments could already contain padded or blank roll values. Normalize
--- them before validating the stricter constraint; quarantine later active
--- duplicates so the upgrade remains safe without deleting enrollment history.
+-- Older deployments could already contain padded, blank, overlong, or
+-- control-character roll values. Normalize valid values and quarantine invalid
+-- values before validating the stricter constraint.
 update public.student_enrollments
-set roll_number = nullif(btrim(roll_number), '')
+set roll_number = case
+  when btrim(roll_number) = '' then null
+  when char_length(btrim(roll_number)) > 40 or btrim(roll_number) ~ '[[:cntrl:]]' then null
+  else btrim(roll_number)
+end
 where roll_number is not null;
-
-with duplicate_active_rolls as (
-  select id,
-    row_number() over (
-      partition by academic_session_id, grade_level_id, section_id, lower(btrim(roll_number))
-      order by created_at, id
-    ) as row_number
-  from public.student_enrollments
-  where status = 'active' and roll_number is not null
-)
-update public.student_enrollments se
-set roll_number = null
-from duplicate_active_rolls duplicates
-where duplicates.id = se.id and duplicates.row_number > 1;
 
 alter table public.student_enrollments drop constraint if exists student_enrollments_roll_number_check;
 alter table public.student_enrollments add constraint student_enrollments_roll_number_check
   check (roll_number is null or (roll_number = btrim(roll_number) and char_length(roll_number) between 1 and 40 and roll_number !~ '[[:cntrl:]]'));
-
-create unique index if not exists student_enrollments_active_roll_unique
-  on public.student_enrollments (academic_session_id, grade_level_id, section_id, lower(btrim(roll_number)))
-  where status = 'active' and roll_number is not null and btrim(roll_number) <> '';
 
 -- Older deployments allowed one active row per member and academic session,
 -- so a member may already have active rows in multiple sessions. Preserve all
@@ -65,6 +51,27 @@ update public.student_enrollments se
 set status = 'completed'
 from ranked_active_enrollments ranked
 where ranked.id = se.id and ranked.row_number > 1;
+
+-- Reconcile one active row per member first. Only surviving active rows should
+-- participate in roll quarantine, otherwise a row that is about to be
+-- completed could erase the roll belonging to the row that survives.
+with duplicate_active_rolls as (
+  select id,
+    row_number() over (
+      partition by academic_session_id, grade_level_id, section_id, lower(btrim(roll_number))
+      order by created_at, id
+    ) as row_number
+  from public.student_enrollments
+  where status = 'active' and roll_number is not null
+)
+update public.student_enrollments se
+set roll_number = null
+from duplicate_active_rolls duplicates
+where duplicates.id = se.id and duplicates.row_number > 1;
+
+create unique index if not exists student_enrollments_active_roll_unique
+  on public.student_enrollments (academic_session_id, grade_level_id, section_id, lower(btrim(roll_number)))
+  where status = 'active' and roll_number is not null and btrim(roll_number) <> '';
 
 create unique index if not exists student_enrollments_one_active_per_member
   on public.student_enrollments (member_id)
