@@ -11,7 +11,7 @@ select has_function('public', 'global_search', 'global search exists');
 select has_function('public', 'report_circulation', 'circulation report exists');
 select has_function('public', 'report_inventory', 'inventory report exists');
 select has_function('public', 'admin_audit_events', 'administrator audit reader exists');
-select has_index('public', 'fines', 'fines_one_automated_overdue_per_loan', 'automated overdue fine uniqueness is partial');
+select has_index('public', 'fines', 'fines_loan_kind_unique', 'automated overdue fine uniqueness is partial');
 select has_column('public', 'fines', 'fine_kind', 'fines preserve an explicit history kind');
 
 select * from finish();

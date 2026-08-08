@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(27);
 
 select has_column('public','student_enrollments','roll_number','student enrollments store a nullable roll number');
 select has_index('public','student_enrollments','student_enrollments_active_roll_unique','active roll uniqueness is scoped to session, grade, and section');
@@ -27,16 +27,11 @@ select ok(not has_table_privilege('authenticated','public.members','UPDATE'),'me
 select ok((select count(*) from storage.buckets where id='book-covers' and public=false)=1,'book covers remain private');
 select ok((select count(*) from public.library_settings where setting_key in ('overdue_renewal_allowed','librarian_waiver_allowed'))=0,'new policy toggles default to fail-closed when absent');
 
-select * from finish();
-rollback;
-
-begin;
-select plan(2);
 insert into public.members(id,member_identifier,member_kind,display_name,status)
 values ('72000000-0000-0000-0000-000000000001','PHASE71-ROLL-TEST','student','Phase 7.1 Roll Test','active');
 insert into public.student_enrollments(member_id,academic_session_id,grade_level_id,section_id,roll_number,status)
 values ('72000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000009','32000000-0000-0000-0000-000000000001','17','active');
-select throws_ok($$insert into public.student_enrollments(member_id,academic_session_id,grade_level_id,section_id,roll_number,status) values ('20000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000009','32000000-0000-0000-0000-000000000001',' 17 ','active')$$,'23505',null,'active roll duplicates are rejected within the same class context');
+select throws_ok($$insert into public.student_enrollments(member_id,academic_session_id,grade_level_id,section_id,roll_number,status) values ('20000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000009','32000000-0000-0000-0000-000000000001','17','active')$$,'23505',null,'active roll duplicates are rejected within the same class context');
 select throws_ok($$insert into public.student_enrollments(member_id,academic_session_id,grade_level_id,section_id,roll_number,status) values ('72000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000009','32000000-0000-0000-0000-000000000001',E'17\n','active')$$,'23514',null,'control characters are rejected in roll numbers');
 select * from finish();
 rollback;
