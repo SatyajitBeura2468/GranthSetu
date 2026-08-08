@@ -889,7 +889,7 @@ export type Database = {
         Returns: boolean
       }
       admin_audit_events: {
-        Args: { p_action?: string; p_target_type?: string }
+        Args: { p_action?: string; p_actor_profile_id?: string; p_from?: string; p_target_type?: string; p_to?: string }
         Returns: {
           action: string
           actor_name: string
