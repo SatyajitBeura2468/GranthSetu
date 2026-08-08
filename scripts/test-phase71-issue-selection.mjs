@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
+import { reconcileIssueSelection } from "../src/app/operator/circulation/issue-book-selection.mjs";
 
 // Disposable local-only coverage for explicit issue selection. Never point
 // this at hosted Supabase or real school data.
@@ -74,9 +75,26 @@ try {
   const page = await readFile(new URL("../src/app/operator/circulation/page.tsx", import.meta.url), "utf8");
   const form = await readFile(new URL("../src/app/operator/circulation/issue-book-form.tsx", import.meta.url), "utf8");
   assert(page.includes("<IssueBookForm") && !page.includes("members[0]?.member_id") && !page.includes("copies[0]?.copy_id"), "server page still binds issue identity to the first result");
-  assert(form.includes("selectedMemberId") && form.includes("selectedCopyId") && form.includes("disabled={!ready || !selectedMemberId || !selectedCopyId}"), "issue form is not gated on two explicit selections");
+  assert(form.includes("selectedMemberId") && form.includes("selectedCopyId") && form.includes("disabled={!visibleSelection.canIssue}"), "issue form is not gated on two explicit visible selections");
   assert(form.includes("setSelectedMemberId(null)") && form.includes("setSelectedCopyId(null)"), "editing search terms does not clear stale selections");
-  console.log("Phase 7.1 explicit-selection issue regression passed: multiple candidates, exact member/copy binding, availability filtering, concurrency, malformed identity rejection, and stale-selection clearing.");
+  assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelection.selectedMemberId") && form.includes("visibleSelection.selectedCopyId"), "candidate lifecycle reconciliation is not wired into rendered selection and hidden fields");
+  assert(page.includes("key={issueCandidateContextKey}"), "candidate context navigation does not remount the issue form");
+  const candidates = (memberIds, copyIds) => ({ members: memberIds.map((member_id) => ({ member_id })), copies: copyIds.map((copy_id) => ({ copy_id })) });
+  const hidden = (selection) => ({ memberId: selection.selectedMemberId ?? "", copyId: selection.selectedCopyId ?? "" });
+  const assertLifecycle = (selection, memberId, copyId, canIssue, label) => {
+    assert(selection.selectedMemberId === memberId && selection.selectedCopyId === copyId && selection.canIssue === canIssue, `${label}: stale lifecycle selection survived candidate navigation`);
+    const values = hidden(selection);
+    assert(values.memberId === (memberId ?? "") && values.copyId === (copyId ?? ""), `${label}: hidden issue IDs retained invisible candidates`);
+  };
+  let lifecycle = reconcileIssueSelection("A", "X", ...Object.values(candidates(["B"], ["X"])), true);
+  assertLifecycle(lifecycle, null, "X", false, "member-only navigation");
+  lifecycle = reconcileIssueSelection("A", "X", ...Object.values(candidates(["A"], ["Y"])), true);
+  assertLifecycle(lifecycle, "A", null, false, "copy-only navigation");
+  lifecycle = reconcileIssueSelection("A", "X", ...Object.values(candidates(["B"], ["Y"])), true);
+  assertLifecycle(lifecycle, null, null, false, "combined navigation");
+  lifecycle = reconcileIssueSelection("B", "Y", ...Object.values(candidates(["B"], ["Y"])), true);
+  assertLifecycle(lifecycle, "B", "Y", true, "new explicit selection after navigation");
+  console.log("Phase 7.1 explicit-selection issue regression passed: multiple candidates, exact member/copy binding, availability filtering, concurrency, malformed identity rejection, and member/copy navigation stale-selection clearing.");
 } finally {
   await admin.from("loans").delete().in("id", createdLoans);
   await admin.from("book_copies").delete().in("id", createdCopies);
