@@ -16,6 +16,9 @@ run(supabaseCommand, [...cli, "db", "reset", "--local", "--version", priorMigrat
 const status = run(supabaseCommand, [...cli, "status", "-o", "env"]);
 const dbUrl = status.match(/^DB_URL=(.*)$/m)?.[1]?.trim();
 if (!dbUrl) throw new Error("Supabase status did not expose DB_URL; refusing to guess a database target.");
+const databaseUrl = new URL(dbUrl.replace(/^['\"]|['\"]$/g, ""));
+const psqlArgs = ["-h", databaseUrl.hostname, "-p", databaseUrl.port, "-U", decodeURIComponent(databaseUrl.username), "-d", databaseUrl.pathname.replace(/^\//, "")];
+const psqlOptions = { env: { ...process.env, PGPASSWORD: decodeURIComponent(databaseUrl.password) } };
 
 const fixtureSql = `
 insert into public.profiles (id, display_name, status)
@@ -32,7 +35,7 @@ values
   ('76000000-0000-0000-0000-000000000001', '75000000-0000-0000-0000-000000000001', 100, '71000000-0000-0000-0000-000000000001', 'Historical row one'),
   ('76000000-0000-0000-0000-000000000002', '75000000-0000-0000-0000-000000000001', 200, '71000000-0000-0000-0000-000000000001', 'Historical row two');
 `;
-run("psql", [dbUrl, "-v", "ON_ERROR_STOP=1"], { input: fixtureSql });
+run("psql", [...psqlArgs, "-v", "ON_ERROR_STOP=1"], { input: fixtureSql, ...psqlOptions });
 run(supabaseCommand, [...cli, "db", "push", "--local", "--yes"]);
 
 const assertionSql = `
@@ -53,5 +56,5 @@ begin
 end $$;
 select 'legacy fine upgrade regression passed' as result;
 `;
-run("psql", [dbUrl, "-v", "ON_ERROR_STOP=1"], { input: assertionSql });
+run("psql", [...psqlArgs, "-v", "ON_ERROR_STOP=1"], { input: assertionSql, ...psqlOptions });
 console.log("Legacy-fines upgrade regression passed: duplicate historical rows preserved as legacy; automated overdue assessment remains unique.");
