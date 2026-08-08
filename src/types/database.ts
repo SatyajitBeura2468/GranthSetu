@@ -269,6 +269,7 @@ export type Database = {
       books: {
         Row: {
           created_at: string
+          cover_storage_path: string | null
           description: string | null
           edition: string | null
           id: string
@@ -284,6 +285,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
@@ -299,6 +301,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
