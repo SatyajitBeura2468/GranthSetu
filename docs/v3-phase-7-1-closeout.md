@@ -6,7 +6,7 @@ This branch is based on the latest `origin/main` and closes the functional requi
 
 ## Reconciliation
 
-The five commits found only on `origin/feat/v3-operational-completion` were reviewed individually. The safe application fixes for trusted-read failure handling and audit actor/date filtering were cherry-picked onto this branch. The old migration edits and generated-type sync were not replayed as history rewrites; the final database behavior is represented by new forward migrations, and public types must be regenerated from the clean final schema in CI.
+The five commits found only on `origin/feat/v3-operational-completion` were reviewed individually. The safe application fixes for trusted-read failure handling and audit actor/date filtering were cherry-picked onto this branch. The old migration edits and generated-type sync were not replayed as history rewrites; the final database behavior is represented by new forward migrations, and public types must be regenerated from the clean final schema in CI. One unavoidable bootstrap exception repairs the pre-existing `global_search` definition in place: clean reset failed before any forward migration because PostgreSQL rejected its `ORDER BY label` over a union. The same correction is also represented forward in `20260808140000`.
 
 ## Functional closeout
 
