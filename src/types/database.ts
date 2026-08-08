@@ -269,7 +269,6 @@ export type Database = {
       books: {
         Row: {
           created_at: string
-          cover_storage_path: string | null
           description: string | null
           edition: string | null
           id: string
@@ -282,10 +281,10 @@ export type Database = {
           subtitle: string | null
           title: string
           updated_at: string
+          cover_storage_path: string | null
         }
         Insert: {
           created_at?: string
-          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
@@ -298,10 +297,10 @@ export type Database = {
           subtitle?: string | null
           title: string
           updated_at?: string
+          cover_storage_path?: string | null
         }
         Update: {
           created_at?: string
-          cover_storage_path?: string | null
           description?: string | null
           edition?: string | null
           id?: string
@@ -889,6 +888,18 @@ export type Database = {
         Args: { p_role_key: string; p_target_profile_id: string }
         Returns: boolean
       }
+      admin_audit_events: {
+        Args: { p_action?: string; p_target_type?: string }
+        Returns: {
+          action: string
+          actor_name: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          target_id: string
+          target_type: string
+        }[]
+      }
       admin_provision_operator_profile: {
         Args: {
           p_display_name: string
@@ -903,6 +914,44 @@ export type Database = {
       }
       admin_set_profile_status: {
         Args: { p_status: string; p_target_profile_id: string }
+        Returns: boolean
+      }
+      admin_upsert_academic_session: {
+        Args: {
+          p_display_label: string
+          p_ends_on: string
+          p_id: string
+          p_session_code: string
+          p_starts_on: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      admin_upsert_grade: {
+        Args: {
+          p_display_name: string
+          p_grade_code: string
+          p_id: string
+          p_sort_order?: number
+        }
+        Returns: string
+      }
+      admin_upsert_section: {
+        Args: {
+          p_display_name: string
+          p_id: string
+          p_section_code: string
+          p_sort_order?: number
+        }
+        Returns: string
+      }
+      admin_upsert_setting: {
+        Args: {
+          p_boolean_value?: boolean
+          p_integer_value?: number
+          p_money_minor_value?: number
+          p_setting_key: string
+        }
         Returns: boolean
       }
       bootstrap_first_administrator: {
@@ -948,6 +997,83 @@ export type Database = {
         }
         Returns: Json
       }
+      catalogue_books: {
+        Args: { p_search?: string }
+        Returns: {
+          author_names: string
+          available_copies: number
+          cover_storage_path: string
+          id: string
+          isbn: string
+          on_loan_copies: number
+          publisher_name: string
+          status: string
+          subtitle: string
+          title: string
+          total_copies: number
+          updated_at: string
+        }[]
+      }
+      catalogue_members: {
+        Args: { p_search?: string }
+        Returns: {
+          active_loans: number
+          display_name: string
+          enrollment_label: string
+          id: string
+          member_identifier: string
+          member_kind: string
+          overdue_loans: number
+          status: string
+          updated_at: string
+        }[]
+      }
+      catalogue_set_book_cover: {
+        Args: { p_book_id: string; p_cover_storage_path: string }
+        Returns: boolean
+      }
+      catalogue_set_book_status: {
+        Args: { p_book_id: string; p_status: string }
+        Returns: boolean
+      }
+      catalogue_upsert_author: {
+        Args: { p_display_name: string; p_id: string }
+        Returns: string
+      }
+      catalogue_upsert_book: {
+        Args: {
+          p_author_ids?: string[]
+          p_category_ids?: string[]
+          p_description?: string
+          p_edition?: string
+          p_expected_updated_at?: string
+          p_id: string
+          p_isbn?: string
+          p_language_code?: string
+          p_publication_year?: number
+          p_publisher_id?: string
+          p_subject_ids?: string[]
+          p_subtitle?: string
+          p_title: string
+        }
+        Returns: string
+      }
+      catalogue_upsert_category: {
+        Args: { p_id: string; p_name: string }
+        Returns: string
+      }
+      catalogue_upsert_location: {
+        Args: { p_display_name: string; p_id: string; p_location_code: string }
+        Returns: string
+      }
+      catalogue_upsert_publisher: {
+        Args: { p_id: string; p_name: string }
+        Returns: string
+      }
+      catalogue_upsert_subject: {
+        Args: { p_id: string; p_name: string }
+        Returns: string
+      }
       current_operator_context: {
         Args: never
         Returns: {
@@ -956,6 +1082,148 @@ export type Database = {
           roles: string[]
           status: string
           user_id: string
+        }[]
+      }
+      global_search: {
+        Args: { p_query: string }
+        Returns: {
+          detail: string
+          label: string
+          result_id: string
+          result_type: string
+          status: string
+        }[]
+      }
+      inventory_copies: {
+        Args: { p_search?: string }
+        Returns: {
+          accession_number: string
+          barcode: string
+          book_id: string
+          condition_status: string
+          id: string
+          location_name: string
+          on_loan: boolean
+          operational_state: string
+          title: string
+          updated_at: string
+        }[]
+      }
+      inventory_upsert_copy: {
+        Args: {
+          p_accession_number: string
+          p_acquired_on?: string
+          p_acquisition_source?: string
+          p_barcode?: string
+          p_book_id: string
+          p_condition_status?: string
+          p_expected_updated_at?: string
+          p_id: string
+          p_location_id?: string
+          p_operational_state?: string
+          p_replacement_cost_minor?: number
+        }
+        Returns: string
+      }
+      member_set_enrollment: {
+        Args: {
+          p_academic_session_id: string
+          p_grade_level_id: string
+          p_member_id: string
+          p_section_id: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      member_upsert: {
+        Args: {
+          p_display_name: string
+          p_expected_updated_at?: string
+          p_id: string
+          p_member_identifier: string
+          p_member_kind: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      operator_dashboard: {
+        Args: never
+        Returns: {
+          active_loans: number
+          active_members: number
+          available_copies: number
+          fines_outstanding_minor: number
+          overdue_loans: number
+          total_books: number
+          total_copies: number
+        }[]
+      }
+      report_circulation: {
+        Args: never
+        Returns: {
+          accession_number: string
+          due_at: string
+          issued_at: string
+          loan_id: string
+          member_identifier: string
+          member_name: string
+          returned_at: string
+          status: string
+          title: string
+        }[]
+      }
+      report_fines: {
+        Args: never
+        Returns: {
+          assessed_amount_minor: number
+          created_at: string
+          fine_id: string
+          fine_kind: string
+          loan_id: string
+          outstanding_minor: number
+          reason: string
+          settled_amount_minor: number
+          waived_amount_minor: number
+        }[]
+      }
+      report_inventory: {
+        Args: never
+        Returns: {
+          available_copies: number
+          book_id: string
+          on_loan_copies: number
+          title: string
+          total_copies: number
+          unavailable_copies: number
+        }[]
+      }
+      report_member_activity: {
+        Args: never
+        Returns: {
+          active_loans: number
+          loan_count: number
+          member_id: string
+          member_identifier: string
+          member_name: string
+        }[]
+      }
+      report_overdue: {
+        Args: never
+        Returns: {
+          days_overdue: number
+          due_at: string
+          loan_id: string
+          member_identifier: string
+          member_name: string
+          title: string
+        }[]
+      }
+      report_popular_books: {
+        Args: never
+        Returns: {
+          book_id: string
+          loan_count: number
+          title: string
         }[]
       }
     }
