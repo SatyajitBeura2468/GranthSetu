@@ -1124,6 +1124,7 @@ export type Database = {
           member_id: string
           member_identifier: string
           member_name: string
+          overdue: boolean
           returned_at: string
           status: string
           title: string

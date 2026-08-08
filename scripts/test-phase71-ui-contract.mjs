@@ -3,6 +3,7 @@ import { reconcileIssueSelection } from "../src/app/operator/circulation/issue-b
 
 const page = await readFile(new URL("../src/app/operator/circulation/page.tsx", import.meta.url), "utf8");
 const form = await readFile(new URL("../src/app/operator/circulation/issue-book-form.tsx", import.meta.url), "utf8");
+const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", import.meta.url), "utf8");
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(page.includes("<IssueBookForm") && !page.includes("members[0]?.member_id") && !page.includes("copies[0]?.copy_id"), "server page still binds issue identity to the first result");
@@ -11,6 +12,7 @@ assert(form.includes("setSelectedMemberId(null)") && form.includes("setSelectedC
 assert(form.includes("router.push(buildSearchUrl"), "issue search is not server-backed through the circulation route");
 assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelection.selectedMemberId") && form.includes("visibleSelection.selectedCopyId"), "candidate lifecycle reconciliation is not wired into rendered selection and hidden fields");
 assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.member ?? \"\"") && page.includes("params.copy ?? \"\""), "candidate context changes do not remount the issue form");
+assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });
