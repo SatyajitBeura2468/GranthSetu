@@ -13,6 +13,7 @@ assert(form.includes("router.push(buildSearchUrl"), "issue search is not server-
 assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelection.selectedMemberId") && form.includes("visibleSelection.selectedCopyId"), "candidate lifecycle reconciliation is not wired into rendered selection and hidden fields");
 assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.member ?? \"\"") && page.includes("params.copy ?? \"\""), "candidate context changes do not remount the issue form");
 assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
+assert(page.includes("result_type === \"copy\" ? `/operator/inventory/${result.result_id}`"), "global search copy results do not route to the selected inventory record");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });
