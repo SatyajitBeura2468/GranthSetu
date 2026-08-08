@@ -14,6 +14,7 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - New trusted member creation generates collision-safe `GS-000001`-style identifiers in the database and creates student enrollment atomically. Profile edits cannot change the identifier.
 - Search RPCs cover members, copies, loans, and fines with bounded results and practical fields. Circulation UI is search-first: the operator must explicitly select one borrower and one available physical copy, editing either search clears its selection, and navigation or candidate changes remount and render-reconcile the issue form so hidden IDs cannot outlive visible candidates. Trusted RPCs remain the final authority.
 - The Phase 7.1 migration reconciles pre-existing duplicate active enrollments before creating the one-active-enrollment-per-member index. It retains an enrollment whose session is active and contains `current_date` first, uses current-session chronology for ties, and only then falls back to session chronology across historical/future rows followed by `created_at` and stable enrollment ID; every older active row is preserved and marked `completed`.
+- Runtime enrollment writes reject an `active` enrollment whose session is not currently eligible, preserving the current in-range enrollment until an intentional transition is possible. The legacy mutable `member_upsert` RPC is revoked from authenticated callers so stable generated identity cannot be bypassed through the old endpoint.
 - Overdue renewal and librarian waiver permissions are explicit typed settings and enforced in database authorization.
 - Reports apply filters in the database; CSV export reuses the same arguments and prefixes formula-like cells safely.
 - Private cover upload, signed preview, replacement, removal, and orphan cleanup are server-only and constrained to approved image types, size, and stable paths.
@@ -23,6 +24,7 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - `scripts/test-phase71-issue-selection.mjs` covers multiple candidates, exact borrower/copy binding, target search beyond the default result window, unavailable-on-loan copies, concurrent issue serialization, malformed identities, and the UI selection contract.
 - `scripts/test-phase71-ui-contract.mjs` exercises the shared selection reconciliation lifecycle for member-only, copy-only, and combined candidate navigation, proving stale hidden IDs are cleared and a new explicit pair is required.
 - `scripts/test-phase71-upgrade.mjs` resets to the pre-Phase-7.1 schema, creates historical/current/future active enrollments plus a no-current-session fallback case, applies the Phase 7.1 migrations, and proves current-session priority, deterministic fallback, history preservation, eligibility, and the new invariant.
+- `scripts/test-phase71.mjs` proves future active enrollment staging is rejected without displacing the current enrollment, the current row remains eligible, and the legacy mutable `member_upsert` RPC is no longer callable.
 
 ## Validation status
 

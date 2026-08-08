@@ -229,6 +229,14 @@ begin
     or (v_roll is not null and (char_length(v_roll) > 40 or v_roll ~ '[[:cntrl:]]')) then
     raise exception using errcode = '22023', message = 'GS_ENROLLMENT_INPUT_INVALID';
   end if;
+  if p_status = 'active' and not exists (
+    select 1 from public.academic_sessions
+    where id = p_academic_session_id
+      and status = 'active'
+      and current_date between starts_on and ends_on
+  ) then
+    raise exception using errcode = 'P0001', message = 'GS_ENROLLMENT_SESSION_NOT_CURRENT';
+  end if;
   if p_status = 'active' then
     update public.student_enrollments set status = 'completed'
       where member_id = p_member_id and status = 'active'
@@ -338,6 +346,7 @@ $$;
 
 revoke all on function public.member_create_with_enrollment(text,text,text,uuid,uuid,uuid,text,text) from public, anon, service_role;
 revoke all on function public.member_update_profile(uuid,text,text,text,timestamptz) from public, anon, service_role;
+revoke all on function public.member_upsert(uuid,text,text,text,text,timestamptz) from public, anon, authenticated, service_role;
 revoke all on function public.member_set_enrollment_v71(uuid,uuid,uuid,uuid,text,text) from public, anon, service_role;
 revoke all on function public.admin_upsert_setting(text,boolean,bigint,bigint) from public, anon, service_role;
 revoke all on function public.operator_policy_context() from public, anon, service_role;
