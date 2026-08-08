@@ -9,10 +9,11 @@ const run = (command, args, options = {}) => {
   return result.stdout;
 };
 
-const cli = ["supabase@2.112.0"];
+const supabaseCommand = process.platform === "win32" ? "npx.cmd" : "supabase";
+const cli = process.platform === "win32" ? ["supabase@2.112.0"] : [];
 const priorMigration = "20260807190030";
-run("npx.cmd", [...cli, "db", "reset", "--local", "--version", priorMigration, "--no-seed", "--yes"]);
-const status = run("npx.cmd", [...cli, "status", "-o", "env"]);
+run(supabaseCommand, [...cli, "db", "reset", "--local", "--version", priorMigration, "--no-seed", "--yes"]);
+const status = run(supabaseCommand, [...cli, "status", "-o", "env"]);
 const dbUrl = status.match(/^DB_URL=(.*)$/m)?.[1]?.trim();
 if (!dbUrl) throw new Error("Supabase status did not expose DB_URL; refusing to guess a database target.");
 
@@ -32,7 +33,7 @@ values
   ('76000000-0000-0000-0000-000000000002', '75000000-0000-0000-0000-000000000001', 200, '71000000-0000-0000-0000-000000000001', 'Historical row two');
 `;
 run("psql", [dbUrl, "-v", "ON_ERROR_STOP=1"], { input: fixtureSql });
-run("npx.cmd", [...cli, "db", "push", "--local", "--yes"]);
+run(supabaseCommand, [...cli, "db", "push", "--local", "--yes"]);
 
 const assertionSql = `
 do $$
