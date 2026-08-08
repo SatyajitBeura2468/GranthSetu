@@ -100,6 +100,8 @@ try {
   assert(!explicitOverdueReport.error && explicitOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "explicit end-of-day overdue report omitted today's cutoff loan");
   const globalLoanSearch = await librarian.client.rpc("global_search_v71", { p_query: "Development Science" });
   assert(!globalLoanSearch.error && globalLoanSearch.data.some((row) => row.result_type === "loan" && row.result_id === todayCutoffLoan.id), "global search omitted the active loan result");
+  const filteredInventory = await librarian.client.rpc("report_inventory_filtered", { p_status: "lost", p_location_id: null });
+  assert(!filteredInventory.error && filteredInventory.data.length > 0 && filteredInventory.data.every((row) => row.total_copies > 0), "inventory status filter retained books without matching copies");
 
   // Issue: success, server ownership, audit, retry, cross-operation reuse.
   const issueCopy = await copy(book); const issueRequest = id();
