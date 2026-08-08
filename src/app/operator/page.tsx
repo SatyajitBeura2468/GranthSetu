@@ -9,7 +9,7 @@ export default async function OperatorPage({ searchParams }: { searchParams: Pro
   const rpc = asOperatorRpcClient(await createSupabaseServerClient());
   const [{ data: dashboard, error: dashboardError }, searchResponse] = await Promise.all([
     rpc.rpc("operator_dashboard"),
-    params.q ? rpc.rpc("global_search", { p_query: params.q }) : Promise.resolve({ data: [], error: null }),
+    params.q ? rpc.rpc("global_search_v71", { p_query: params.q }) : Promise.resolve({ data: [], error: null }),
   ]);
   const searchResults = searchResponse.data;
   const searchError = searchResponse.error;

@@ -61,6 +61,20 @@ jobs:
           source <(supabase status -o env)
           set +a
           npm run db:test:circulation
+      - name: Run Phase 7.1 integration tests
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:phase71
+      - name: Run legacy-fine upgrade regression
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:legacy-fines-upgrade
       - name: Lint local database
         run: supabase db lint --local --schema public --level error --fail-on error
       - name: Verify generated public database types
@@ -69,6 +83,12 @@ jobs:
           supabase gen types typescript --local --schema public > /tmp/database.ts
           sed -i '${/^$/d;}' /tmp/database.ts
           diff -u src/types/database.ts /tmp/database.ts
+      - name: Upload generated public database types for reconciliation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase71-generated-database-types
+          path: /tmp/database.ts
       - name: Stop local Supabase
         if: always()
         run: supabase stop
