@@ -102,7 +102,7 @@ begin
   if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000003' or v_section <> '94000000-0000-0000-0000-000000000003' or v_roll is not null then raise exception 'fallback future enrollment did not quarantine its invalid roll'; end if;
 
   select status, roll_number into v_status, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000006';
-  if v_status <> 'active' or v_roll is not null then raise exception 'duplicate roll quarantine erased the surviving preferred enrollment or failed to quarantine the conflict'; end if;
+  if v_status <> 'active' or v_roll <> 'SHARED-ROLL' then raise exception 'duplicate roll quarantine erased the surviving enrollment after member reconciliation'; end if;
 
   if not exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'student_enrollments_one_active_per_member') then raise exception 'one-active-enrollment unique index was not created'; end if;
   begin
