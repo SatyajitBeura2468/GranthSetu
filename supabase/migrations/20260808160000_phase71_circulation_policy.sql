@@ -29,7 +29,7 @@ begin
   select count(*) into v_count from public.loan_renewals where loan_id=v_loan.id;
   if v_count >= v_limit then raise exception using errcode='P0001', message='GS_RENEWAL_LIMIT_REACHED'; end if;
   insert into public.loan_renewals(loan_id,approved_by_profile_id,previous_due_at,new_due_at,renewed_at)
-    values(v_loan.id,v_actor,v_loan.due_at,v_loan.due_at+make_interval(days=>v_period::integer),v_now) returning * into v_renewal;
+    values(v_loan.id,v_actor,v_loan.due_at,greatest(v_loan.due_at,v_now)+make_interval(days=>v_period::integer),v_now) returning * into v_renewal;
   update public.loans set due_at=v_renewal.new_due_at where id=v_loan.id returning * into v_loan;
   v_result := jsonb_build_object('loan_id',v_loan.id,'renewal_id',v_renewal.id,'previous_due_at',v_renewal.previous_due_at,'new_due_at',v_renewal.new_due_at,'renewal_count',v_count+1,'status',v_loan.status,'idempotent',false);
   perform private.append_circulation_audit(v_actor,'circulation.loan_renewed','loan',v_loan.id,p_request_id,v_result);
