@@ -13,6 +13,26 @@ alter table public.student_enrollments add constraint student_enrollments_roll_n
 create unique index if not exists student_enrollments_active_roll_unique
   on public.student_enrollments (academic_session_id, grade_level_id, section_id, lower(btrim(roll_number)))
   where status = 'active' and roll_number is not null and btrim(roll_number) <> '';
+
+-- Older deployments allowed one active row per member and academic session,
+-- so a member may already have active rows in multiple sessions. Preserve all
+-- rows while retaining the newest enrollment deterministically: academic
+-- session start date, then enrollment creation time, then stable row id.
+with ranked_active_enrollments as (
+  select se.id,
+    row_number() over (
+      partition by se.member_id
+      order by s.starts_on desc, se.created_at desc, se.id desc
+    ) as row_number
+  from public.student_enrollments se
+  join public.academic_sessions s on s.id = se.academic_session_id
+  where se.status = 'active'
+)
+update public.student_enrollments se
+set status = 'completed'
+from ranked_active_enrollments ranked
+where ranked.id = se.id and ranked.row_number > 1;
+
 create unique index if not exists student_enrollments_one_active_per_member
   on public.student_enrollments (member_id)
   where status = 'active';

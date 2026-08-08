@@ -24,6 +24,8 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Verify explicit issue-selection UI contract
+        run: npm run test:phase71:ui
 
   database:
     runs-on: ubuntu-latest
@@ -68,6 +70,16 @@ jobs:
           source <(supabase status -o env)
           set +a
           npm run db:test:phase71
+      - name: Run explicit-selection issue integration tests
+        shell: bash
+        run: |
+          set -a
+          source <(supabase status -o env)
+          set +a
+          npm run db:test:phase71:issue-selection
+      - name: Run Phase 7.1 multi-active-enrollment upgrade regression
+        shell: bash
+        run: npm run db:test:phase71:upgrade
       - name: Run legacy-fine upgrade regression
         shell: bash
         run: |
