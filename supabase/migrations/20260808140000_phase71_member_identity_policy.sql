@@ -6,6 +6,27 @@ alter index if exists public.fines_one_automated_overdue_per_loan rename to fine
 create unique index if not exists fines_loan_kind_unique on public.fines (loan_id) where fine_kind = 'overdue';
 
 alter table public.student_enrollments add column if not exists roll_number text;
+-- Older deployments could already contain padded or blank roll values. Normalize
+-- them before validating the stricter constraint; quarantine later active
+-- duplicates so the upgrade remains safe without deleting enrollment history.
+update public.student_enrollments
+set roll_number = nullif(btrim(roll_number), '')
+where roll_number is not null;
+
+with duplicate_active_rolls as (
+  select id,
+    row_number() over (
+      partition by academic_session_id, grade_level_id, section_id, lower(btrim(roll_number))
+      order by created_at, id
+    ) as row_number
+  from public.student_enrollments
+  where status = 'active' and roll_number is not null
+)
+update public.student_enrollments se
+set roll_number = null
+from duplicate_active_rolls duplicates
+where duplicates.id = se.id and duplicates.row_number > 1;
+
 alter table public.student_enrollments drop constraint if exists student_enrollments_roll_number_check;
 alter table public.student_enrollments add constraint student_enrollments_roll_number_check
   check (roll_number is null or (roll_number = btrim(roll_number) and char_length(roll_number) between 1 and 40 and roll_number !~ '[[:cntrl:]]'));

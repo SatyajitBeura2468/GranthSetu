@@ -45,9 +45,9 @@ export async function saveBookAction(formData: FormData) {
   if (cover instanceof File && cover.size > 0) {
     let path: string;
     try { path = await createBookCoverUpload(bookId, cover); } catch (error) { fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", error instanceof Error ? error.message : "The cover upload failed."); }
-    const coverResult = await supabase.rpc("catalogue_set_book_cover", { p_book_id: bookId, p_cover_storage_path: path });
+    const coverResult = await supabase.rpc("catalogue_set_book_cover_v71", { p_book_id: bookId, p_cover_storage_path: path, p_expected_cover_storage_path: previous?.cover_storage_path ?? null });
     if (coverResult.error) { await removeBookCoverObject(path); fail(`/operator/catalogue/${bookId}`, rpcErrorMessage(coverResult.error)); }
-    const cleanupError = await removeBookCoverObject(previous?.cover_storage_path);
+    const cleanupError = await removeBookCoverObject(typeof coverResult.data === "string" ? coverResult.data : null);
     success(`/operator/catalogue/${bookId}`, cleanupError ? "Book updated; previous cover cleanup needs review." : id ? "Book updated" : "Book created");
   }
   success(`/operator/catalogue/${bookId}`, id ? "Book updated" : "Book created");
@@ -68,9 +68,10 @@ export async function removeBookCoverAction(formData: FormData) {
   const id = formValue(formData, "id");
   const supabase = asOperatorRpcClient(await createSupabaseServerClient());
   const admin = createSupabaseAdminClient();
-  const { data: previous } = await admin.from("books").select("cover_storage_path").eq("id", id).maybeSingle();
-  const { error } = await supabase.rpc("catalogue_set_book_cover", { p_book_id: id, p_cover_storage_path: null });
+  const { data: previous, error: previousError } = await admin.from("books").select("cover_storage_path").eq("id", id).maybeSingle();
+  if (previousError || !previous) fail(`/operator/catalogue/${id}`, "The book cover could not be read. Reload and try again.");
+  const { data: replacedPath, error } = await supabase.rpc("catalogue_set_book_cover_v71", { p_book_id: id, p_cover_storage_path: null, p_expected_cover_storage_path: previous.cover_storage_path ?? null });
   if (error) fail(`/operator/catalogue/${id}`, rpcErrorMessage(error));
-  const cleanupError = await removeBookCoverObject(previous?.cover_storage_path);
+  const cleanupError = await removeBookCoverObject(typeof replacedPath === "string" ? replacedPath : null);
   success(`/operator/catalogue/${id}`, cleanupError ? "Cover removed; storage cleanup needs review." : "Cover removed");
 }

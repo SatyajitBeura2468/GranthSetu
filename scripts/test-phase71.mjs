@@ -11,6 +11,8 @@ const createdMembers = [];
 const createdSessions = [];
 const createdUsers = [];
 const createdProfiles = [];
+let coverFixture = null;
+let coverOriginal = null;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
@@ -65,9 +67,16 @@ try {
   }
   const setting = await client.rpc("admin_upsert_setting", { p_setting_key: "overdue_renewal_allowed", p_boolean_value: true, p_integer_value: null, p_money_minor_value: null }); assert(!setting.error, `policy toggle failed: ${setting.error?.message}`);
   const context = await client.rpc("operator_policy_context"); assert(!context.error && context.data?.[0]?.policy_ready === true && context.data?.[0]?.overdue_renewal_allowed === true, "policy context did not reflect complete trusted settings");
-  console.log("Phase 7.1 integration passed: >100 member search regression, roll search and uniqueness, atomic concurrent identifier generation, policy context, and server-authorized member creation.");
+  const cover = await admin.from("books").select("id,cover_storage_path").eq("status", "active").limit(1).single(); assert(!cover.error, `cover race fixture lookup failed: ${cover.error?.message}`); coverFixture = cover.data.id; coverOriginal = cover.data.cover_storage_path;
+  const coverPathA = `book-covers/${coverFixture}/phase71-${token}.jpg`; const coverPathB = `book-covers/${coverFixture}/phase71-${token}-next.jpg`;
+  const coverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathA, p_expected_cover_storage_path: coverOriginal }); assert(!coverSet.error && coverSet.data === coverOriginal, `atomic cover set failed: ${coverSet.error?.message}`);
+  const staleCoverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathB, p_expected_cover_storage_path: coverOriginal }); assert(staleCoverSet.error?.message.includes("GS_STALE_UPDATE"), "stale cover mutation was not rejected");
+  const coverRestore = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverOriginal, p_expected_cover_storage_path: coverPathA }); assert(!coverRestore.error && coverRestore.data === coverPathA, `cover race fixture restore failed: ${coverRestore.error?.message}`);
+  coverFixture = null;
+  console.log("Phase 7.1 integration passed: >100 member search regression, roll search and uniqueness, atomic concurrent identifier generation, policy context, cover cleanup race protection, and server-authorized member creation.");
 } finally {
   await client.auth.signOut().catch(() => undefined);
+  if (coverFixture) await admin.from("books").update({ cover_storage_path: coverOriginal }).eq("id", coverFixture);
   if (createdMembers.length) { await admin.from("student_enrollments").delete().in("member_id", createdMembers); await admin.from("members").delete().in("id", createdMembers); }
   if (createdSessions.length) await admin.from("academic_sessions").delete().in("id", createdSessions);
   if (createdProfiles.length) { await admin.from("profile_roles").delete().in("profile_id", createdProfiles); await admin.from("profiles").delete().in("id", createdProfiles); }

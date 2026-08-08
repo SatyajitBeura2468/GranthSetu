@@ -17,7 +17,7 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - Runtime enrollment creation and updates reject an `active` enrollment whose session is not currently eligible, preserving the current in-range enrollment until an intentional transition is possible. The legacy mutable `member_upsert` and `member_set_enrollment` RPCs are revoked from authenticated callers so stable identity and enrollment policy cannot be bypassed through old endpoints.
 - Overdue renewal and librarian waiver permissions are explicit typed settings and enforced in database authorization. The operator policy context reports readiness only when the default loan period, checkout limit, and renewal limit are present and valid, and the circulation UI disables mutation controls until that trusted readiness flag is true.
 - Reports apply filters in the database; CSV export reuses the same arguments and prefixes formula-like cells safely. An overdue report with no explicit date uses the current timestamp, while an explicit date remains an inclusive end-of-day cutoff.
-- Private cover upload, signed preview, replacement, removal, and orphan cleanup are server-only and constrained to approved image types, size, and stable paths.
+- Private cover upload, signed preview, replacement, removal, and orphan cleanup are server-only and constrained to approved image types, size, and stable paths. Cover replacement/removal uses an expected-path, row-locked mutation so stale cleanup cannot delete a newer cover.
 
 ## Regression coverage
 
@@ -26,6 +26,7 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - `scripts/test-phase71-upgrade.mjs` resets to the pre-Phase-7.1 schema, creates historical/current/future active enrollments plus a no-current-session fallback case, applies the Phase 7.1 migrations, and proves current-session priority, deterministic fallback, history preservation, eligibility, and the new invariant.
 - `scripts/test-phase71.mjs` proves future active enrollment staging is rejected without displacing the current enrollment, the current row remains eligible, and the legacy mutable `member_upsert` RPC is no longer callable.
 - `scripts/test-phase71.mjs` also proves student creation rejects active future enrollment and the legacy `member_set_enrollment` RPC is no longer callable.
+- `scripts/test-phase71.mjs` also proves stale cover mutations are rejected and the prior cover path is returned atomically for cleanup.
 - `scripts/test-phase71.mjs` proves incomplete required circulation settings report `policy_ready = false`, while complete settings report readiness and preserve the trusted policy toggle.
 - `scripts/test-circulation.mjs` proves the default overdue report excludes a loan due later today and an explicit current-date report includes it through end of day.
 - `scripts/test-circulation.mjs` also proves global search returns active loans and circulation search exposes authoritative overdue status for the workbench.

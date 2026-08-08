@@ -5,6 +5,7 @@ const page = await readFile(new URL("../src/app/operator/circulation/page.tsx", 
 const workspacePage = await readFile(new URL("../src/app/operator/page.tsx", import.meta.url), "utf8");
 const form = await readFile(new URL("../src/app/operator/circulation/issue-book-form.tsx", import.meta.url), "utf8");
 const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", import.meta.url), "utf8");
+const catalogueActions = await readFile(new URL("../src/app/operator/catalogue/actions.ts", import.meta.url), "utf8");
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(page.includes("<IssueBookForm") && !page.includes("members[0]?.member_id") && !page.includes("copies[0]?.copy_id"), "server page still binds issue identity to the first result");
@@ -16,6 +17,7 @@ assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.
 assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
 assert(workspacePage.includes('result_type === "copy"') && workspacePage.includes('/operator/inventory/${result.result_id}'), "global search copy results do not route to the selected inventory record");
 assert(page.includes("Borrower search is unavailable") && page.includes("Copy search is unavailable") && page.includes("Loan search is unavailable") && page.includes("Fine search is unavailable"), "circulation search failures are not surfaced as unavailable workflows");
+assert(catalogueActions.includes("catalogue_set_book_cover_v71") && catalogueActions.includes("p_expected_cover_storage_path") && catalogueActions.includes("typeof replacedPath === \"string\""), "cover replacement cleanup is not bound to an atomic expected-path mutation");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });

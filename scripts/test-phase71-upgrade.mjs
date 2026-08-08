@@ -48,7 +48,7 @@ values
   ('94000000-0000-0000-0000-000000000003', 'UPGRADE-C', 'Section C', 3);
 insert into public.student_enrollments(id, member_id, academic_session_id, grade_level_id, section_id, roll_number, status, created_at)
 values
-  ('95000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', 'OLD-17', 'active', '2025-04-02T09:00:00Z'),
+  ('95000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', '  OLD-17 ', 'active', '2025-04-02T09:00:00Z'),
   ('95000000-0000-0000-0000-000000000002', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000002', '93000000-0000-0000-0000-000000000002', '94000000-0000-0000-0000-000000000002', 'CURRENT-18', 'active', '2026-04-02T09:00:00Z'),
   ('95000000-0000-0000-0000-000000000003', '91000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000003', '93000000-0000-0000-0000-000000000003', '94000000-0000-0000-0000-000000000003', 'FUTURE-19', 'active', '2026-05-02T09:00:00Z'),
   ('95000000-0000-0000-0000-000000000004', '91000000-0000-0000-0000-000000000002', '92000000-0000-0000-0000-000000000001', '93000000-0000-0000-0000-000000000001', '94000000-0000-0000-0000-000000000001', 'FALLBACK-OLD', 'active', '2025-04-02T09:00:00Z'),
@@ -75,7 +75,7 @@ begin
   select count(*) into v_active from public.student_enrollments where member_id = '91000000-0000-0000-0000-000000000001' and status = 'active';
   if v_active <> 1 then raise exception 'expected exactly one active enrollment, got %', v_active; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000001';
-  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll <> 'OLD-17' then raise exception 'older enrollment history was not preserved'; end if;
+  if v_status <> 'completed' or v_grade <> '93000000-0000-0000-0000-000000000001' or v_section <> '94000000-0000-0000-0000-000000000001' or v_roll <> 'OLD-17' then raise exception 'older enrollment history was not preserved or roll was not normalized'; end if;
   select status, grade_level_id, section_id, roll_number into v_status, v_grade, v_section, v_roll from public.student_enrollments where id = '95000000-0000-0000-0000-000000000002';
   if v_status <> 'active' or v_grade <> '93000000-0000-0000-0000-000000000002' or v_section <> '94000000-0000-0000-0000-000000000002' or v_roll <> 'CURRENT-18' then raise exception 'newest enrollment did not remain active with its original data'; end if;
   if not exists (

@@ -1018,6 +1018,10 @@ export type Database = {
         Args: { p_book_id: string; p_cover_storage_path: string }
         Returns: boolean
       }
+      catalogue_set_book_cover_v71: {
+        Args: { p_book_id: string; p_cover_storage_path: string; p_expected_cover_storage_path: string }
+        Returns: string
+      }
       catalogue_set_book_status: {
         Args: { p_book_id: string; p_status: string }
         Returns: boolean
