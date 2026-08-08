@@ -15,6 +15,7 @@ assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelecti
 assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.member ?? \"\"") && page.includes("params.copy ?? \"\""), "candidate context changes do not remount the issue form");
 assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
 assert(workspacePage.includes('result_type === "copy"') && workspacePage.includes('/operator/inventory/${result.result_id}'), "global search copy results do not route to the selected inventory record");
+assert(page.includes("Borrower search is unavailable") && page.includes("Copy search is unavailable") && page.includes("Loan search is unavailable") && page.includes("Fine search is unavailable"), "circulation search failures are not surfaced as unavailable workflows");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });

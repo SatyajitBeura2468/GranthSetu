@@ -52,6 +52,11 @@ create index if not exists student_enrollments_roll_search_index
   on public.student_enrollments (lower(btrim(roll_number)))
   where roll_number is not null;
 
+-- A zero-day default was valid before Phase 7.1 but is not operationally usable.
+-- Remove it before tightening the constraint so upgrades fail closed instead of aborting.
+delete from public.library_settings
+where setting_key = 'default_loan_period_days' and value_kind = 'integer' and integer_value = 0;
+
 alter table public.library_settings drop constraint if exists library_settings_key_check;
 alter table public.library_settings drop constraint if exists library_settings_key_kind_check;
 alter table public.library_settings drop constraint if exists library_settings_one_typed_value_check;

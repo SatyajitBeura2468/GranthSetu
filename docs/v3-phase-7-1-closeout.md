@@ -30,6 +30,7 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - `scripts/test-circulation.mjs` proves the default overdue report excludes a loan due later today and an explicit current-date report includes it through end of day.
 - `scripts/test-circulation.mjs` also proves global search returns active loans and circulation search exposes authoritative overdue status for the workbench.
 - `scripts/test-circulation.mjs` proves inventory status filters omit books with no matching physical copies, and loan-result navigation resolves by the authoritative loan ID.
+- `scripts/test-phase71-upgrade.mjs` proves a legacy zero-day default policy is removed before the stricter positive-day constraint is added, and `scripts/test-phase71-ui-contract.mjs` proves circulation search failures are surfaced as unavailable workflows.
 - The reports UI renders only filters supported by each report and sanitizes the same supported filter set into the CSV export link.
 
 ## Validation status

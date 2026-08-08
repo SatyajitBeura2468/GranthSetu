@@ -25,6 +25,8 @@ const fixtureSql = `
 -- nullable legacy column models a deployed pre-Phase-7.1 database that had
 -- already collected roll metadata without the new active-row invariant.
 alter table public.student_enrollments add column if not exists roll_number text;
+insert into public.library_settings(setting_key, value_kind, integer_value)
+values ('default_loan_period_days', 'integer', 0);
 insert into public.members(id, member_identifier, member_kind, display_name, status)
 values
   ('91000000-0000-0000-0000-000000000001', 'PHASE71-UPGRADE-MEMBER', 'student', 'Phase 7.1 Upgrade Student', 'active'),
@@ -65,6 +67,9 @@ declare
   v_section uuid;
   v_roll text;
 begin
+  select count(*) into v_total from public.library_settings where setting_key = 'default_loan_period_days' and value_kind = 'integer' and integer_value = 0;
+  if v_total <> 0 then raise exception 'zero-day default policy was not removed before constraint tightening'; end if;
+
   select count(*) into v_total from public.student_enrollments where member_id = '91000000-0000-0000-0000-000000000001';
   if v_total <> 3 then raise exception 'enrollment history was deleted, expected 3 rows, got %', v_total; end if;
   select count(*) into v_active from public.student_enrollments where member_id = '91000000-0000-0000-0000-000000000001' and status = 'active';
