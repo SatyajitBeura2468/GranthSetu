@@ -72,6 +72,7 @@ try {
   const coverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathA, p_expected_cover_storage_path: coverOriginal }); assert(!coverSet.error && coverSet.data === coverOriginal, `atomic cover set failed: ${coverSet.error?.message}`);
   const staleCoverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathB, p_expected_cover_storage_path: coverOriginal }); assert(staleCoverSet.error?.message.includes("GS_STALE_UPDATE"), "stale cover mutation was not rejected");
   const coverRestore = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverOriginal, p_expected_cover_storage_path: coverPathA }); assert(!coverRestore.error && coverRestore.data === coverPathA, `cover race fixture restore failed: ${coverRestore.error?.message}`);
+  const legacyCoverSet = await client.rpc("catalogue_set_book_cover", { p_book_id: coverFixture, p_cover_storage_path: coverPathB }); assert(legacyCoverSet.error, "legacy cover mutation remained callable by authenticated operators");
   coverFixture = null;
   console.log("Phase 7.1 integration passed: >100 member search regression, roll search and uniqueness, atomic concurrent identifier generation, policy context, cover cleanup race protection, and server-authorized member creation.");
 } finally {

@@ -31,3 +31,4 @@ $$;
 
 revoke all on function public.catalogue_set_book_cover_v71(uuid, text, text) from public, anon, service_role;
 grant execute on function public.catalogue_set_book_cover_v71(uuid, text, text) to authenticated;
+revoke all on function public.catalogue_set_book_cover(uuid, text) from authenticated;
