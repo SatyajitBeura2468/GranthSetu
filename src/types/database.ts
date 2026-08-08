@@ -889,6 +889,18 @@ export type Database = {
         Args: { p_role_key: string; p_target_profile_id: string }
         Returns: boolean
       }
+      admin_audit_events: {
+        Args: { p_action?: string; p_actor_profile_id?: string; p_from?: string; p_target_type?: string; p_to?: string }
+        Returns: {
+          action: string
+          actor_name: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          target_id: string
+          target_type: string
+        }[]
+      }
       admin_provision_operator_profile: {
         Args: {
           p_display_name: string
