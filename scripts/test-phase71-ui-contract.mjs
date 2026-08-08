@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { reconcileIssueSelection } from "../src/app/operator/circulation/issue-book-selection.mjs";
 
 const page = await readFile(new URL("../src/app/operator/circulation/page.tsx", import.meta.url), "utf8");
+const workspacePage = await readFile(new URL("../src/app/operator/page.tsx", import.meta.url), "utf8");
 const form = await readFile(new URL("../src/app/operator/circulation/issue-book-form.tsx", import.meta.url), "utf8");
 const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", import.meta.url), "utf8");
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -13,7 +14,7 @@ assert(form.includes("router.push(buildSearchUrl"), "issue search is not server-
 assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelection.selectedMemberId") && form.includes("visibleSelection.selectedCopyId"), "candidate lifecycle reconciliation is not wired into rendered selection and hidden fields");
 assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.member ?? \"\"") && page.includes("params.copy ?? \"\""), "candidate context changes do not remount the issue form");
 assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
-assert(page.includes('result_type === "copy"') && page.includes('/operator/inventory/${result.result_id}'), "global search copy results do not route to the selected inventory record");
+assert(workspacePage.includes('result_type === "copy"') && workspacePage.includes('/operator/inventory/${result.result_id}'), "global search copy results do not route to the selected inventory record");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });
