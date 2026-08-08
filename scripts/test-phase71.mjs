@@ -58,8 +58,13 @@ try {
   assert(!protectedMember.error, `legacy RPC fixture lookup failed: ${protectedMember.error?.message}`);
   const legacyMutation = await client.rpc("member_upsert", { p_id: protectedMember.data.id, p_member_identifier: `LEGACY-BYPASS-${token}`, p_member_kind: protectedMember.data.member_kind, p_display_name: protectedMember.data.display_name, p_status: protectedMember.data.status, p_expected_updated_at: protectedMember.data.updated_at });
   assert(legacyMutation.error, "legacy mutable member_upsert RPC remained callable by authenticated operators");
+  const clearedPolicies = await admin.from("library_settings").delete().in("setting_key", ["default_loan_period_days", "checkout_limit", "renewal_limit"]); assert(!clearedPolicies.error, `required policy cleanup failed: ${clearedPolicies.error?.message}`);
+  const incompleteContext = await client.rpc("operator_policy_context"); assert(!incompleteContext.error && incompleteContext.data?.[0]?.policy_ready === false, "policy context reported ready without required loan settings");
+  for (const [settingKey, settingValue] of [["default_loan_period_days", 14], ["checkout_limit", 3], ["renewal_limit", 1]]) {
+    const requiredSetting = await client.rpc("admin_upsert_setting", { p_setting_key: settingKey, p_boolean_value: null, p_integer_value: settingValue, p_money_minor_value: null }); assert(!requiredSetting.error, `${settingKey} policy setup failed: ${requiredSetting.error?.message}`);
+  }
   const setting = await client.rpc("admin_upsert_setting", { p_setting_key: "overdue_renewal_allowed", p_boolean_value: true, p_integer_value: null, p_money_minor_value: null }); assert(!setting.error, `policy toggle failed: ${setting.error?.message}`);
-  const context = await client.rpc("operator_policy_context"); assert(!context.error && context.data?.[0]?.overdue_renewal_allowed === true, "policy context did not reflect the trusted setting");
+  const context = await client.rpc("operator_policy_context"); assert(!context.error && context.data?.[0]?.policy_ready === true && context.data?.[0]?.overdue_renewal_allowed === true, "policy context did not reflect complete trusted settings");
   console.log("Phase 7.1 integration passed: >100 member search regression, roll search and uniqueness, atomic concurrent identifier generation, policy context, and server-authorized member creation.");
 } finally {
   await client.auth.signOut().catch(() => undefined);

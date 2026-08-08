@@ -90,6 +90,15 @@ try {
   const inactiveMember = await member("teacher", "inactive");
   const studentWithoutEnrollment = await member("student");
 
+  // The omitted report cutoff is the current instant; an explicit date remains end-of-day inclusive.
+  const todayCutoffLoan = await fixtureLoan({ memberId: activeMember, copyId: await copy(book), issuedBy: librarian.profileId });
+  const dueLaterToday = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const todayCutoffUpdate = await admin.from("loans").update({ due_at: dueLaterToday }).eq("id", todayCutoffLoan.id); assert(!todayCutoffUpdate.error, `today cutoff fixture update failed: ${todayCutoffUpdate.error?.message}`);
+  const defaultOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: null, p_query: null });
+  assert(!defaultOverdueReport.error && !defaultOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "default overdue report included a loan due later today");
+  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: new Date().toISOString().slice(0, 10), p_query: null });
+  assert(!explicitOverdueReport.error && explicitOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "explicit end-of-day overdue report omitted today's cutoff loan");
+
   // Issue: success, server ownership, audit, retry, cross-operation reuse.
   const issueCopy = await copy(book); const issueRequest = id();
   const issue = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: activeMember, p_book_copy_id: issueCopy, p_request_id: issueRequest, p_notes: "synthetic" });

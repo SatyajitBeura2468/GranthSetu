@@ -15,8 +15,8 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - Search RPCs cover members, copies, loans, and fines with bounded results and practical fields. Circulation UI is search-first: the operator must explicitly select one borrower and one available physical copy, editing either search clears its selection, and navigation or candidate changes remount and render-reconcile the issue form so hidden IDs cannot outlive visible candidates. Trusted RPCs remain the final authority.
 - The Phase 7.1 migration reconciles pre-existing duplicate active enrollments before creating the one-active-enrollment-per-member index. It retains an enrollment whose session is active and contains `current_date` first, uses current-session chronology for ties, and only then falls back to session chronology across historical/future rows followed by `created_at` and stable enrollment ID; every older active row is preserved and marked `completed`.
 - Runtime enrollment creation and updates reject an `active` enrollment whose session is not currently eligible, preserving the current in-range enrollment until an intentional transition is possible. The legacy mutable `member_upsert` and `member_set_enrollment` RPCs are revoked from authenticated callers so stable identity and enrollment policy cannot be bypassed through old endpoints.
-- Overdue renewal and librarian waiver permissions are explicit typed settings and enforced in database authorization.
-- Reports apply filters in the database; CSV export reuses the same arguments and prefixes formula-like cells safely.
+- Overdue renewal and librarian waiver permissions are explicit typed settings and enforced in database authorization. The operator policy context reports readiness only when the default loan period, checkout limit, and renewal limit are present and valid, and the circulation UI disables mutation controls until that trusted readiness flag is true.
+- Reports apply filters in the database; CSV export reuses the same arguments and prefixes formula-like cells safely. An overdue report with no explicit date uses the current timestamp, while an explicit date remains an inclusive end-of-day cutoff.
 - Private cover upload, signed preview, replacement, removal, and orphan cleanup are server-only and constrained to approved image types, size, and stable paths.
 
 ## Regression coverage
@@ -26,6 +26,8 @@ The five commits found only on `origin/feat/v3-operational-completion` were revi
 - `scripts/test-phase71-upgrade.mjs` resets to the pre-Phase-7.1 schema, creates historical/current/future active enrollments plus a no-current-session fallback case, applies the Phase 7.1 migrations, and proves current-session priority, deterministic fallback, history preservation, eligibility, and the new invariant.
 - `scripts/test-phase71.mjs` proves future active enrollment staging is rejected without displacing the current enrollment, the current row remains eligible, and the legacy mutable `member_upsert` RPC is no longer callable.
 - `scripts/test-phase71.mjs` also proves student creation rejects active future enrollment and the legacy `member_set_enrollment` RPC is no longer callable.
+- `scripts/test-phase71.mjs` proves incomplete required circulation settings report `policy_ready = false`, while complete settings report readiness and preserve the trusted policy toggle.
+- `scripts/test-circulation.mjs` proves the default overdue report excludes a loan due later today and an explicit current-date report includes it through end of day.
 
 ## Validation status
 

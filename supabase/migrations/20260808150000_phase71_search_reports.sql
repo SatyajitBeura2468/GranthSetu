@@ -110,9 +110,9 @@ create or replace function public.report_overdue_filtered(p_as_of date default n
 returns table(loan_id uuid,title text,member_name text,member_identifier text,accession_number text,due_at timestamptz,days_overdue bigint)
 language sql stable security definer set search_path = '' as $$
   select l.id,b.title,m.display_name,m.member_identifier,c.accession_number,l.due_at,
-    greatest(0, ceil(extract(epoch from ((coalesce(p_as_of,current_date)+1)::timestamptz-l.due_at))/86400)::bigint)
+    greatest(0, ceil(extract(epoch from ((case when p_as_of is null then now() else (p_as_of + 1)::timestamptz end)-l.due_at))/86400)::bigint)
   from public.loans l join public.book_copies c on c.id=l.book_copy_id join public.books b on b.id=c.book_id join public.members m on m.id=l.member_id
-  where private.is_active_operator() and l.status='active' and l.due_at < (coalesce(p_as_of,current_date)+1)::timestamptz
+  where private.is_active_operator() and l.status='active' and l.due_at < case when p_as_of is null then now() else (p_as_of + 1)::timestamptz end
     and (nullif(btrim(coalesce(p_query,'')),'') is null or b.title ilike '%'||btrim(p_query)||'%' or m.display_name ilike '%'||btrim(p_query)||'%' or m.member_identifier ilike '%'||btrim(p_query)||'%' or c.accession_number ilike '%'||btrim(p_query)||'%')
   order by l.due_at limit 1000;
 $$;

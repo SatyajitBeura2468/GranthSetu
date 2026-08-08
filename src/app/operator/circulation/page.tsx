@@ -25,8 +25,8 @@ export default async function CirculationPage({ searchParams }: { searchParams: 
     rpc.rpc("operator_policy_context"),
   ]);
   const members = (memberResult.data ?? []) as Member[]; const copies = (copyResult.data ?? []) as Copy[]; const loans = (loanResult.data ?? []) as Loan[]; const fines = (fineResult.data ?? []) as Fine[];
-  const policy = (Array.isArray(policyResult.data) ? policyResult.data[0] : policyResult.data) as { overdue_renewal_allowed?: boolean; librarian_waiver_allowed?: boolean } | null;
-  const ready = !policyResult.error; const canWaive = hasRole(context, "administrator") || (hasRole(context, "librarian") && Boolean(policy?.librarian_waiver_allowed));
+  const policy = (Array.isArray(policyResult.data) ? policyResult.data[0] : policyResult.data) as { policy_ready?: boolean; overdue_renewal_allowed?: boolean; librarian_waiver_allowed?: boolean } | null;
+  const ready = !policyResult.error && policy?.policy_ready === true; const canWaive = hasRole(context, "administrator") || (hasRole(context, "librarian") && Boolean(policy?.librarian_waiver_allowed));
   const issueCandidateContextKey = [params.member ?? "", params.copy ?? "", ...members.map((member) => member.member_id), ...copies.map((copy) => copy.copy_id)].join("|");
   return <section className="operator-page circulation-page" aria-labelledby="circulation-title">
     <p className="auth-kicker">Trusted operations</p><h1 id="circulation-title">Circulation workbench</h1>

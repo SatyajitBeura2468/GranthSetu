@@ -328,7 +328,10 @@ revoke all on function private.policy_boolean(text) from public, anon, authentic
 create or replace function public.operator_policy_context()
 returns table(policy_ready boolean, overdue_renewal_allowed boolean, librarian_waiver_allowed boolean)
 language sql stable security definer set search_path = '' as $$
-  select private.is_active_operator(),
+  select private.is_active_operator()
+    and private.policy_integer('default_loan_period_days') > 0
+    and private.policy_integer('checkout_limit') >= 0
+    and private.policy_integer('renewal_limit') >= 0,
     coalesce(private.policy_boolean('overdue_renewal_allowed'), false),
     coalesce(private.policy_boolean('librarian_waiver_allowed'), false)
   where private.is_active_operator();
