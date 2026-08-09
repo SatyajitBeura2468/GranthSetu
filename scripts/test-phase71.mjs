@@ -12,7 +12,9 @@ const createdSessions = [];
 const createdUsers = [];
 const createdProfiles = [];
 let coverFixture = null;
+let coverOtherFixture = null;
 let coverOriginal = null;
+let coverOtherOriginal = null;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
@@ -70,8 +72,12 @@ try {
   }
   const setting = await client.rpc("admin_upsert_setting", { p_setting_key: "overdue_renewal_allowed", p_boolean_value: true, p_integer_value: null, p_money_minor_value: null }); assert(!setting.error, `policy toggle failed: ${setting.error?.message}`);
   const context = await client.rpc("operator_policy_context"); assert(!context.error && context.data?.[0]?.policy_ready === true && context.data?.[0]?.overdue_renewal_allowed === true, "policy context did not reflect complete trusted settings");
-  const cover = await admin.from("books").select("id,cover_storage_path").eq("status", "active").limit(1).single(); assert(!cover.error, `cover race fixture lookup failed: ${cover.error?.message}`); coverFixture = cover.data.id; coverOriginal = cover.data.cover_storage_path;
+  const coverBooks = await admin.from("books").select("id,cover_storage_path").eq("status", "active").order("id").limit(2); assert(!coverBooks.error && coverBooks.data?.length === 2, `cover race fixture lookup failed: ${coverBooks.error?.message ?? "two active books are required"}`);
+  coverFixture = coverBooks.data[0].id; coverOriginal = coverBooks.data[0].cover_storage_path;
+  coverOtherFixture = coverBooks.data[1].id; coverOtherOriginal = coverBooks.data[1].cover_storage_path;
   const coverPathA = `book-covers/${coverFixture}/phase71-${token}.jpg`; const coverPathB = `book-covers/${coverFixture}/phase71-${token}-next.jpg`;
+  const mismatchedCoverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverOtherFixture, p_cover_storage_path: coverPathA, p_expected_cover_storage_path: coverOtherOriginal }); assert(mismatchedCoverSet.error?.message.includes("GS_COVER_PATH_INVALID"), "cover path from another book was accepted");
+  const coverReferences = await admin.from("books").select("id,cover_storage_path").in("id", [coverFixture, coverOtherFixture]); assert(!coverReferences.error && coverReferences.data.find((book) => book.id === coverFixture)?.cover_storage_path === coverOriginal && coverReferences.data.find((book) => book.id === coverOtherFixture)?.cover_storage_path === coverOtherOriginal, "cross-book cover rejection changed a book cover reference");
   const coverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathA, p_expected_cover_storage_path: coverOriginal }); assert(!coverSet.error && coverSet.data === coverOriginal, `atomic cover set failed: ${coverSet.error?.message}`);
   const staleCoverSet = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverPathB, p_expected_cover_storage_path: coverOriginal }); assert(staleCoverSet.error?.message.includes("GS_STALE_UPDATE"), "stale cover mutation was not rejected");
   const coverRestore = await client.rpc("catalogue_set_book_cover_v71", { p_book_id: coverFixture, p_cover_storage_path: coverOriginal, p_expected_cover_storage_path: coverPathA }); assert(!coverRestore.error && coverRestore.data === coverPathA, `cover race fixture restore failed: ${coverRestore.error?.message}`);
@@ -81,6 +87,7 @@ try {
 } finally {
   await client.auth.signOut().catch(() => undefined);
   if (coverFixture) await admin.from("books").update({ cover_storage_path: coverOriginal }).eq("id", coverFixture);
+  if (coverOtherFixture) await admin.from("books").update({ cover_storage_path: coverOtherOriginal }).eq("id", coverOtherFixture);
   if (createdMembers.length) { await admin.from("student_enrollments").delete().in("member_id", createdMembers); await admin.from("members").delete().in("id", createdMembers); }
   if (createdSessions.length) await admin.from("academic_sessions").delete().in("id", createdSessions);
   if (createdProfiles.length) { await admin.from("profile_roles").delete().in("profile_id", createdProfiles); await admin.from("profiles").delete().in("id", createdProfiles); }

@@ -19,6 +19,9 @@ begin
   where id = p_book_id
   for update;
   if not found then raise exception using errcode = 'P0001', message = 'GS_BOOK_NOT_FOUND'; end if;
+  if p_cover_storage_path is not null and split_part(p_cover_storage_path, '/', 2) <> p_book_id::text then
+    raise exception using errcode = '22023', message = 'GS_COVER_PATH_INVALID';
+  end if;
   if v_previous_path is distinct from p_expected_cover_storage_path then
     raise exception using errcode = 'P0001', message = 'GS_STALE_UPDATE';
   end if;
