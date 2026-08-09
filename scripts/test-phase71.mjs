@@ -25,9 +25,12 @@ try {
   assert(!role.error, "administrator role missing");
   const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, role_id: role.data.id }); assert(!assignment.error, `fixture role failed: ${assignment.error?.message}`);
   const signedIn = await client.auth.signInWithPassword({ email: `phase71-${token}@phase71.invalid`, password }); assert(!signedIn.error, `fixture sign-in failed: ${signedIn.error?.message}`);
-  const today = new Date().toISOString().slice(0, 10);
-  const session = await admin.from("academic_sessions").select("id").eq("status", "active").lte("starts_on", today).gte("ends_on", today).limit(1).single(); const grade = await admin.from("grade_levels").select("id").limit(1).single(); const section = await admin.from("sections").select("id").limit(1).single();
-  assert(!session.error && !grade.error && !section.error, "academic fixtures missing");
+  const currentStart = new Date(Date.now() - 730 * 86400000).toISOString().slice(0, 10);
+  const currentEnd = new Date(Date.now() + 730 * 86400000).toISOString().slice(0, 10);
+  const session = await admin.from("academic_sessions").insert({ session_code: `PHASE71-CURRENT-${token}`, display_label: "Phase 7.1 current session", starts_on: currentStart, ends_on: currentEnd, status: "active" }).select("id").single();
+  assert(!session.error, `current session fixture failed: ${session.error?.message}`); createdSessions.push(session.data.id);
+  const grade = await admin.from("grade_levels").select("id").limit(1).single(); const section = await admin.from("sections").select("id").limit(1).single();
+  assert(!grade.error && !section.error, "academic fixtures missing");
   const futureStart = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
   const futureEnd = new Date(Date.now() + 367 * 86400000).toISOString().slice(0, 10);
   const futureSession = await admin.from("academic_sessions").insert({ session_code: `PHASE71-FUTURE-${token}`, display_label: "Phase 7.1 future session", starts_on: futureStart, ends_on: futureEnd, status: "active" }).select("id").single();

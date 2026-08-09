@@ -96,7 +96,8 @@ try {
   const todayCutoffUpdate = await admin.from("loans").update({ due_at: dueLaterToday }).eq("id", todayCutoffLoan.id); assert(!todayCutoffUpdate.error, `today cutoff fixture update failed: ${todayCutoffUpdate.error?.message}`);
   const defaultOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: null, p_query: null });
   assert(!defaultOverdueReport.error && !defaultOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "default overdue report included a loan due later today");
-  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: new Date().toISOString().slice(0, 10), p_query: null });
+  // Tie the explicit end-of-day cutoff to the fixture's UTC due date if CI crosses midnight.
+  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: dueLaterToday.slice(0, 10), p_query: null });
   assert(!explicitOverdueReport.error && explicitOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "explicit end-of-day overdue report omitted today's cutoff loan");
   const globalLoanSearch = await librarian.client.rpc("global_search_v71", { p_query: "Development Science" });
   assert(!globalLoanSearch.error && globalLoanSearch.data.some((row) => row.result_type === "loan" && row.result_id === todayCutoffLoan.id), "global search omitted the active loan result");
