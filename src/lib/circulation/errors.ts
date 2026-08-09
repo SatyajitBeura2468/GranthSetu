@@ -23,6 +23,10 @@ const messages: Record<string, string> = {
   GS_FINE_AMOUNT_INVALID: "Enter a positive INR amount with no more than two decimal places.",
   GS_FINE_OUTSTANDING_EXCEEDED: "That amount exceeds the fine outstanding.",
   GS_ADMIN_REQUIRED: "Only administrators may waive fines.",
+  GS_WAIVER_NOT_ALLOWED: "Fine waivers are not enabled for this operator role.",
+  GS_ROLL_DUPLICATE: "That roll number is already active in this class and session.",
+  GS_ROLL_INVALID: "Enter a roll number without control characters and no more than 40 characters.",
+  GS_REPORT_DATE_RANGE_INVALID: "The report start date must be on or before its end date.",
   GS_REQUEST_ID_REUSED: "This request token was already used for another operation.",
 };
 

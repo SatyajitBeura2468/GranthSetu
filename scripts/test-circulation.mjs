@@ -90,6 +90,20 @@ try {
   const inactiveMember = await member("teacher", "inactive");
   const studentWithoutEnrollment = await member("student");
 
+  // The omitted report cutoff is the current instant; an explicit date remains end-of-day inclusive.
+  const todayCutoffLoan = await fixtureLoan({ memberId: activeMember, copyId: await copy(book), issuedBy: librarian.profileId });
+  const dueLaterToday = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const todayCutoffUpdate = await admin.from("loans").update({ due_at: dueLaterToday }).eq("id", todayCutoffLoan.id); assert(!todayCutoffUpdate.error, `today cutoff fixture update failed: ${todayCutoffUpdate.error?.message}`);
+  const defaultOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: null, p_query: null });
+  assert(!defaultOverdueReport.error && !defaultOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "default overdue report included a loan due later today");
+  // Tie the explicit end-of-day cutoff to the fixture's UTC due date if CI crosses midnight.
+  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: dueLaterToday.slice(0, 10), p_query: null });
+  assert(!explicitOverdueReport.error && explicitOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "explicit end-of-day overdue report omitted today's cutoff loan");
+  const globalLoanSearch = await librarian.client.rpc("global_search_v71", { p_query: "Development Science" });
+  assert(!globalLoanSearch.error && globalLoanSearch.data.some((row) => row.result_type === "loan" && row.result_id === todayCutoffLoan.id), "global search omitted the active loan result");
+  const filteredInventory = await librarian.client.rpc("report_inventory_filtered", { p_status: "lost", p_location_id: null });
+  assert(!filteredInventory.error && filteredInventory.data.length > 0 && filteredInventory.data.every((row) => row.total_copies > 0), "inventory status filter retained books without matching copies");
+
   // Issue: success, server ownership, audit, retry, cross-operation reuse.
   const issueCopy = await copy(book); const issueRequest = id();
   const issue = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: activeMember, p_book_copy_id: issueCopy, p_request_id: issueRequest, p_notes: "synthetic" });
@@ -137,6 +151,13 @@ try {
   const renewRetry = await rpc(librarian.client, "circulation_renew_loan", { p_loan_id: renewLoan.loan_id, p_request_id: renewRequest }); assert(!renewRetry.error && renewRetry.data.idempotent === true, "renew retry was not idempotent");
   const renewLimit = await rpc(librarian.client, "circulation_renew_loan", { p_loan_id: renewLoan.loan_id, p_request_id: id() }); assert(renewLimit.error?.message.includes("GS_RENEWAL_LIMIT_REACHED"), "renewal limit was bypassed");
   const overdueCopy = await copy(book); const overdueMember = await member("teacher"); const overdueLoan = await fixtureLoan({ memberId: overdueMember, copyId: overdueCopy, returned: false, overdue: true, issuedBy: librarian.profileId });
+  const loanSearch = await librarian.client.rpc("circulation_loan_search", { p_query: "", p_active_only: true, p_limit: 50 });
+  assert(!loanSearch.error && loanSearch.data.some((row) => row.loan_id === todayCutoffLoan.id && row.overdue === false) && loanSearch.data.some((row) => row.loan_id === overdueLoan.id && row.overdue === true), "circulation loan search did not expose authoritative overdue status");
+  await policy({ overdue_renewal_allowed: { value: true, kind: "boolean" } });
+  const allowedOverdueCopy = await copy(book); const allowedOverdueMember = await member("teacher"); const allowedOverdueLoan = await fixtureLoan({ memberId: allowedOverdueMember, copyId: allowedOverdueCopy, returned: false, overdue: true, issuedBy: librarian.profileId });
+  const allowedOverdueRenew = await rpc(librarian.client, "circulation_renew_loan", { p_loan_id: allowedOverdueLoan.id, p_request_id: id() });
+  assert(!allowedOverdueRenew.error && new Date(allowedOverdueRenew.data.new_due_at).getTime() > Date.now(), "overdue renewal did not establish a future due date");
+  await policy({ overdue_renewal_allowed: { value: false, kind: "boolean" } });
   const overdueRenew = await rpc(librarian.client, "circulation_renew_loan", { p_loan_id: overdueLoan.id, p_request_id: id() }); assert(overdueRenew.error?.message.includes("GS_LOAN_OVERDUE"), "overdue renewal succeeded");
   const concurrentRenewCopy = await copy(book); const concurrentRenewMember = await member("teacher"); const concurrentLoan = await (async () => { const result = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: concurrentRenewMember, p_book_copy_id: concurrentRenewCopy, p_request_id: id() }); assert(!result.error, "concurrent renewal fixture failed"); createdLoans.push(result.data.loan_id); return result.data; })();
   const renewRace = await Promise.allSettled([rpc(librarian.client, "circulation_renew_loan", { p_loan_id: concurrentLoan.loan_id, p_request_id: id() }), rpc(adminOp.client, "circulation_renew_loan", { p_loan_id: concurrentLoan.loan_id, p_request_id: id() })]); assert(renewRace.filter((result) => result.status === "fulfilled" && !result.value.error).length === 1, "renewal concurrency exceeded the limit");

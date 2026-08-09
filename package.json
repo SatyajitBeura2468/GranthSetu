@@ -15,6 +15,10 @@
     "db:test:auth": "node scripts/test-auth.mjs",
     "db:test:circulation": "node scripts/test-circulation.mjs",
     "db:test:legacy-fines-upgrade": "node scripts/test-legacy-fines-upgrade.mjs",
+    "db:test:phase71": "node scripts/test-phase71.mjs",
+    "db:test:phase71:issue-selection": "node scripts/test-phase71-issue-selection.mjs",
+    "db:test:phase71:upgrade": "node scripts/test-phase71-upgrade.mjs",
+    "test:phase71:ui": "node scripts/test-phase71-ui-contract.mjs",
     "db:lint": "npx supabase@2.112.0 db lint --local --schema public --level error --fail-on error",
     "db:types": "npx supabase@2.112.0 gen types typescript --local --schema public > src/types/database.ts"
   },

@@ -6,6 +6,7 @@ import { rpcErrorMessage, asOperatorRpcClient } from "@/lib/operator/rpc";
 import { formValue, nullable, uuidList } from "@/lib/operator/forms";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createBookCoverUpload, removeBookCoverObject } from "@/lib/operator/cover-storage";
 
 const referenceRpc: Record<string, string> = { author: "catalogue_upsert_author", publisher: "catalogue_upsert_publisher", category: "catalogue_upsert_category", subject: "catalogue_upsert_subject", location: "catalogue_upsert_location" };
 function fail(path: string, message: string): never { redirect(`${path}?error=${encodeURIComponent(message)}`); }
@@ -40,14 +41,14 @@ export async function saveBookAction(formData: FormData) {
   const bookId = data;
   const cover = formData.get("cover");
   if (cover instanceof File && cover.size > 0) {
-    if (cover.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(cover.type)) fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", "Cover must be JPEG, PNG, or WebP and no larger than 5 MB.");
-    const ext = cover.type === "image/jpeg" ? "jpg" : cover.type === "image/png" ? "png" : "webp";
-    const path = `book-covers/${bookId}/${crypto.randomUUID()}.${ext}`;
     const admin = createSupabaseAdminClient();
-    const uploaded = await admin.storage.from("book-covers").upload(path, cover, { contentType: cover.type, upsert: false });
-    if (uploaded.error) fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", "The book was saved, but the cover upload failed.");
-    const coverResult = await supabase.rpc("catalogue_set_book_cover", { p_book_id: bookId, p_cover_storage_path: path });
-    if (coverResult.error) fail(`/operator/catalogue/${bookId}`, rpcErrorMessage(coverResult.error));
+    const { data: previous } = await admin.from("books").select("cover_storage_path").eq("id", bookId).maybeSingle();
+    let path: string;
+    try { path = await createBookCoverUpload(bookId, cover); } catch (error) { fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", error instanceof Error ? error.message : "The cover upload failed."); }
+    const coverResult = await supabase.rpc("catalogue_set_book_cover_v71", { p_book_id: bookId, p_cover_storage_path: path, p_expected_cover_storage_path: previous?.cover_storage_path ?? null });
+    if (coverResult.error) { await removeBookCoverObject(path); fail(`/operator/catalogue/${bookId}`, rpcErrorMessage(coverResult.error)); }
+    const cleanupError = await removeBookCoverObject(typeof coverResult.data === "string" ? coverResult.data : null);
+    success(`/operator/catalogue/${bookId}`, cleanupError ? "Book updated; previous cover cleanup needs review." : id ? "Book updated" : "Book created");
   }
   success(`/operator/catalogue/${bookId}`, id ? "Book updated" : "Book created");
 }
@@ -66,7 +67,11 @@ export async function removeBookCoverAction(formData: FormData) {
   await assertOperator();
   const id = formValue(formData, "id");
   const supabase = asOperatorRpcClient(await createSupabaseServerClient());
-  const { error } = await supabase.rpc("catalogue_set_book_cover", { p_book_id: id, p_cover_storage_path: null });
+  const admin = createSupabaseAdminClient();
+  const { data: previous, error: previousError } = await admin.from("books").select("cover_storage_path").eq("id", id).maybeSingle();
+  if (previousError || !previous) fail(`/operator/catalogue/${id}`, "The book cover could not be read. Reload and try again.");
+  const { data: replacedPath, error } = await supabase.rpc("catalogue_set_book_cover_v71", { p_book_id: id, p_cover_storage_path: null, p_expected_cover_storage_path: previous.cover_storage_path ?? null });
   if (error) fail(`/operator/catalogue/${id}`, rpcErrorMessage(error));
-  success(`/operator/catalogue/${id}`, "Cover removed");
+  const cleanupError = await removeBookCoverObject(typeof replacedPath === "string" ? replacedPath : null);
+  success(`/operator/catalogue/${id}`, cleanupError ? "Cover removed; storage cleanup needs review." : "Cover removed");
 }
