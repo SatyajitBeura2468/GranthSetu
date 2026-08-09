@@ -15,7 +15,7 @@ export async function createLibraryAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims?.sub) {
-    if (!email || password.length < 8) redirect(`/create-library?error=${encodeURIComponent("Enter a valid email and a password of at least 8 characters.")}`);
+    if (!email || password.length < 12) redirect(`/create-library?error=${encodeURIComponent("Enter a valid email and a password of at least 12 characters.")}`);
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { display_name: person }, emailRedirectTo: getAuthCallbackUrl(`/create-library?name=${encodeURIComponent(name)}&code=${encodeURIComponent(code)}&person=${encodeURIComponent(person)}`) } });
     if (error) redirect(`/create-library?error=${encodeURIComponent("Unable to create the account. Try signing in if you already have one.")}`);
     if (!data.session) redirect(`/create-library?confirmation=1`);
