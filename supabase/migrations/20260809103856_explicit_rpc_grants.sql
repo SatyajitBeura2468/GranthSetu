@@ -11,7 +11,12 @@ do $$ declare f record; begin
       'current_operator_context','operator_accessible_libraries','operator_context_for_library',
       'create_library_room','operator_workspace_data','operator_workspace_mutation',
       'operator_circulation_search','operator_room_operators','operator_room_audit','operator_room_report',
-      'admin_assign_operator_to_room','admin_set_room_operator_status'
+      'admin_assign_operator_to_room','admin_set_room_operator_status',
+      'circulation_issue_loan','circulation_return_loan','circulation_renew_loan','circulation_assess_overdue_fine',
+      'circulation_settle_fine','circulation_waive_fine','circulation_member_search','circulation_copy_search',
+      'circulation_loan_search','circulation_fine_search','operator_policy_context','global_search_v71',
+      'report_overdue_filtered','report_inventory_filtered','member_create_with_enrollment','member_update_profile',
+      'member_set_enrollment','member_set_enrollment_v71','catalogue_set_book_cover_v71','admin_upsert_setting'
     ])
   loop
     execute format('grant execute on function %s to authenticated', f.signature);

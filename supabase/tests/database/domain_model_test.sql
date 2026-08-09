@@ -31,7 +31,7 @@ select ok(to_regnamespace('private') is not null, 'private authorization schema 
 select ok(not has_schema_privilege('authenticated', 'private', 'USAGE'), 'authenticated cannot use private authorization schema');
 select ok(has_function_privilege('authenticated', 'public.current_operator_context()', 'EXECUTE'), 'authenticated can resolve only current operator context');
 select ok(not has_function_privilege('anon', 'public.current_operator_context()', 'EXECUTE'), 'anon cannot resolve operator context');
-select ok(has_function_privilege('authenticated', 'public.admin_provision_operator_profile(uuid,text,text)', 'EXECUTE'), 'authenticated can invoke guarded provisioning RPC');
+select ok(not has_function_privilege('authenticated', 'public.admin_provision_operator_profile(uuid,text,text)', 'EXECUTE'), 'room operators cannot invoke legacy global-profile provisioning');
 select ok(has_function_privilege('service_role', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'service role can invoke bootstrap RPC');
 select ok(not has_function_privilege('authenticated', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'authenticated cannot invoke bootstrap RPC');
 select ok(not has_function_privilege('anon', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'anon cannot invoke bootstrap RPC');

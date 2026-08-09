@@ -10,6 +10,7 @@ if ((!url.includes("127.0.0.1") && !url.includes("localhost") && !url.includes("
 
 const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const password = "Phase5-Test-Password-2026!";
+const libraryCode = "OAVMUSI";
 const createdUsers = [];
 const createdProfiles = [];
 const createdCopies = [];
@@ -180,14 +181,15 @@ try {
   // Immediate database-state authorization changes without refreshing the Auth session.
   const authorizationCopy = await copy(book); const authorizationMember = await member("teacher");
   const beforeDeactivate = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: authorizationMember, p_book_copy_id: authorizationCopy, p_request_id: id() }); assert(!beforeDeactivate.error, "librarian baseline authorization failed"); createdLoans.push(beforeDeactivate.data.loan_id);
-  await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "inactive" });
+  await expectError(() => rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "inactive" }), "tenant administrator altered a global profile lifecycle");
+  await rpc(adminOp.client, "admin_set_room_operator_status", { p_library_code: libraryCode, p_target_profile_id: librarian.profileId, p_status: "inactive" });
   const deactivatedMember = await member("teacher"); const deactivatedCopy = await copy(book);
   await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: deactivatedMember, p_book_copy_id: deactivatedCopy, p_request_id: id() }), "deactivated librarian retained circulation access");
-  await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "active" });
-  await rpc(adminOp.client, "admin_revoke_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_assign_operator_to_room", { p_library_code: libraryCode, p_target_auth_user_id: librarian.auth.id, p_display_name: "Phase 5 librarian", p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_set_room_operator_status", { p_library_code: libraryCode, p_target_profile_id: librarian.profileId, p_status: "inactive" });
   const revokedMember = await member("teacher"); const revokedCopy = await copy(book);
   await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: revokedMember, p_book_copy_id: revokedCopy, p_request_id: id() }), "revoked librarian retained circulation access");
-  await rpc(adminOp.client, "admin_assign_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_assign_operator_to_room", { p_library_code: libraryCode, p_target_auth_user_id: librarian.auth.id, p_display_name: "Phase 5 librarian", p_role_key: "librarian" });
 
   // Data API attack surface: all normal operator writes remain outside the browser boundary.
   for (const table of ["publishers", "categories", "subjects", "authors", "books", "book_copies", "members", "academic_sessions", "grade_levels", "sections", "student_enrollments", "loans", "loan_renewals", "fines", "audit_events"]) {
