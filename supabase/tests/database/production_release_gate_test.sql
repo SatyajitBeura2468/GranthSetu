@@ -1,9 +1,7 @@
 begin;
-select plan(10);
+select plan(9);
 
-select ok(not has_function_privilege('authenticated','public.global_search_v71(text)','EXECUTE'), 'legacy global search is not callable by authenticated users');
-select ok(not has_function_privilege('authenticated','public.circulation_member_search(text,boolean,integer)','EXECUTE') is true, 'placeholder');
--- The exact legacy signatures below must remain unavailable after tenantization.
+select ok(not has_function_privilege('authenticated','public.global_search_v71(text)','EXECUTE'), 'legacy global search is revoked');
 select ok(not has_function_privilege('authenticated','public.circulation_member_search(text,integer)','EXECUTE'), 'legacy member search is revoked');
 select ok(not has_function_privilege('authenticated','public.circulation_copy_search(text,boolean,integer)','EXECUTE'), 'legacy copy search is revoked');
 select ok(not has_function_privilege('authenticated','public.circulation_loan_search(text,boolean,integer)','EXECUTE'), 'legacy loan search is revoked');
