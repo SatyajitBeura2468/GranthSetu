@@ -1703,6 +1703,10 @@ export type Database = {
         Args: { p_kind: string; p_library_code: string; p_query: string }
         Returns: Json
       }
+      operator_circulation_search_legacy_text: {
+        Args: { p_kind: string; p_library_code: string; p_query: string }
+        Returns: Json
+      }
       operator_context_for_library: {
         Args: { p_library_code: string }
         Returns: {
@@ -1727,6 +1731,14 @@ export type Database = {
           total_copies: number
         }[]
       }
+      operator_global_search: {
+        Args: { p_library_code: string; p_query: string }
+        Returns: Json
+      }
+      operator_global_search_legacy_text: {
+        Args: { p_library_code: string; p_query: string }
+        Returns: Json
+      }
       operator_policy_context: {
         Args: never
         Returns: {
@@ -1734,6 +1746,15 @@ export type Database = {
           overdue_renewal_allowed: boolean
           policy_ready: boolean
         }[]
+      }
+      operator_reference_save: {
+        Args: {
+          p_code?: string
+          p_kind: string
+          p_library_code: string
+          p_name: string
+        }
+        Returns: Json
       }
       operator_room_audit: {
         Args: {
