@@ -14,7 +14,7 @@ import { createBookCoverUpload, removeBookCoverObject } from "@/lib/operator/cov
 function value(form: FormData, key: string) { const result = String(form.get(key) ?? "").trim(); return result || null; }
 function destination(operation: string) {
   if (["issue","renew","return","fine_settle","fine_waive"].includes(operation)) return "circulation";
-  if (operation.startsWith("book")) return "catalogue";
+  if (operation.startsWith("book") || operation === "reference_save") return "catalogue";
   if (operation.startsWith("copy")) return "inventory";
   if (operation.startsWith("member")) return "members";
   if (operation.startsWith("setting") || operation.includes("_save") && ["academic_session_save","grade_save","section_save"].includes(operation) || operation === "library_update") return "settings";
@@ -26,11 +26,11 @@ export async function workspaceMutationAction(formData: FormData) {
   const operation = String(formData.get("operation") ?? ""); const section = destination(operation);
   const context = await getLibraryOperatorContext(libraryCode);
   if (!context || context.demo) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This mutation is unavailable in the local demonstration workspace.")}`);
-  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","copy_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","operator_assign","operator_status"]);
+  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","copy_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","operator_assign","operator_status","reference_save"]);
   if (!allowed.has(operation)) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Unsupported operation.")}`);
 
   const payload: Record<string, string | string[] | null> = {};
-  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
+  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
   payload.categoryIds = formData.getAll("categoryIds").map(String); payload.subjectIds = formData.getAll("subjectIds").map(String);
   if (operation === "copy_save" && payload.replacementCostMinor) {
     const rupees = Number(payload.replacementCostMinor); if (!Number.isFinite(rupees) || rupees < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid replacement cost.")}`);
@@ -47,7 +47,15 @@ export async function workspaceMutationAction(formData: FormData) {
   }
 
   try {
-    if (operation === "operator_assign") {
+    if (operation === "reference_save") {
+      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_reference_save", {
+        p_library_code: libraryCode,
+        p_kind: payload.kind,
+        p_name: payload.name,
+        p_code: payload.code,
+      });
+      if (error) throw new Error(error.message);
+    } else if (operation === "operator_assign") {
       if (!context.roles.includes("administrator")) throw new Error("GS_ADMIN_REQUIRED");
       const email = String(payload.email ?? "").toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("GS_OPERATOR_INPUT_INVALID");

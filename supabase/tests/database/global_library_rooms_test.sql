@@ -23,7 +23,7 @@ select ok((select qual from pg_policies where schemaname='public' and tablename=
 select ok(not exists(select 1 from pg_policies where schemaname='public' and tablename='audit_events' and policyname='audit_events_tenant_select'), 'the broad room-operator audit policy is absent');
 select ok(position('update public.profiles set display_name' in lower(pg_get_functiondef('public.admin_assign_operator_to_room(text,uuid,text,text)'::regprocedure))) = 0, 'room assignment cannot overwrite an existing global display name');
 select ok(pg_get_functiondef('public.operator_room_audit(text,text,date,date,text)'::regprocedure) ~* 'from\s+\(\s*select[\s\S]*limit 500\s*\)\s+q', 'audit input rows are bounded before JSON aggregation');
-select ok(regexp_count(lower(pg_get_functiondef('public.operator_circulation_search(text,text,text)'::regprocedure)), 'limit 50') >= 4, 'every circulation search kind is bounded before JSON aggregation');
+select ok(regexp_count(lower(pg_get_functiondef('public.operator_circulation_search_legacy_text(text,text,text)'::regprocedure)), 'limit 50') >= 4, 'every circulation search kind is bounded before JSON aggregation before the cleaned wrapper formats output');
 select is((select public_code from public.public_resolve_library(' oavmusi ')), 'OAVMUSI', 'public codes resolve case-insensitively');
 select is((select count(*)::integer from public.public_resolve_library('NOT-A-ROOM')), 0, 'unknown room codes fail closed');
 select ok(not ((select proargnames from pg_proc where oid = 'public.public_catalogue(text,text,boolean,integer)'::regprocedure) && array['member_identifier','display_name','cover_storage_path']), 'public catalogue cannot return member identity or private storage paths');

@@ -129,8 +129,31 @@ try {
   const unmappedClient = await signIn(unmapped);
   const anonymous = userClient();
 
-  const { error: signUpError } = await anonymous.auth.signUp({ email: `phase4-signup${suffix}`, password });
-  assert(signUpError, "public signup unexpectedly succeeded");
+  const signupEmail = `phase4-signup-${Date.now()}${suffix}`;
+  const { data: signupData, error: signUpError } = await anonymous.auth.signUp({ email: signupEmail, password });
+  assert(!signUpError && signupData.user, `public signup failed: ${signUpError?.message ?? "unknown error"}`);
+  createdUsers.push({ label: "public-signup", email: signupEmail, id: signupData.user.id });
+  const { data: signupProfile, error: signupProfileError } = await admin.from("profiles").select("id").eq("auth_user_id", signupData.user.id).maybeSingle();
+  assert(!signupProfileError, "could not inspect the newly signed-up identity");
+  if (signupProfile) {
+    const { data: signupRoles, error: signupRoleError } = await admin.from("profile_roles").select("profile_id").eq("profile_id", signupProfile.id);
+    assert(!signupRoleError && signupRoles.length === 0, "public signup unexpectedly granted a Library Room role");
+  }
+  const { error: signupConfirmError } = await admin.auth.admin.updateUserById(signupData.user.id, { email_confirm: true });
+  assert(!signupConfirmError, "could not confirm the disposable public-signup identity");
+  const signupUser = createdUsers.find((user) => user.label === "public-signup");
+  const signupClient = await signIn(signupUser);
+  const { data: signupContext, error: signupContextError } = await signupClient.rpc("current_operator_context");
+  assert(!signupContextError && (!signupContext || signupContext.length === 0), "public signup unexpectedly received an operator context");
+  for (const [table, column] of [["members", "id"], ["loans", "id"], ["fines", "id"], ["library_settings", "library_id"], ["audit_events", "id"], ["profile_roles", "profile_id"]]) {
+    const { data, error } = await signupClient.from(table).select(column);
+    assert(!error && data?.length === 0, `public signup read protected ${table} rows`);
+  }
+  await expectError(() => signupClient.rpc("global_search_v71", { p_query: "Development" }), "public signup executed legacy global search");
+  await expectError(() => signupClient.rpc("operator_global_search", { p_library_code: libraryCode, p_query: "Development" }), "public signup executed room-scoped global search");
+  await expectError(() => signupClient.rpc("report_overdue_filtered", { p_as_of: null, p_query: null }), "public signup executed legacy overdue report");
+  const { data: storageRows, error: storageError } = await signupClient.storage.from("book-covers").list("");
+  assert(!storageError && storageRows?.length === 0, "public signup listed private cover storage");
 
   await expectError(() => anonymous.from("members").select("id"), "anonymous member read unexpectedly succeeded");
 

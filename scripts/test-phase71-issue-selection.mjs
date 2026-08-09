@@ -19,6 +19,7 @@ const createdLoans = [];
 const createdUsers = [];
 const createdProfiles = [];
 const libraryId = "10000000-0000-0000-0000-000000000001";
+const libraryCode = "OAVMUSI";
 let bookId;
 
 try {
@@ -55,16 +56,16 @@ try {
   createdCopies.push(...copies.data.map((row) => row.id));
   const [copyX, copyY] = createdCopies;
 
-  const memberCandidates = await client.rpc("circulation_member_search", { p_query: token, p_limit: 50 });
-  assert(!memberCandidates.error && memberCandidates.data.some((row) => row.member_id === memberA) && memberCandidates.data.some((row) => row.member_id === memberB), "multiple borrower candidates were not returned for explicit selection");
-  const copyCandidates = await client.rpc("circulation_copy_search", { p_query: token, p_available_only: true, p_limit: 50 });
-  assert(!copyCandidates.error && copyCandidates.data.some((row) => row.copy_id === copyX) && copyCandidates.data.some((row) => row.copy_id === copyY), "multiple available copy candidates were not returned for explicit selection");
+  const memberCandidates = await client.rpc("operator_circulation_search", { p_library_code: libraryCode, p_kind: "members", p_query: token });
+  assert(!memberCandidates.error && memberCandidates.data.some((row) => row.id === memberA) && memberCandidates.data.some((row) => row.id === memberB), "multiple borrower candidates were not returned for explicit selection");
+  const copyCandidates = await client.rpc("operator_circulation_search", { p_library_code: libraryCode, p_kind: "copies", p_query: token });
+  assert(!copyCandidates.error && copyCandidates.data.some((row) => row.id === copyX) && copyCandidates.data.some((row) => row.id === copyY), "multiple available copy candidates were not returned for explicit selection");
 
   const issued = await client.rpc("circulation_issue_loan", { p_member_id: memberA, p_book_copy_id: copyX, p_request_id: crypto.randomUUID(), p_notes: "explicit selection regression" });
   assert(!issued.error && issued.data?.member_id === memberA && issued.data?.copy_id === copyX, "selected borrower/copy did not remain bound to the issued loan");
   createdLoans.push(issued.data.loan_id);
-  const afterIssue = await client.rpc("circulation_copy_search", { p_query: token, p_available_only: true, p_limit: 50 });
-  assert(!afterIssue.error && !afterIssue.data.some((row) => row.copy_id === copyX) && afterIssue.data.some((row) => row.copy_id === copyY), "an already-loaned copy remained selectable as available");
+  const afterIssue = await client.rpc("operator_circulation_search", { p_library_code: libraryCode, p_kind: "copies", p_query: token });
+  assert(!afterIssue.error && !afterIssue.data.some((row) => row.id === copyX) && afterIssue.data.some((row) => row.id === copyY), "an already-loaned copy remained selectable as available");
 
   const concurrent = await Promise.all([memberB, memberC].map((memberId) => client.rpc("circulation_issue_loan", { p_member_id: memberId, p_book_copy_id: copyY, p_request_id: crypto.randomUUID() })));
   assert(concurrent.filter((result) => !result.error).length === 1, "concurrent issue attempts were not serialized by the trusted RPC");

@@ -12,6 +12,7 @@ const createdSessions = [];
 const createdUsers = [];
 const createdProfiles = [];
 const libraryId = "10000000-0000-0000-0000-000000000001";
+const libraryCode = "OAVMUSI";
 let coverFixture = null;
 let coverOtherFixture = null;
 let coverOriginal = null;
@@ -43,8 +44,8 @@ try {
   const inserted = await admin.from("members").insert(bulk).select("id"); assert(!inserted.error && inserted.data?.length === 125, `bulk member fixture failed: ${inserted.error?.message}`); createdMembers.push(...inserted.data.map((row) => row.id));
   const enrollments = createdMembers.map((id, index) => ({ library_id: libraryId, member_id: id, academic_session_id: session.data.id, grade_level_id: grade.data.id, section_id: section.data.id, roll_number: String(1000 + index), status: "active" }));
   const enrolled = await admin.from("student_enrollments").insert(enrollments); assert(!enrolled.error, `bulk enrollment fixture failed: ${enrolled.error?.message}`);
-  const search = await client.rpc("circulation_member_search", { p_query: "Phase71Search", p_limit: 500 }); assert(!search.error && search.data.length === 50, `search-first member result was not bounded at 50: ${search.error?.message ?? search.data?.length}`);
-  const rollSearch = await client.rpc("circulation_member_search", { p_query: "1007", p_limit: 50 }); assert(!rollSearch.error && rollSearch.data.some((row) => row.roll_number === "1007"), "roll number was not searchable");
+  const search = await client.rpc("operator_circulation_search", { p_library_code: libraryCode, p_kind: "members", p_query: "Phase71Search" }); assert(!search.error && search.data.length === 50, `search-first member result was not bounded at 50: ${search.error?.message ?? search.data?.length}`);
+  const rollSearch = await client.rpc("operator_circulation_search", { p_library_code: libraryCode, p_kind: "members", p_query: "1007" }); assert(!rollSearch.error && rollSearch.data.some((row) => row.context?.includes("1007")), "roll number was not searchable");
 
   const created = await Promise.all(Array.from({ length: 12 }, (_, index) => client.rpc("member_create_with_enrollment", { p_display_name: `Concurrent ${index}`, p_member_kind: "teacher", p_status: "active", p_academic_session_id: null, p_grade_level_id: null, p_section_id: null, p_roll_number: null, p_enrollment_status: "active" })));
   assert(created.every((result) => !result.error && typeof result.data === "string"), `concurrent atomic member creation failed: ${created.find((result) => result.error)?.error?.message}`); createdMembers.push(...created.map((result) => result.data));
