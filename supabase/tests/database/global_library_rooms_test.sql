@@ -1,5 +1,5 @@
 begin;
-select plan(22);
+select plan(32);
 
 select has_table('public', 'libraries', 'library rooms are first-class records');
 select has_column('public', 'books', 'library_id', 'catalogue records are tenant scoped');
@@ -11,9 +11,19 @@ select ok(has_function_privilege('anon', 'public.public_catalogue(text,text,bool
 select ok(not has_table_privilege('anon', 'public.members', 'SELECT'), 'anonymous users cannot read members');
 select ok(not has_table_privilege('authenticated', 'public.loans', 'INSERT'), 'operators cannot bypass trusted circulation writes');
 select ok(not has_function_privilege('authenticated', 'public.admin_set_profile_status(uuid,text)', 'EXECUTE'), 'room operators cannot invoke the legacy global profile lifecycle RPC');
+select ok(not has_function_privilege('authenticated', 'public.catalogue_set_book_cover(uuid,text)', 'EXECUTE'), 'room operators cannot invoke the legacy non-atomic cover mutation');
+select ok(not has_function_privilege('authenticated', 'public.admin_upsert_academic_session(uuid,text,text,date,date,text)', 'EXECUTE'), 'room operators cannot bypass the room mutation adapter for academic sessions');
+select ok(not has_function_privilege('authenticated', 'public.admin_upsert_grade(uuid,text,text,integer)', 'EXECUTE'), 'room operators cannot bypass the room mutation adapter for grades');
+select ok(not has_function_privilege('authenticated', 'public.admin_upsert_section(uuid,text,text,integer)', 'EXECUTE'), 'room operators cannot bypass the room mutation adapter for sections');
 select ok(has_function_privilege('authenticated', 'public.admin_assign_operator_to_room(text,uuid,text,text)', 'EXECUTE'), 'room administrators retain the room-scoped operator assignment RPC');
+select ok(has_function_privilege('authenticated', 'private.has_library_access(uuid,text)', 'EXECUTE'), 'authenticated tenant SELECT policies can evaluate the private room-access helper');
+select ok(has_function_privilege('authenticated', 'private.request_library_id()', 'EXECUTE'), 'authenticated profile policies can resolve the active room context');
+select ok(has_function_privilege('authenticated', 'private.is_active_operator()', 'EXECUTE'), 'authenticated role policies can evaluate active operator state');
+select ok((select qual from pg_policies where schemaname='public' and tablename='audit_events' and policyname='audit_events_room_admin_select') like '%administrator%', 'audit rows remain visible only through the room-administrator policy');
+select ok(not exists(select 1 from pg_policies where schemaname='public' and tablename='audit_events' and policyname='audit_events_tenant_select'), 'the broad room-operator audit policy is absent');
 select ok(position('update public.profiles set display_name' in lower(pg_get_functiondef('public.admin_assign_operator_to_room(text,uuid,text,text)'::regprocedure))) = 0, 'room assignment cannot overwrite an existing global display name');
 select ok(pg_get_functiondef('public.operator_room_audit(text,text,date,date,text)'::regprocedure) ~* 'from\s+\(\s*select[\s\S]*limit 500\s*\)\s+q', 'audit input rows are bounded before JSON aggregation');
+select ok(regexp_count(lower(pg_get_functiondef('public.operator_circulation_search(text,text,text)'::regprocedure)), 'limit 50') >= 4, 'every circulation search kind is bounded before JSON aggregation');
 select is((select public_code from public.public_resolve_library(' oavmusi ')), 'OAVMUSI', 'public codes resolve case-insensitively');
 select is((select count(*)::integer from public.public_resolve_library('NOT-A-ROOM')), 0, 'unknown room codes fail closed');
 select ok(not ((select proargnames from pg_proc where oid = 'public.public_catalogue(text,text,boolean,integer)'::regprocedure) && array['member_identifier','display_name','cover_storage_path']), 'public catalogue cannot return member identity or private storage paths');

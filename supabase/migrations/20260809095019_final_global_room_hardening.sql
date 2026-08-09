@@ -191,7 +191,7 @@ do $$ declare t text; begin
   foreach t in array array[
     'profile_roles','members','academic_sessions','grade_levels','sections','student_enrollments',
     'publishers','categories','subjects','authors','books','book_authors','book_categories',
-    'book_subjects','locations','book_copies','loans','loan_renewals','fines','library_settings','audit_events'
+    'book_subjects','locations','book_copies','loans','loan_renewals','fines','library_settings'
   ] loop
     execute format('drop trigger if exists enforce_tenant_write on public.%I', t);
     execute format('create trigger enforce_tenant_write before insert or update or delete on public.%I for each row execute function private.enforce_tenant_write()', t);
@@ -230,6 +230,11 @@ do $$ declare t text; begin
     execute format('grant select on public.%I to authenticated', t);
   end loop;
 end $$;
+alter table public.audit_events enable row level security;
+create policy audit_events_room_admin_select on public.audit_events for select to authenticated
+  using (private.has_library_access(library_id, 'administrator'));
+revoke insert, update, delete, truncate, references, trigger on public.audit_events from authenticated, anon;
+grant select on public.audit_events to authenticated;
 grant select on public.roles, public.profiles, public.libraries to authenticated;
 revoke all on public.roles, public.profiles, public.libraries from anon;
 
@@ -836,7 +841,9 @@ grant execute on function public.bootstrap_first_administrator(uuid,text) to ser
 revoke all on function private.enforce_tenant_write() from public, anon, authenticated, service_role;
 revoke all on function private.request_library_id() from public, anon, authenticated, service_role;
 revoke all on function private.has_library_access(uuid,text) from public, anon, service_role;
+grant execute on function private.request_library_id() to authenticated;
 grant execute on function private.has_library_access(uuid,text) to authenticated;
+grant execute on function private.is_active_operator() to authenticated;
 
 comment on function public.operator_workspace_mutation(text,text,jsonb,uuid) is
   'Room-scoped thin adapter over canonical Phase 5-7.1 domain functions.';
