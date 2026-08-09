@@ -7,6 +7,7 @@ const form = await readFile(new URL("../src/app/operator/circulation/issue-book-
 const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", import.meta.url), "utf8");
 const catalogueActions = await readFile(new URL("../src/app/operator/catalogue/actions.ts", import.meta.url), "utf8");
 const coverStorage = await readFile(new URL("../src/lib/operator/cover-storage.ts", import.meta.url), "utf8");
+const editBookPage = await readFile(new URL("../src/app/operator/catalogue/[id]/page.tsx", import.meta.url), "utf8");
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(page.includes("<IssueBookForm") && !page.includes("members[0]?.member_id") && !page.includes("copies[0]?.copy_id"), "server page still binds issue identity to the first result");
@@ -22,6 +23,7 @@ assert(catalogueActions.includes("catalogue_set_book_cover_v71") && catalogueAct
 const saveBookAction = catalogueActions.slice(catalogueActions.indexOf("export async function saveBookAction"), catalogueActions.indexOf("export async function setBookStatusAction"));
 assert(saveBookAction.indexOf("const cover = formData.get(\"cover\")") < saveBookAction.indexOf("if (cover instanceof File && cover.size > 0)") && saveBookAction.indexOf("if (cover instanceof File && cover.size > 0)") < saveBookAction.indexOf("const admin = createSupabaseAdminClient()"), "metadata-only book saves still construct a privileged cover client");
 assert(coverStorage.includes('select("id", { count: "exact", head: true }).eq("cover_storage_path", path)') && coverStorage.includes("if ((count ?? 0) > 0) return null;") && coverStorage.indexOf("if ((count ?? 0) > 0) return null;") < coverStorage.indexOf(".storage.from(bucket).remove([path])"), "cover cleanup does not retain shared legacy paths before deletion");
+assert(editBookPage.includes("let coverUrl: string | null = null;") && editBookPage.includes("try {") && editBookPage.includes("coverUrl = await signedBookCoverUrl(book.cover_storage_path);") && editBookPage.includes("} catch {") && editBookPage.includes("private preview is optional"), "book editing does not tolerate unavailable privileged cover previews");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });

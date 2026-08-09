@@ -17,7 +17,12 @@ export default async function EditBookPage({ params, searchParams }: { params: P
     supabase.from("book_authors").select("author_id").eq("book_id", id), supabase.from("book_categories").select("category_id").eq("book_id", id), supabase.from("book_subjects").select("subject_id").eq("book_id", id),
   ]);
   if (!book) notFound();
-  const coverUrl = await signedBookCoverUrl(book.cover_storage_path);
+  let coverUrl: string | null = null;
+  try {
+    coverUrl = await signedBookCoverUrl(book.cover_storage_path);
+  } catch {
+    // A private preview is optional; it must not block metadata editing when privileged credentials are unavailable.
+  }
   const selectedAuthors = new Set((linkedAuthors ?? []).map((row) => row.author_id));
   const selectedCategories = new Set((linkedCategories ?? []).map((row) => row.category_id));
   const selectedSubjects = new Set((linkedSubjects ?? []).map((row) => row.subject_id));
