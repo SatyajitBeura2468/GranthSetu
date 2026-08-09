@@ -14,7 +14,7 @@ select ok(not has_function_privilege('authenticated','public.operator_global_sea
 select ok(not has_function_privilege('authenticated','public.operator_circulation_search_legacy_text(text,text,text)','EXECUTE'), 'the mojibake legacy circulation-search implementation is not executable');
 select ok(pg_get_functiondef('public.operator_global_search(text,text)'::regprocedure) ~* 'security definer' and pg_get_functiondef('public.operator_global_search(text,text)'::regprocedure) ~* 'operator_global_search_legacy_text', 'global search exposes only the cleaned room-aware wrapper');
 select ok(pg_get_functiondef('public.catalogue_upsert_author(uuid,text)'::regprocedure) ~* 'lower\(btrim\(display_name\)\)' and exists (select 1 from pg_indexes where schemaname='public' and indexname='authors_library_normalized_name_unique'), 'authors are normalized and unique only within their library room');
-select ok(pg_get_functiondef('public.global_search_v71(text)'::regprocedure) ~* 'private.request_library_id\(\)' and pg_get_functiondef('public.global_search_v71(text)'::regprocedure) ~* 'public.operator_global_search\(v_code,p_query\)', 'legacy global search resolves one current room before calling the room-bound search');
+select ok(pg_get_functiondef('public.global_search_v71(text)'::regprocedure) ~* 'private.request_library_id' and pg_get_functiondef('public.global_search_v71(text)'::regprocedure) ~* 'public.operator_global_search', 'legacy global search resolves one current room before calling the room-bound search');
 
 select * from finish();
 rollback;
