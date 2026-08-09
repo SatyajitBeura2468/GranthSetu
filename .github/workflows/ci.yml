@@ -26,6 +26,8 @@ jobs:
         run: npm run build
       - name: Verify explicit issue-selection UI contract
         run: npm run test:phase71:ui
+      - name: Verify auth onboarding contract
+        run: npm run test:auth:onboarding
 
   database:
     runs-on: ubuntu-latest
