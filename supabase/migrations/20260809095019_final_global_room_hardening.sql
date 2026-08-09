@@ -502,7 +502,7 @@ begin
   select id into v_admin from public.roles where role_key='administrator';
   if p_status='inactive' and exists(select 1 from public.profile_roles where profile_id=p_target_profile_id and library_id=v_library and role_id=v_admin and status='active') then
     select count(distinct pr.profile_id) into v_active_admins from public.profile_roles pr join public.profiles p on p.id=pr.profile_id
-    where pr.library_id=v_library and pr.role_id=v_admin and pr.status='active' and p.status='active';
+    where pr.library_id=v_library and pr.role_id=v_admin and pr.status='active' and p.status='active' and p.auth_user_id is not null;
     if v_active_admins <= 1 then raise exception using errcode='42501',message='GS_LAST_ROOM_ADMIN'; end if;
   end if;
   update public.profile_roles set status=p_status where profile_id=p_target_profile_id and library_id=v_library and status<>p_status;
