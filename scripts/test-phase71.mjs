@@ -11,18 +11,15 @@ const createdMembers = [];
 const createdSessions = [];
 const createdUsers = [];
 const createdProfiles = [];
+const libraryId = "10000000-0000-0000-0000-000000000001";
 let coverFixture = null;
 let coverOtherFixture = null;
 let coverOriginal = null;
 let coverOtherOriginal = null;
-let libraryId = null;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
 try {
-  const library = await admin.from("libraries").select("id").eq("public_code", "OAVMUSI").single();
-  assert(!library.error && library.data?.id, `bootstrap library missing: ${library.error?.message}`);
-  libraryId = library.data.id;
   const user = await admin.auth.admin.createUser({ email: `phase71-${token}@phase71.invalid`, password, email_confirm: true });
   assert(!user.error && user.data.user, `fixture auth user failed: ${user.error?.message}`); createdUsers.push(user.data.user.id);
   const profile = await admin.from("profiles").insert({ auth_user_id: user.data.user.id, display_name: "Phase 7.1 Administrator", status: "active" }).select("id").single();

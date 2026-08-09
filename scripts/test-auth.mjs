@@ -11,6 +11,7 @@ if (!anonKey || !serviceKey) {
 const password = "Phase4-Test-Password-2026!";
 const suffix = "@phase4.invalid";
 const libraryCode = "OAVMUSI";
+const libraryId = "10000000-0000-0000-0000-000000000001";
 const identities = [
   { label: "administrator-a", displayName: "Development Administrator A", status: "active", role: "administrator", metadata: { role: "administrator", is_admin: true } },
   { label: "administrator-b", displayName: "Development Administrator B", status: "active", role: "administrator", metadata: { role: "administrator", is_admin: true } },
@@ -93,12 +94,10 @@ async function createFixtureUsers() {
 
   const { data: roles, error: roleError } = await admin.from("roles").select("id,role_key");
   assert(!roleError, "could not read fixed operator roles");
-  const { data: library, error: libraryError } = await admin.from("libraries").select("id").eq("public_code", libraryCode).single();
-  assert(!libraryError && library, "could not resolve the disposable test Library Room");
   const roleIds = new Map(roles.map((role) => [role.role_key, role.id]));
   const assignments = createdUsers.filter((user) => user.role).map((user) => ({
     profile_id: user.profileId,
-    library_id: library.id,
+    library_id: libraryId,
     role_id: roleIds.get(user.role),
   }));
   const { error: assignmentError } = await admin.from("profile_roles").insert(assignments);

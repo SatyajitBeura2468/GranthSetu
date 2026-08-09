@@ -11,6 +11,7 @@ if ((!url.includes("127.0.0.1") && !url.includes("localhost") && !url.includes("
 const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const password = "Phase5-Test-Password-2026!";
 const libraryCode = "OAVMUSI";
+const libraryId = "10000000-0000-0000-0000-000000000001";
 const createdUsers = [];
 const createdProfiles = [];
 const createdCopies = [];
@@ -18,7 +19,6 @@ const createdMembers = [];
 const createdLoans = [];
 const createdFines = [];
 const clients = [];
-let libraryId;
 
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const expectError = async (operation, message) => { const result = await operation(); assert(result.error, message); return result; };
@@ -77,9 +77,6 @@ async function assertNoAudit(requestId) {
 }
 
 try {
-  const library = await admin.from("libraries").select("id").eq("public_code", libraryCode).single();
-  assert(!library.error && library.data, "could not resolve the circulation test Library Room");
-  libraryId = library.data.id;
   const adminOp = await operator("administrator", "administrator", { role: "administrator", is_admin: true });
   const librarian = await operator("librarian", "librarian", { role: "administrator", is_admin: true, roles: ["administrator"] });
   const inactive = await operator("inactive", "librarian", {});

@@ -18,13 +18,10 @@ const createdCopies = [];
 const createdLoans = [];
 const createdUsers = [];
 const createdProfiles = [];
+const libraryId = "10000000-0000-0000-0000-000000000001";
 let bookId;
-let libraryId;
 
 try {
-  const library = await admin.from("libraries").select("id").eq("public_code", "OAVMUSI").single();
-  assert(!library.error && library.data?.id, `bootstrap library missing: ${library.error?.message}`);
-  libraryId = library.data.id;
   const email = `phase71-issue-${token}@phase71.invalid`;
   const user = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   assert(!user.error && user.data.user, `issue operator creation failed: ${user.error?.message}`);
