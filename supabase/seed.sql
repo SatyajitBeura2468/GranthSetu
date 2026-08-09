@@ -99,7 +99,7 @@ values ('62000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-0000000
 
 insert into public.library_settings (setting_key, value_kind, boolean_value, updated_by_profile_id)
 values ('fines_enabled', 'boolean', false, '10000000-0000-0000-0000-000000000001')
-on conflict do update set
+on conflict (library_id, setting_key) do update set
   value_kind = excluded.value_kind,
   boolean_value = excluded.boolean_value,
   integer_value = null,
