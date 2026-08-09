@@ -1,27 +1,35 @@
 import Link from "next/link";
+import { ArrowRight, Building2, LogIn } from "lucide-react";
+import { Brand } from "@/components/brand/brand";
+import { LibraryCodeForm } from "@/components/library/library-code-form";
+import { RememberedLibrary } from "@/components/library/remembered-library";
+import { PageBridge } from "@/components/brand/page-bridge";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function Home() {
-  const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "local";
-  const commit = process.env.VERCEL_GIT_COMMIT_SHA;
-
   return (
-    <main className="foundation-shell">
-      <section className="foundation-panel" aria-labelledby="foundation-title">
-        <div className="foundation-mark" aria-hidden="true">G</div>
-        <p className="foundation-kicker">GranthSetu</p>
-        <h1 id="foundation-title">OAV Musiguda Library Management System</h1>
-        <p className="foundation-stage">V3 Platform Foundation</p>
-        <p className="foundation-copy">
-          Modern application infrastructure is being established. The library
-          workflows will arrive through separately reviewed phases.
-        </p>
-        <Link className="button" href="/login">Operator sign in</Link>
-        <dl className="foundation-meta">
-          <div><dt>Runtime</dt><dd>Next.js + React + TypeScript</dd></div>
-          <div><dt>Environment</dt><dd>{environment}</dd></div>
-          {commit ? <div><dt>Commit</dt><dd>{commit.slice(0, 12)}</dd></div> : null}
-        </dl>
+    <main className="gateway-shell">
+      <header className="gateway-topbar">
+        <Brand />
+        <ThemeToggle />
+      </header>
+      <section className="gateway-stage" aria-labelledby="gateway-title">
+        <div className="gateway-copy">
+          <h1 id="gateway-title">Your library,<br /><em>one code away.</em></h1>
+          <p>Enter the code shared by your institution to open its Library Room. No student account is required.</p>
+        </div>
+        <div className="gateway-entry">
+          <RememberedLibrary />
+          <LibraryCodeForm />
+          <div className="gateway-divider" aria-hidden="true"><span>or</span></div>
+          <div className="gateway-utilities">
+            <Link className="button button-secondary" href="/staff"><LogIn aria-hidden="true" />Staff sign in</Link>
+            <Link className="button button-quiet" href="/create-library"><Building2 aria-hidden="true" />Create a library<ArrowRight aria-hidden="true" /></Link>
+          </div>
+        </div>
       </section>
+      <PageBridge className="gateway-motif" />
+      <footer className="gateway-footer"><span>© {new Date().getFullYear()} GranthSetu</span><span>One platform. Many private Library Rooms.</span></footer>
     </main>
   );
 }

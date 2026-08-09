@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { reconcileIssueSelection } from "../src/app/operator/circulation/issue-book-selection.mjs";
 
 const page = await readFile(new URL("../src/app/operator/circulation/page.tsx", import.meta.url), "utf8");
-const workspacePage = await readFile(new URL("../src/app/operator/page.tsx", import.meta.url), "utf8");
+const workspaceSearchPage = await readFile(new URL("../src/app/operator/[libraryCode]/search/page.tsx", import.meta.url), "utf8");
 const form = await readFile(new URL("../src/app/operator/circulation/issue-book-form.tsx", import.meta.url), "utf8");
 const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", import.meta.url), "utf8");
 const catalogueActions = await readFile(new URL("../src/app/operator/catalogue/actions.ts", import.meta.url), "utf8");
@@ -17,7 +17,7 @@ assert(form.includes("router.push(buildSearchUrl"), "issue search is not server-
 assert(form.includes("reconcileIssueSelection") && form.includes("visibleSelection.selectedMemberId") && form.includes("visibleSelection.selectedCopyId"), "candidate lifecycle reconciliation is not wired into rendered selection and hidden fields");
 assert(page.includes("key={issueCandidateContextKey}") && page.includes("params.member ?? \"\"") && page.includes("params.copy ?? \"\""), "candidate context changes do not remount the issue form");
 assert(reports.includes("function exportQuery") && reports.includes("kind === \"overdue\"") && reports.includes("kind !== \"popular\" && kind !== \"inventory\""), "report filters are not constrained to the supported report arguments");
-assert(workspacePage.includes('result_type === "copy"') && workspacePage.includes('/operator/inventory/${result.result_id}'), "global search copy results do not route to the selected inventory record");
+assert(workspaceSearchPage.includes('result_type === "loan"') && workspaceSearchPage.includes('/operator/${libraryCode}/${meta.path}/${result.result_id}'), "room-scoped global search results do not route to their selected record");
 assert(page.includes("Borrower search is unavailable") && page.includes("Copy search is unavailable") && page.includes("Loan search is unavailable") && page.includes("Fine search is unavailable"), "circulation search failures are not surfaced as unavailable workflows");
 assert(catalogueActions.includes("catalogue_set_book_cover_v71") && catalogueActions.includes("p_expected_cover_storage_path") && catalogueActions.includes("typeof replacedPath === \"string\""), "cover replacement cleanup is not bound to an atomic expected-path mutation");
 const saveBookAction = catalogueActions.slice(catalogueActions.indexOf("export async function saveBookAction"), catalogueActions.indexOf("export async function setBookStatusAction"));

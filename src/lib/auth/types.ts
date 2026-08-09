@@ -9,3 +9,10 @@ export type OperatorContext = {
   status: "active";
   roles: OperatorRole[];
 };
+
+export type LibraryOperatorContext = OperatorContext & {
+  libraryId: string;
+  libraryCode: string;
+  libraryName: string;
+  demo?: boolean;
+};

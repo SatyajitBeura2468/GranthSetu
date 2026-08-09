@@ -2,7 +2,11 @@
 
 ## Status and scope
 
-This is the proposed conceptual blueprint for the next implementation phase. It is design documentation only: it contains no executable SQL, no Supabase connection, no authentication implementation, and no school data. The historical V2 client remains authoritative evidence of terminology and workflows, not a schema to copy.
+This document describes the implemented V3 domain. GranthSetu is globally multi-tenant: `libraries` is the tenant root and each tenant-owned record carries a non-null `library_id`. The historical V2 client remains authoritative evidence of terminology and workflows, not a schema to copy.
+
+The bootstrap migration maps every pre-V3 row to `OAVMUSI` without changing primary IDs. Natural identifiers such as member identifier, accession number, barcode, location code, academic code, and reference name are unique inside a room—not across the platform. Composite foreign keys such as `(book_id, library_id)` and `(member_id, library_id)` make cross-room catalogue and circulation relationships structurally invalid.
+
+Public codes are locators only. They may be shared and indexed; they confer no private access.
 
 ## Design principles
 
@@ -11,7 +15,7 @@ This is the proposed conceptual blueprint for the next implementation phase. It 
 - Preserve circulation and audit history even when people or inventory become inactive.
 - Prefer constrained domain values and explicit events over arbitrary status strings.
 - Derive availability from copy state and active loans instead of maintaining conflicting counters.
-- Keep the first release appropriate for one school and a modest collection.
+- Keep each Library Room appropriate for a school or community collection while supporting many isolated rooms.
 - Make policy values configurable without hardcoding product rules into tables or UI.
 - Do not place secrets or real school data in the repository.
 
@@ -124,7 +128,7 @@ Members, profiles, books, and copies are deactivated/archived rather than destru
 
 Normalized records support title/copy totals, availability, active/overdue loans, lost/damaged inventory, popular titles, member activity, period circulation, class-wise reports, category inventory, member counts, and fine summaries without reporting tables in the first release. PostgreSQL indexes and full-text/trigram capabilities are sufficient initially; no Elasticsearch, Algolia, analytics database, event bus, or CQRS layer is justified.
 
-Likely indexes include accession number, normalized ISBN, member identifier, active loans by copy/member/due date, loan history by copy/member/time, title/author search fields, and catalogue category/subject. The expected scale is one school, thousands of titles/copies, and ordinary operational reporting; the design should grow beyond that without premature enterprise infrastructure.
+Indexes lead with `library_id` for tenant-bound access paths, followed by accession number, normalized ISBN, member identifier, active loan state/due date, loan history, and catalogue search fields. The expected scale is many independently operated school or community rooms, each with thousands of titles/copies and ordinary operational reporting; the design should grow beyond that without premature enterprise infrastructure.
 
 ## Migration compatibility
 

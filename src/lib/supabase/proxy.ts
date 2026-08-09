@@ -14,11 +14,21 @@ export async function updateSession(request: NextRequest) {
   const publicEnv = getOptionalPublicSupabaseEnv();
   const pathname = request.nextUrl.pathname;
   const protectedRoute = pathname === "/operator" || pathname.startsWith("/operator/");
+  const legacyOperatorRoute = /^\/operator\/(?:admin|catalogue|circulation|inventory|members|reports|settings)(?:\/|$)/.test(pathname);
+  const localDemoRoute = process.env.NODE_ENV === "development" && pathname.startsWith("/operator/OAVMUSI");
+
+  if (legacyOperatorRoute) {
+    const roomChooser = request.nextUrl.clone();
+    roomChooser.pathname = "/operator";
+    roomChooser.search = "";
+    return NextResponse.redirect(roomChooser, 308);
+  }
 
   if (!publicEnv) {
+    if (localDemoRoute) return NextResponse.next({ request });
     if (!protectedRoute) return NextResponse.next({ request });
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
+    loginUrl.pathname = "/staff";
     loginUrl.search = `?next=${encodeURIComponent(sanitizeNextPath(pathname))}`;
     return NextResponse.redirect(loginUrl);
   }
@@ -48,7 +58,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!hasVerifiedClaims && protectedRoute) {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
+    loginUrl.pathname = "/staff";
     loginUrl.search = `?next=${encodeURIComponent(sanitizeNextPath(pathname))}`;
     return copyCookies(supabaseResponse, NextResponse.redirect(loginUrl));
   }

@@ -1,59 +1,68 @@
-# GranthSetu V3 Deployment
+# GranthSetu V3 deployment runbook
 
-## Repository and branch model
+## Release topology
 
-- GitHub repository: `SatyajitBeura2468/GranthSetu`
-- Vercel project: `granthsetu`
-- Vercel project ID: `prj_oRfwKM95K8o9fpdZxTCJaMB4A5jX`
-- Vercel team: `Satyajit Beura's Projects` (`teamsatyajitbeura`)
+- Repository: `SatyajitBeura2468/GranthSetu`
 - Production branch: `main`
-- Development database: Supabase project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) in `ap-south-1` (Mumbai)
-- Feature branches, including `feat/v3-operator-auth-authorization`, are Preview branches.
-- A future reviewed pull request can reach Production only after an explicit merge to `main`.
+- Vercel project: `granthsetu`
+- Canonical web host: `https://granthsetu.vercel.app`
+- Database: a separately reviewed Supabase project per environment
 
-## Local commands
+The web deployment and data-plane migration are independent. Never copy a Development database credential into Production merely to make a deployment appear complete.
+
+## Required environment variables
+
+| Name | Scope | Notes |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Browser/server | Exact approved project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser/server | Publishable or anon key for that project |
+| `SUPABASE_SECRET_KEY` | Server only | Secret/service key; never prefix with `NEXT_PUBLIC_` |
+| `SUPABASE_EXPECTED_PROJECT_REF` | Server only | Optional fail-closed match for the approved project ref |
+| `NEXT_PUBLIC_SITE_URL` | Browser/server | Exact canonical origin, without a trailing slash |
+
+Use separate values for Local, Preview, and Production. Confirm variable names and targets without printing secrets into logs.
+
+## Pre-deployment gates
+
+1. Confirm a clean working tree and intended commit.
+2. Run `npm ci`, lint, type-check, UI contract tests, and production build.
+3. Start local Supabase, reset from zero, lint the database, and run all pgTAP suites including `db:test:tenancy`.
+4. Generate `src/types/database.ts` from the reset schema and rerun the web gates.
+5. Inspect `/`, `/l/OAVMUSI`, catalogue/detail, staff/login/create-library, and every operator area at desktop and mobile widths.
+6. Test keyboard focus, light/dark themes, reduced motion, empty/error states, redirects, CSV export, and no-console-error behavior.
+
+## Production database gate
+
+Before applying the V3 tenancy migration:
+
+1. Identify the exact Supabase project and owner.
+2. Take a recoverable backup and record its timestamp.
+3. Confirm the source schema matches the reviewed migration base.
+4. Rehearse the migration against a restored copy.
+5. Verify every tenant-owned table maps existing rows to `OAVMUSI` and no primary IDs change.
+6. Run the isolation matrix with two synthetic rooms and two users.
+7. Apply only through the approved migration workflow; never via ad-hoc dashboard edits.
+8. Generate types from the migrated target and retain the test evidence.
+
+If any item is unavailable, publish only the web application and label the production data plane pending configuration.
+
+## Web release and smoke test
+
+After all applicable gates are green, push the reviewed commit to `main`. Vercel Git integration should create the Production deployment. Verify:
 
 ```text
-npm ci
-npm run dev
-npm run lint
-npm run typecheck
-npm run build
+GET /
+GET /api/health
+GET /l/NOT-A-ROOM        -> safe 404
+GET /staff
+GET /create-library
+GET /operator            -> authenticated room chooser or /staff redirect
 ```
 
-## Vercel behavior
+Then test one synthetic room end to end: public discovery, catalogue search, room login, issue, return, renewal, member creation, catalogue creation, inventory creation, report export, operator assignment, and audit visibility.
 
-The Vercel project is connected to the GitHub repository at the repository root with the Next.js framework preset. Vercel Git integration creates Preview Deployments for feature-branch pushes and pull requests, while `main` remains the Production branch. No Production Deployment is being created intentionally in this foundation task.
+## Rollback
 
-## Environment strategy
-
-`.env.example` documents variable names only. Local secrets belong in an untracked `.env.local`. Vercel values belong in Vercel’s environment-variable store, scoped to the appropriate Local, Preview, or Production environment. Privileged Supabase secrets must remain server-only.
-
-Preview/Development may point only at the isolated `granthsetu-dev` Supabase project. Vercel Production has no Supabase credentials and must not receive Development values. `SUPABASE_SECRET_KEY`, when needed for Preview operator provisioning, is server-only and must be scoped only to this Development Preview. No Production Supabase project or school data is configured.
-
-Database migrations, local reset/testing, generated types, synthetic seed data, and the remote Development workflow are documented in [Database Development](database-development.md).
-
-## Preview verification
-
-Open the generated Preview URL and verify `/`. Verify the health endpoint with:
-
-```text
-curl https://<preview-host>/api/health
-```
-
-The response should report `status: "ok"`, service `granthsetu`, and stage `v3-platform-foundation`. It must not contain secrets.
-
-## Phase 4 verification boundary
-
-The Phase 4 branch must receive a fresh Preview deployment. Verify `/login`, `/forgot-password`, and protected-route redirects without creating a real user. A hosted operator invite/recovery smoke test must use an approved synthetic account and only after the hosted Auth signup-disabled, template, and redirect settings have been independently verified. Do not claim hosted Auth readiness from a source-only build.
-
-## Verified foundation Preview
-
-- Preview URL: `https://granthsetu-4q0dwr22v-teamsatyajitbeura.vercel.app`
-- Homepage: HTTP 200 and foundation content verified.
-- `/api/health`: HTTP 200 JSON verified with `environment: "preview"` and commit `c90776f8d5d94988d499cf061560e84677292171`.
-- GitHub repository connection: connected to `SatyajitBeura2468/GranthSetu`.
-- No successful Production Deployment was created intentionally; an initial automatic trigger failed before the framework preset was corrected and is not live.
-
-The subsequent Git-triggered Preview for the documentation commit was also `READY`:
-`https://granthsetu-git-feat-v3-platform-foundation-teamsatyajitbeura.vercel.app`, commit `40cdb68192396e1c90e2821541056b0f14dc6179`.
+- Web: use Vercel's previous known-good deployment; do not rewrite Git history.
+- Database: stop writes and use the reviewed backup/restore plan. This migration changes keys and foreign keys, so do not improvise a destructive down migration on live records.
+- Credentials: rotate any secret exposed in logs and redeploy every affected environment.

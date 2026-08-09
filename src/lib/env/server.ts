@@ -2,8 +2,6 @@ import "server-only";
 
 import { getPublicSupabaseEnv } from "@/lib/env/public";
 
-export const APPROVED_DEVELOPMENT_PROJECT_REF = "jyvvxseeytjyhuinyzgn";
-
 function getProjectRef(url: string) {
   const parsed = new URL(url);
   const [ref] = parsed.hostname.split(".");
@@ -21,16 +19,13 @@ export function getServerSupabaseEnv() {
 export function getPrivilegedSupabaseEnv() {
   const { url, projectRef } = getServerSupabaseEnv();
   const secretKey = process.env.SUPABASE_SECRET_KEY;
-  const isProduction = process.env.VERCEL_ENV === "production";
+  const expectedProjectRef = process.env.SUPABASE_EXPECTED_PROJECT_REF?.trim();
 
-  if (isProduction) {
-    throw new Error("Privileged Supabase operations are disabled in Production.");
-  }
-  if (projectRef !== APPROVED_DEVELOPMENT_PROJECT_REF) {
-    throw new Error("Privileged Supabase operations require the approved Development project.");
+  if (expectedProjectRef && projectRef !== expectedProjectRef) {
+    throw new Error("The Supabase URL does not match SUPABASE_EXPECTED_PROJECT_REF.");
   }
   if (!secretKey) {
-    throw new Error("The Development Supabase secret key is not configured.");
+    throw new Error("The server-only Supabase secret key is not configured.");
   }
 
   return { url, secretKey, projectRef };

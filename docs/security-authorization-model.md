@@ -2,7 +2,11 @@
 
 ## Scope
 
-This document defines the security boundaries implemented through the current V3 phases. Phase 4 implements Supabase Auth, database-authoritative operator roles, and RLS. Phase 5 adds trusted circulation RPCs; the remaining product workflows are still future work. All authorization decisions are enforced server-side and, where data is exposed through Supabase, at the database boundary as well.
+This document defines the implemented V3 room boundary. Supabase Auth proves identity; `profiles`, `profile_roles`, and `libraries` determine room membership and capability. A public library code is never authorization. All private reads and writes are revalidated at the PostgreSQL boundary and constrained by `library_id`.
+
+The anonymous Data API receives no direct table grants. It may execute only narrow public functions that return room identity and safe bibliographic/availability fields. Member identity, loans, fines, operator identity, audit events, and private storage paths never appear in that result. Covers remain in a private bucket and are exposed only through a short-lived, server-signed URL after the book and room are revalidated.
+
+Authenticated operators receive SELECT policies scoped by `private.has_library_access(library_id)`. Direct INSERT, UPDATE, and DELETE grants remain closed; room-scoped trusted functions re-check role, tenant, target relationships, status, and invariants before mutating data. Administrator-only settings, operator assignment, and audit data fail with `GS_ADMIN_REQUIRED` for librarians.
 
 ## Identity concepts
 
@@ -22,7 +26,7 @@ Role is a capability assignment; it is not a member type, student class, or auth
 
 | Resource/action | Administrator | Librarian | Member/student (future) |
 | --- | --- | --- | --- |
-| Read public catalogue and availability | Yes | Yes | Limited, authenticated or approved public policy |
+| Read active public catalogue and availability | Yes | Yes | Yes, anonymously through the narrow room RPC |
 | Create/edit books, authors, categories | Yes | Yes | No |
 | Archive books and withdraw copies | Yes | Yes, subject to policy | No |
 | Create/edit physical copies and locations | Yes | Yes | No |
