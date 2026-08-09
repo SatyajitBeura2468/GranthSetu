@@ -182,12 +182,12 @@ try {
   console.log("Circulation integration tests passed: issue, return, renewal, overdue, fines, concurrency, idempotency, audit, and metadata-forgery cases.");
 } finally {
   for (const client of clients) await client.auth.signOut().catch(() => {});
-  await admin.from("fines").delete().in("id", createdFines).catch(() => {});
-  await admin.from("loan_renewals").delete().in("loan_id", createdLoans).catch(() => {});
-  await admin.from("loans").delete().in("id", createdLoans).catch(() => {});
-  await admin.from("book_copies").delete().in("id", createdCopies).catch(() => {});
-  await admin.from("members").delete().in("id", createdMembers).catch(() => {});
-  await admin.from("profile_roles").delete().in("profile_id", createdProfiles).catch(() => {});
-  await admin.from("profiles").delete().in("id", createdProfiles).catch(() => {});
+  await admin.from("fines").delete().in("id", createdFines);
+  await admin.from("loan_renewals").delete().in("loan_id", createdLoans);
+  await admin.from("loans").delete().in("id", createdLoans);
+  await admin.from("book_copies").delete().in("id", createdCopies);
+  await admin.from("members").delete().in("id", createdMembers);
+  await admin.from("profile_roles").delete().in("profile_id", createdProfiles);
+  await admin.from("profiles").delete().in("id", createdProfiles);
   for (const user of createdUsers) await admin.auth.admin.deleteUser(user.id).catch(() => {});
 }
