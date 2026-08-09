@@ -15,32 +15,36 @@ let coverFixture = null;
 let coverOtherFixture = null;
 let coverOriginal = null;
 let coverOtherOriginal = null;
+let libraryId = null;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
 try {
+  const library = await admin.from("libraries").select("id").eq("public_code", "OAVMUSI").single();
+  assert(!library.error && library.data?.id, `bootstrap library missing: ${library.error?.message}`);
+  libraryId = library.data.id;
   const user = await admin.auth.admin.createUser({ email: `phase71-${token}@phase71.invalid`, password, email_confirm: true });
   assert(!user.error && user.data.user, `fixture auth user failed: ${user.error?.message}`); createdUsers.push(user.data.user.id);
   const profile = await admin.from("profiles").insert({ auth_user_id: user.data.user.id, display_name: "Phase 7.1 Administrator", status: "active" }).select("id").single();
   assert(!profile.error, `fixture profile failed: ${profile.error?.message}`); createdProfiles.push(profile.data.id);
   const role = await admin.from("roles").select("id").eq("role_key", "administrator").single();
   assert(!role.error, "administrator role missing");
-  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, role_id: role.data.id }); assert(!assignment.error, `fixture role failed: ${assignment.error?.message}`);
+  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, library_id: libraryId, role_id: role.data.id }); assert(!assignment.error, `fixture role failed: ${assignment.error?.message}`);
   const signedIn = await client.auth.signInWithPassword({ email: `phase71-${token}@phase71.invalid`, password }); assert(!signedIn.error, `fixture sign-in failed: ${signedIn.error?.message}`);
   const currentStart = new Date(Date.now() - 730 * 86400000).toISOString().slice(0, 10);
   const currentEnd = new Date(Date.now() + 730 * 86400000).toISOString().slice(0, 10);
-  const session = await admin.from("academic_sessions").insert({ session_code: `PHASE71-CURRENT-${token}`, display_label: "Phase 7.1 current session", starts_on: currentStart, ends_on: currentEnd, status: "active" }).select("id").single();
+  const session = await admin.from("academic_sessions").insert({ library_id: libraryId, session_code: `PHASE71-CURRENT-${token}`, display_label: "Phase 7.1 current session", starts_on: currentStart, ends_on: currentEnd, status: "active" }).select("id").single();
   assert(!session.error, `current session fixture failed: ${session.error?.message}`); createdSessions.push(session.data.id);
-  const grade = await admin.from("grade_levels").select("id").limit(1).single(); const section = await admin.from("sections").select("id").limit(1).single();
+  const grade = await admin.from("grade_levels").select("id").eq("library_id", libraryId).limit(1).single(); const section = await admin.from("sections").select("id").eq("library_id", libraryId).limit(1).single();
   assert(!grade.error && !section.error, "academic fixtures missing");
   const futureStart = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
   const futureEnd = new Date(Date.now() + 367 * 86400000).toISOString().slice(0, 10);
-  const futureSession = await admin.from("academic_sessions").insert({ session_code: `PHASE71-FUTURE-${token}`, display_label: "Phase 7.1 future session", starts_on: futureStart, ends_on: futureEnd, status: "active" }).select("id").single();
+  const futureSession = await admin.from("academic_sessions").insert({ library_id: libraryId, session_code: `PHASE71-FUTURE-${token}`, display_label: "Phase 7.1 future session", starts_on: futureStart, ends_on: futureEnd, status: "active" }).select("id").single();
   assert(!futureSession.error, `future session fixture failed: ${futureSession.error?.message}`); createdSessions.push(futureSession.data.id);
 
-  const bulk = Array.from({ length: 125 }, (_, index) => ({ member_identifier: `PHASE71-BULK-${token}-${index}`, member_kind: "student", display_name: `Phase71Search ${index}`, status: "active" }));
+  const bulk = Array.from({ length: 125 }, (_, index) => ({ library_id: libraryId, member_identifier: `PHASE71-BULK-${token}-${index}`, member_kind: "student", display_name: `Phase71Search ${index}`, status: "active" }));
   const inserted = await admin.from("members").insert(bulk).select("id"); assert(!inserted.error && inserted.data?.length === 125, `bulk member fixture failed: ${inserted.error?.message}`); createdMembers.push(...inserted.data.map((row) => row.id));
-  const enrollments = createdMembers.map((id, index) => ({ member_id: id, academic_session_id: session.data.id, grade_level_id: grade.data.id, section_id: section.data.id, roll_number: String(1000 + index), status: "active" }));
+  const enrollments = createdMembers.map((id, index) => ({ library_id: libraryId, member_id: id, academic_session_id: session.data.id, grade_level_id: grade.data.id, section_id: section.data.id, roll_number: String(1000 + index), status: "active" }));
   const enrolled = await admin.from("student_enrollments").insert(enrollments); assert(!enrolled.error, `bulk enrollment fixture failed: ${enrolled.error?.message}`);
   const search = await client.rpc("circulation_member_search", { p_query: "Phase71Search", p_limit: 500 }); assert(!search.error && search.data.length === 50, `search-first member result was not bounded at 50: ${search.error?.message ?? search.data?.length}`);
   const rollSearch = await client.rpc("circulation_member_search", { p_query: "1007", p_limit: 50 }); assert(!rollSearch.error && rollSearch.data.some((row) => row.roll_number === "1007"), "roll number was not searchable");
@@ -65,14 +69,14 @@ try {
   assert(!protectedMember.error, `legacy RPC fixture lookup failed: ${protectedMember.error?.message}`);
   const legacyMutation = await client.rpc("member_upsert", { p_id: protectedMember.data.id, p_member_identifier: `LEGACY-BYPASS-${token}`, p_member_kind: protectedMember.data.member_kind, p_display_name: protectedMember.data.display_name, p_status: protectedMember.data.status, p_expected_updated_at: protectedMember.data.updated_at });
   assert(legacyMutation.error, "legacy mutable member_upsert RPC remained callable by authenticated operators");
-  const clearedPolicies = await admin.from("library_settings").delete().in("setting_key", ["default_loan_period_days", "checkout_limit", "renewal_limit"]); assert(!clearedPolicies.error, `required policy cleanup failed: ${clearedPolicies.error?.message}`);
+  const clearedPolicies = await admin.from("library_settings").delete().eq("library_id", libraryId).in("setting_key", ["default_loan_period_days", "checkout_limit", "renewal_limit"]); assert(!clearedPolicies.error, `required policy cleanup failed: ${clearedPolicies.error?.message}`);
   const incompleteContext = await client.rpc("operator_policy_context"); assert(!incompleteContext.error && incompleteContext.data?.[0]?.policy_ready === false, "policy context reported ready without required loan settings");
   for (const [settingKey, settingValue] of [["default_loan_period_days", 14], ["checkout_limit", 3], ["renewal_limit", 1]]) {
     const requiredSetting = await client.rpc("admin_upsert_setting", { p_setting_key: settingKey, p_boolean_value: null, p_integer_value: settingValue, p_money_minor_value: null }); assert(!requiredSetting.error, `${settingKey} policy setup failed: ${requiredSetting.error?.message}`);
   }
   const setting = await client.rpc("admin_upsert_setting", { p_setting_key: "overdue_renewal_allowed", p_boolean_value: true, p_integer_value: null, p_money_minor_value: null }); assert(!setting.error, `policy toggle failed: ${setting.error?.message}`);
   const context = await client.rpc("operator_policy_context"); assert(!context.error && context.data?.[0]?.policy_ready === true && context.data?.[0]?.overdue_renewal_allowed === true, "policy context did not reflect complete trusted settings");
-  const coverBooks = await admin.from("books").select("id,cover_storage_path").eq("status", "active").order("id").limit(2); assert(!coverBooks.error && coverBooks.data?.length === 2, `cover race fixture lookup failed: ${coverBooks.error?.message ?? "two active books are required"}`);
+  const coverBooks = await admin.from("books").select("id,cover_storage_path").eq("library_id", libraryId).eq("status", "active").order("id").limit(2); assert(!coverBooks.error && coverBooks.data?.length === 2, `cover race fixture lookup failed: ${coverBooks.error?.message ?? "two active books are required"}`);
   coverFixture = coverBooks.data[0].id; coverOriginal = coverBooks.data[0].cover_storage_path;
   coverOtherFixture = coverBooks.data[1].id; coverOtherOriginal = coverBooks.data[1].cover_storage_path;
   const coverPathA = `book-covers/${coverFixture}/phase71-${token}.jpg`; const coverPathB = `book-covers/${coverFixture}/phase71-${token}-next.jpg`; const coverOtherPath = `book-covers/${coverOtherFixture}/phase71-${token}.jpg`;

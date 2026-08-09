@@ -19,8 +19,12 @@ const createdLoans = [];
 const createdUsers = [];
 const createdProfiles = [];
 let bookId;
+let libraryId;
 
 try {
+  const library = await admin.from("libraries").select("id").eq("public_code", "OAVMUSI").single();
+  assert(!library.error && library.data?.id, `bootstrap library missing: ${library.error?.message}`);
+  libraryId = library.data.id;
   const email = `phase71-issue-${token}@phase71.invalid`;
   const user = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   assert(!user.error && user.data.user, `issue operator creation failed: ${user.error?.message}`);
@@ -29,26 +33,26 @@ try {
   assert(!profile.error, `issue profile creation failed: ${profile.error?.message}`);
   createdProfiles.push(profile.data.id);
   const role = await admin.from("roles").select("id").eq("role_key", "librarian").single();
-  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, role_id: role.data.id });
+  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, library_id: libraryId, role_id: role.data.id });
   assert(!assignment.error, `issue role assignment failed: ${assignment.error?.message}`);
   const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const signedIn = await client.auth.signInWithPassword({ email, password });
   assert(!signedIn.error, `issue operator sign-in failed: ${signedIn.error?.message}`);
 
   const memberRows = await admin.from("members").insert([
-    { member_identifier: `PHASE71-SELECT-A-${token}`, member_kind: "teacher", display_name: `Phase71 Select A ${token}`, status: "active" },
-    { member_identifier: `PHASE71-SELECT-B-${token}`, member_kind: "teacher", display_name: `Phase71 Select B ${token}`, status: "active" },
-    { member_identifier: `PHASE71-SELECT-C-${token}`, member_kind: "teacher", display_name: `Phase71 Select C ${token}`, status: "active" },
+    { library_id: libraryId, member_identifier: `PHASE71-SELECT-A-${token}`, member_kind: "teacher", display_name: `Phase71 Select A ${token}`, status: "active" },
+    { library_id: libraryId, member_identifier: `PHASE71-SELECT-B-${token}`, member_kind: "teacher", display_name: `Phase71 Select B ${token}`, status: "active" },
+    { library_id: libraryId, member_identifier: `PHASE71-SELECT-C-${token}`, member_kind: "teacher", display_name: `Phase71 Select C ${token}`, status: "active" },
   ]).select("id,display_name");
   assert(!memberRows.error && memberRows.data.length === 3, `issue member fixture failed: ${memberRows.error?.message}`);
   createdMembers.push(...memberRows.data.map((row) => row.id));
   const [memberA, memberB, memberC] = createdMembers;
-  const book = await admin.from("books").insert({ title: `Phase71 Explicit Selection ${token}`, status: "active" }).select("id").single();
+  const book = await admin.from("books").insert({ library_id: libraryId, title: `Phase71 Explicit Selection ${token}`, status: "active" }).select("id").single();
   assert(!book.error, `issue book fixture failed: ${book.error?.message}`);
   bookId = book.data.id;
   const copies = await admin.from("book_copies").insert([
-    { book_id: bookId, accession_number: `PHASE71-SELECT-X-${token}`, operational_state: "active" },
-    { book_id: bookId, accession_number: `PHASE71-SELECT-Y-${token}`, operational_state: "active" },
+    { library_id: libraryId, book_id: bookId, accession_number: `PHASE71-SELECT-X-${token}`, operational_state: "active" },
+    { library_id: libraryId, book_id: bookId, accession_number: `PHASE71-SELECT-Y-${token}`, operational_state: "active" },
   ]).select("id,accession_number");
   assert(!copies.error && copies.data.length === 2, `issue copy fixture failed: ${copies.error?.message}`);
   createdCopies.push(...copies.data.map((row) => row.id));

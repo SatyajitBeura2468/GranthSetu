@@ -93,9 +93,12 @@ async function createFixtureUsers() {
 
   const { data: roles, error: roleError } = await admin.from("roles").select("id,role_key");
   assert(!roleError, "could not read fixed operator roles");
+  const { data: library, error: libraryError } = await admin.from("libraries").select("id").eq("public_code", libraryCode).single();
+  assert(!libraryError && library, "could not resolve the disposable test Library Room");
   const roleIds = new Map(roles.map((role) => [role.role_key, role.id]));
   const assignments = createdUsers.filter((user) => user.role).map((user) => ({
     profile_id: user.profileId,
+    library_id: library.id,
     role_id: roleIds.get(user.role),
   }));
   const { error: assignmentError } = await admin.from("profile_roles").insert(assignments);
