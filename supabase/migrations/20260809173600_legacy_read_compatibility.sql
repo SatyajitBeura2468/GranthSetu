@@ -16,7 +16,7 @@ declare
 begin
   v_library := private.request_library_id();
   if v_library is null then raise exception using errcode='42501', message='GS_NOT_OPERATOR'; end if;
-  select public_code into v_code from public.libraries where id=v_library and status='active';
+  select l.public_code into v_code from public.libraries l where l.id=v_library and l.status='active';
   if v_code is null then raise exception using errcode='42501', message='GS_LIBRARY_CONTEXT_REQUIRED'; end if;
   v_results := public.operator_global_search(v_code, p_query);
   return query
@@ -39,7 +39,7 @@ declare
 begin
   v_library := private.request_library_id();
   if v_library is null then raise exception using errcode='42501', message='GS_NOT_OPERATOR'; end if;
-  select public_code into v_code from public.libraries where id=v_library and status='active';
+  select l.public_code into v_code from public.libraries l where l.id=v_library and l.status='active';
   if v_code is null then raise exception using errcode='42501', message='GS_LIBRARY_CONTEXT_REQUIRED'; end if;
   v_results := public.operator_room_report(v_code,'overdue',null,p_as_of,p_query,null,false);
   return query
