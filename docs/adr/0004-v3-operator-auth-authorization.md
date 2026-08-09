@@ -6,7 +6,7 @@ Accepted for Phase 4 implementation on the isolated `granthsetu-dev` project. Pr
 
 ## Decision
 
-GranthSetu uses Supabase Auth email/password identities for approved operators only. Public signup, anonymous sign-in, OAuth, student/member authentication, and self-service role selection are disabled. The identity chain is `auth.users` → `profiles.auth_user_id` → active profile → `profile_roles` → fixed `roles.role_key` values (`administrator` and `librarian`). Authorization is derived from database state, never from editable Auth metadata or hidden controls.
+GranthSetu uses Supabase Auth email/password identities for staff and prospective Library Room creators. Confirmed public email signup creates no role, anonymous sign-in is disabled, and students/members do not authenticate. The trusted `create_library_room` flow grants its creator the first room-local administrator assignment; all later roles are room-local administrator assignments. The identity chain is `auth.users` → `profiles.auth_user_id` → active profile → `profile_roles` → fixed `roles.role_key` values (`administrator` and `librarian`). Authorization is derived from database state, never from editable Auth metadata or hidden controls.
 
 The Next.js App Router refreshes cookies in `src/proxy.ts` using the Supabase SSR client and verifies claims with `getClaims()`. Server actions perform the authoritative role check again. The privileged `SUPABASE_SECRET_KEY` is accepted only in server-only code, only for the approved Development project, and is never sent to the browser.
 

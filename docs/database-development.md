@@ -78,7 +78,7 @@ The current Development project was created only after account, organization, pr
 
 ## Phase 4 Auth boundary
 
-The local Auth configuration disables public signup, anonymous sign-in, and email self-registration, and requires 12-character passwords. Auth identities are linked to profiles only through server-side administrator actions. `current_operator_context()` derives active roles from database tables. `profiles`, `profile_roles`, and `audit_events` are administrator-readable; operational/reference tables are readable by active operators; direct authenticated writes remain denied. See [authentication development](authentication-development.md).
+The local Auth configuration enables confirmed public email signup, disables anonymous sign-in, and requires 12-character passwords. Signup creates no Library Room role; the trusted room-creation workflow or a room-local administrator assignment is required before an identity can operate a library. `current_operator_context()` derives active roles from database tables. `profiles`, `profile_roles`, and `audit_events` are administrator-readable; operational/reference tables are readable by active operators; direct authenticated writes remain denied. See [authentication development](authentication-development.md).
 
 ## Production prohibition
 

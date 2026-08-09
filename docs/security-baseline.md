@@ -11,7 +11,7 @@ The Development database baseline and Phase 4 operator authentication/authorizat
 - Anonymous and authenticated roles have no broad public-schema table privileges at this stage; the baseline fails closed.
 - Student self-service is deferred; only administrator and librarian roles are defined.
 - Future admin actions require authenticated, server-enforced authorization.
-- Public signup and anonymous sign-in are disabled; only administrator-provisioned operator Auth identities are eligible.
+- Public email signup creates an unprivileged identity; anonymous sign-in is disabled. Only a trusted Library Room creation or room-local administrator assignment can grant operator authority.
 - Roles are fixed database assignments (`administrator` and `librarian`) resolved through profiles and profile_roles, never user metadata.
 - RLS permits narrow authenticated SELECT access and denies direct browser writes; sensitive access changes run through audited administrator RPCs.
 - Future email operations run server-side.
