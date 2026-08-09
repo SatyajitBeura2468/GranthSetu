@@ -6,7 +6,11 @@ const validPath = /^book-covers\/[0-9a-f-]+\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/;
 
 export async function removeBookCoverObject(path: string | null | undefined) {
   if (!path || !validPath.test(path)) return null;
-  const { error } = await createSupabaseAdminClient().storage.from(bucket).remove([path]);
+  const admin = createSupabaseAdminClient();
+  const { count, error: referenceError } = await admin.from("books").select("id", { count: "exact", head: true }).eq("cover_storage_path", path);
+  if (referenceError) return referenceError.message;
+  if ((count ?? 0) > 0) return null;
+  const { error } = await admin.storage.from(bucket).remove([path]);
   return error?.message ?? null;
 }
 

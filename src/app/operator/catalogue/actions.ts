@@ -39,10 +39,10 @@ export async function saveBookAction(formData: FormData) {
   });
   if (error || typeof data !== "string") fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", rpcErrorMessage(error));
   const bookId = data;
-  const admin = createSupabaseAdminClient();
-  const { data: previous } = await admin.from("books").select("cover_storage_path").eq("id", bookId).maybeSingle();
   const cover = formData.get("cover");
   if (cover instanceof File && cover.size > 0) {
+    const admin = createSupabaseAdminClient();
+    const { data: previous } = await admin.from("books").select("cover_storage_path").eq("id", bookId).maybeSingle();
     let path: string;
     try { path = await createBookCoverUpload(bookId, cover); } catch (error) { fail(id ? `/operator/catalogue/${id}` : "/operator/catalogue", error instanceof Error ? error.message : "The cover upload failed."); }
     const coverResult = await supabase.rpc("catalogue_set_book_cover_v71", { p_book_id: bookId, p_cover_storage_path: path, p_expected_cover_storage_path: previous?.cover_storage_path ?? null });
