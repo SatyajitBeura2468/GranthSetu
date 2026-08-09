@@ -26,7 +26,7 @@ begin
     return '10000000-0000-0000-0000-000000000001'::uuid;
   end if;
 
-  select count(distinct pr.library_id), min(pr.library_id)
+  select count(distinct pr.library_id), min(pr.library_id::text)::uuid
     into v_count, v_library
   from public.profiles p
   join public.profile_roles pr on pr.profile_id = p.id and pr.status = 'active'
