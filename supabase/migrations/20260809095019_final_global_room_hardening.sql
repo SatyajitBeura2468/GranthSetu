@@ -594,19 +594,31 @@ begin
       'overdueLoans',(select count(*) from public.loans l where l.library_id=v_library and l.member_id=m.id and l.status='active' and l.due_at<timezone('utc',now()))) order by m.display_name),'[]'::jsonb)
     into v_result from (select * from public.members where library_id=v_library and status='active' and (display_name ilike '%'||v_q||'%' or member_identifier ilike '%'||v_q||'%') order by display_name limit 50) m;
   elsif p_kind='copies' then
-    select coalesce(jsonb_agg(jsonb_build_object('id',c.id,'title',b.title,'author',coalesce((select string_agg(a.display_name,', ' order by ba.author_order) from public.book_authors ba join public.authors a on a.id=ba.author_id and a.library_id=ba.library_id where ba.book_id=b.id and ba.library_id=v_library),'Author not listed'),'accession',c.accession_number,'barcode',c.barcode,'location',coalesce(loc.display_name,'Not assigned'),'state','Available') order by b.title,c.accession_number),'[]'::jsonb)
-    into v_result from public.book_copies c join public.books b on b.id=c.book_id and b.library_id=c.library_id left join public.locations loc on loc.id=c.location_id and loc.library_id=c.library_id
-    where c.library_id=v_library and c.operational_state='active' and b.status='active'
-      and not exists(select 1 from public.loans l where l.library_id=v_library and l.book_copy_id=c.id and l.status='active')
-      and (b.title ilike '%'||v_q||'%' or coalesce(b.isbn,'') ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%' or coalesce(c.barcode,'') ilike '%'||v_q||'%' or exists(select 1 from public.book_authors ba join public.authors a on a.id=ba.author_id and a.library_id=ba.library_id where ba.book_id=b.id and ba.library_id=v_library and a.display_name ilike '%'||v_q||'%')) limit 50;
+    select coalesce(jsonb_agg(jsonb_build_object('id',q.id,'title',q.title,'author',coalesce((select string_agg(a.display_name,', ' order by ba.author_order) from public.book_authors ba join public.authors a on a.id=ba.author_id and a.library_id=ba.library_id where ba.book_id=q.book_id and ba.library_id=v_library),'Author not listed'),'accession',q.accession_number,'barcode',q.barcode,'location',q.location,'state','Available') order by q.title,q.accession_number),'[]'::jsonb)
+    into v_result from (
+      select c.id,c.book_id,b.title,c.accession_number,c.barcode,coalesce(loc.display_name,'Not assigned') location
+      from public.book_copies c join public.books b on b.id=c.book_id and b.library_id=c.library_id left join public.locations loc on loc.id=c.location_id and loc.library_id=c.library_id
+      where c.library_id=v_library and c.operational_state='active' and b.status='active'
+        and not exists(select 1 from public.loans l where l.library_id=v_library and l.book_copy_id=c.id and l.status='active')
+        and (b.title ilike '%'||v_q||'%' or coalesce(b.isbn,'') ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%' or coalesce(c.barcode,'') ilike '%'||v_q||'%' or exists(select 1 from public.book_authors ba join public.authors a on a.id=ba.author_id and a.library_id=ba.library_id where ba.book_id=b.id and ba.library_id=v_library and a.display_name ilike '%'||v_q||'%'))
+      order by b.title,c.accession_number limit 50
+    ) q;
   elsif p_kind='loans' then
-    select coalesce(jsonb_agg(jsonb_build_object('id',lo.id,'member',m.display_name,'identifier',m.member_identifier,'title',b.title,'accession',c.accession_number,'barcode',c.barcode,'due',lo.due_at::date,'overdue',lo.due_at<timezone('utc',now())) order by lo.due_at),'[]'::jsonb)
-    into v_result from public.loans lo join public.members m on m.id=lo.member_id and m.library_id=lo.library_id join public.book_copies c on c.id=lo.book_copy_id and c.library_id=lo.library_id join public.books b on b.id=c.book_id and b.library_id=c.library_id
-    where lo.library_id=v_library and lo.status='active' and (m.display_name ilike '%'||v_q||'%' or m.member_identifier ilike '%'||v_q||'%' or b.title ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%' or coalesce(c.barcode,'') ilike '%'||v_q||'%') limit 50;
+    select coalesce(jsonb_agg(jsonb_build_object('id',q.id,'member',q.member,'identifier',q.identifier,'title',q.title,'accession',q.accession,'barcode',q.barcode,'due',q.due_at::date,'overdue',q.due_at<timezone('utc',now())) order by q.due_at),'[]'::jsonb)
+    into v_result from (
+      select lo.id,m.display_name member,m.member_identifier identifier,b.title,c.accession_number accession,c.barcode,lo.due_at
+      from public.loans lo join public.members m on m.id=lo.member_id and m.library_id=lo.library_id join public.book_copies c on c.id=lo.book_copy_id and c.library_id=lo.library_id join public.books b on b.id=c.book_id and b.library_id=c.library_id
+      where lo.library_id=v_library and lo.status='active' and (m.display_name ilike '%'||v_q||'%' or m.member_identifier ilike '%'||v_q||'%' or b.title ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%' or coalesce(c.barcode,'') ilike '%'||v_q||'%')
+      order by lo.due_at limit 50
+    ) q;
   elsif p_kind='fines' then
-    select coalesce(jsonb_agg(jsonb_build_object('id',f.id,'member',m.display_name,'identifier',m.member_identifier,'title',b.title,'accession',c.accession_number,'assessedMinor',f.assessed_amount_minor,'outstandingMinor',f.assessed_amount_minor-f.waived_amount_minor-f.settled_amount_minor,'reason',f.reason) order by f.created_at desc),'[]'::jsonb)
-    into v_result from public.fines f join public.loans lo on lo.id=f.loan_id and lo.library_id=f.library_id join public.members m on m.id=lo.member_id and m.library_id=lo.library_id join public.book_copies c on c.id=lo.book_copy_id and c.library_id=lo.library_id join public.books b on b.id=c.book_id and b.library_id=c.library_id
-    where f.library_id=v_library and f.assessed_amount_minor-f.waived_amount_minor-f.settled_amount_minor>0 and (m.display_name ilike '%'||v_q||'%' or m.member_identifier ilike '%'||v_q||'%' or b.title ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%') limit 50;
+    select coalesce(jsonb_agg(jsonb_build_object('id',q.id,'member',q.member,'identifier',q.identifier,'title',q.title,'accession',q.accession,'assessedMinor',q.assessed_amount_minor,'outstandingMinor',q.outstanding_minor,'reason',q.reason) order by q.created_at desc),'[]'::jsonb)
+    into v_result from (
+      select f.id,m.display_name member,m.member_identifier identifier,b.title,c.accession_number accession,f.assessed_amount_minor,f.assessed_amount_minor-f.waived_amount_minor-f.settled_amount_minor outstanding_minor,f.reason,f.created_at
+      from public.fines f join public.loans lo on lo.id=f.loan_id and lo.library_id=f.library_id join public.members m on m.id=lo.member_id and m.library_id=lo.library_id join public.book_copies c on c.id=lo.book_copy_id and c.library_id=lo.library_id join public.books b on b.id=c.book_id and b.library_id=c.library_id
+      where f.library_id=v_library and f.assessed_amount_minor-f.waived_amount_minor-f.settled_amount_minor>0 and (m.display_name ilike '%'||v_q||'%' or m.member_identifier ilike '%'||v_q||'%' or b.title ilike '%'||v_q||'%' or c.accession_number ilike '%'||v_q||'%')
+      order by f.created_at desc limit 50
+    ) q;
   else raise exception using errcode='22023',message='GS_SEARCH_KIND_INVALID';
   end if;
   return coalesce(v_result,'[]'::jsonb);
@@ -823,7 +835,8 @@ grant execute on function public.bootstrap_first_administrator(uuid,text) to ser
 
 revoke all on function private.enforce_tenant_write() from public, anon, authenticated, service_role;
 revoke all on function private.request_library_id() from public, anon, authenticated, service_role;
-revoke all on function private.has_library_access(uuid,text) from public, anon, authenticated, service_role;
+revoke all on function private.has_library_access(uuid,text) from public, anon, service_role;
+grant execute on function private.has_library_access(uuid,text) to authenticated;
 
 comment on function public.operator_workspace_mutation(text,text,jsonb,uuid) is
   'Room-scoped thin adapter over canonical Phase 5-7.1 domain functions.';

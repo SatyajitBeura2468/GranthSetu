@@ -52,9 +52,15 @@ export async function workspaceMutationAction(formData: FormData) {
       const email = String(payload.email ?? "").toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("GS_OPERATOR_INPUT_INVALID");
       const admin = createSupabaseAdminClient();
-      const { data: existing, error: listError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      if (listError) throw listError;
-      let authUser = existing.users.find((user) => user.email?.toLowerCase() === email);
+      let authUser;
+      let page = 1;
+      do {
+        const { data: existing, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        if (listError) throw listError;
+        authUser = existing.users.find((user) => user.email?.toLowerCase() === email);
+        if (authUser || !existing.nextPage) break;
+        page = existing.nextPage;
+      } while (true);
       if (!authUser) {
         const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: getAuthCallbackUrl(`/l/${libraryCode}/login`) });
         if (error) throw error; authUser = data.user;

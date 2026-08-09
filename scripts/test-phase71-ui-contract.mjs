@@ -8,6 +8,10 @@ const reports = await readFile(new URL("../src/app/operator/reports/page.tsx", i
 const catalogueActions = await readFile(new URL("../src/app/operator/catalogue/actions.ts", import.meta.url), "utf8");
 const coverStorage = await readFile(new URL("../src/lib/operator/cover-storage.ts", import.meta.url), "utf8");
 const editBookPage = await readFile(new URL("../src/app/operator/catalogue/[id]/page.tsx", import.meta.url), "utf8");
+const roomCirculation = await readFile(new URL("../src/components/operator/circulation-workbench.tsx", import.meta.url), "utf8");
+const roomActions = await readFile(new URL("../src/app/operator/[libraryCode]/actions.ts", import.meta.url), "utf8");
+const roomWorkspace = await readFile(new URL("../src/lib/operator/workspace.ts", import.meta.url), "utf8");
+const boundedSearchMigration = await readFile(new URL("../supabase/migrations/20260809130000_bound_circulation_search.sql", import.meta.url), "utf8");
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(page.includes("<IssueBookForm") && !page.includes("members[0]?.member_id") && !page.includes("copies[0]?.copy_id"), "server page still binds issue identity to the first result");
@@ -24,6 +28,11 @@ const saveBookAction = catalogueActions.slice(catalogueActions.indexOf("export a
 assert(saveBookAction.indexOf("const cover = formData.get(\"cover\")") < saveBookAction.indexOf("if (cover instanceof File && cover.size > 0)") && saveBookAction.indexOf("if (cover instanceof File && cover.size > 0)") < saveBookAction.indexOf("const admin = createSupabaseAdminClient()"), "metadata-only book saves still construct a privileged cover client");
 assert(coverStorage.includes('select("id", { count: "exact", head: true }).eq("cover_storage_path", path)') && coverStorage.includes("if ((count ?? 0) > 0) return null;") && coverStorage.indexOf("if ((count ?? 0) > 0) return null;") < coverStorage.indexOf(".storage.from(bucket).remove([path])"), "cover cleanup does not retain shared legacy paths before deletion");
 assert(editBookPage.includes("let coverUrl: string | null = null;") && editBookPage.includes("try {") && editBookPage.includes("coverUrl = await signedBookCoverUrl(book.cover_storage_path);") && editBookPage.includes("} catch {") && editBookPage.includes("private preview is optional"), "book editing does not tolerate unavailable privileged cover previews");
+assert(roomCirculation.includes('setMemberId("")') && roomCirculation.includes('setCopyId("")') && roomCirculation.includes('setLoanId("")') && roomCirculation.includes('setFineId("")'), "room circulation searches retain a selected identity after the visible query changes");
+assert(roomCirculation.includes("result.key === searchKey") && roomCirculation.includes("if (!cancelled) setResult"), "room circulation search can render a stale async response for a newer query");
+assert((boundedSearchMigration.match(/limit 50/g) ?? []).length >= 4 && boundedSearchMigration.includes("into v_result from ("), "circulation JSON aggregation is not bounded by ordered input subqueries");
+assert(roomActions.includes("existing.nextPage") && roomActions.includes("page = existing.nextPage"), "operator invitation lookup does not traverse all Auth user pages");
+assert(roomWorkspace.includes('session.status === "active"') && roomWorkspace.includes("session.starts_on <= today") && roomWorkspace.includes("session.id === currentEnrollmentSessionId"), "member forms expose non-current sessions without preserving only the existing enrollment");
 
 const member = (member_id) => ({ member_id });
 const copy = (copy_id) => ({ copy_id });

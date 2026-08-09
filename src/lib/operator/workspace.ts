@@ -70,6 +70,7 @@ export async function getWorkspaceData(rawCode: string, resource: keyof typeof d
     return { ...payload, bookOptions: books.data ?? [], locations: locations.data ?? [], copy: detail.data ?? undefined };
   }
   if (resource === "members") {
+    const today = new Date().toISOString().slice(0, 10);
     const [sessions, grades, sections, detail, enrollment] = await Promise.all([
       client.from("academic_sessions").select("id,display_label,status,starts_on,ends_on").or(`library_id.eq.${context.libraryId}`).order("starts_on", { ascending: false }),
       client.from("grade_levels").select("id,display_name,sort_order").or(`library_id.eq.${context.libraryId}`).order("sort_order"),
@@ -77,7 +78,11 @@ export async function getWorkspaceData(rawCode: string, resource: keyof typeof d
       id ? client.from("members").select("id,member_identifier,member_kind,display_name,status,updated_at").or(`library_id.eq.${context.libraryId}`).eq("id", id).maybeSingle() : Promise.resolve({ data: null }),
       id ? client.from("student_enrollments").select("academic_session_id,grade_level_id,section_id,status,roll_number").or(`library_id.eq.${context.libraryId}`).eq("member_id", id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
     ]);
-    return { ...payload, sessions: sessions.data ?? [], grades: grades.data ?? [], sections: sections.data ?? [], member: detail.data ?? undefined, enrollment: enrollment.data ?? undefined };
+    const currentEnrollmentSessionId = enrollment.data?.academic_session_id;
+    const selectableSessions = (sessions.data ?? []).filter((session) =>
+      session.id === currentEnrollmentSessionId || session.status === "active" && session.starts_on <= today && session.ends_on >= today
+    );
+    return { ...payload, sessions: selectableSessions, grades: grades.data ?? [], sections: sections.data ?? [], member: detail.data ?? undefined, enrollment: enrollment.data ?? undefined };
   }
   const [sessions, grades, sections, typedSettings] = await Promise.all([
     client.from("academic_sessions").select("id,session_code,display_label,starts_on,ends_on,status").or(`library_id.eq.${context.libraryId}`).order("starts_on", { ascending: false }),
