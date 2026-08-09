@@ -36,7 +36,9 @@ See [`docs/ui-design-system.md`](docs/ui-design-system.md) for tokens and intera
 - Narrow anonymous RPCs for public library discovery and catalogue data
 - Vercel deployment from `main`
 
-The tenancy migration is [`supabase/migrations/20260809075709_global_library_room_tenancy.sql`](supabase/migrations/20260809075709_global_library_room_tenancy.sql). It assigns every existing tenant-owned row to the bootstrap room, changes natural keys to room-local uniqueness, and adds composite foreign keys that reject cross-room relationships.
+The tenancy migration sequence starts with [`20260809075709_global_library_room_tenancy.sql`](supabase/migrations/20260809075709_global_library_room_tenancy.sql), followed by final policy/RPC hardening and an explicit least-privilege grant pass. It assigns every existing tenant-owned row to the bootstrap room, changes natural keys to room-local uniqueness, adds composite foreign keys that reject cross-room relationships, bootstraps every circulation policy per room, and preserves the mature Phase 5–7.1 circulation engine as the single business-rule implementation.
+
+Member identifiers, accession numbers, barcodes, and academic codes are room-local. A global profile may hold active assignments in several rooms, but a room administrator can change only that room's assignment; global profile lifecycle is never reactivated as a side effect. Anonymous execution is restricted to active-room resolution and catalogue/detail/availability RPCs. Authenticated direct table writes remain revoked.
 
 ## Local development
 
@@ -65,6 +67,8 @@ npm run db:test:tenancy
 ```
 
 Database commands require the local Supabase containers. Do not apply migrations to an unknown or unreviewed Production project. The synthetic seed contains no school records or policy claims.
+
+The 2026-08-09 final migration rehearsal and smoke test targeted Development project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) only. Production was not migrated, linked, reset, or queried. Development retains an explicitly synthetic `DEVROOM` isolation room so room switching and public/operator separation remain reproducible.
 
 ## Environment
 

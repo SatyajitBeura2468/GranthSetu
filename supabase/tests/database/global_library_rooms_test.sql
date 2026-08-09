@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(22);
 
 select has_table('public', 'libraries', 'library rooms are first-class records');
 select has_column('public', 'books', 'library_id', 'catalogue records are tenant scoped');
@@ -10,9 +10,13 @@ select has_function('public', 'operator_workspace_mutation', 'operator writes us
 select ok(has_function_privilege('anon', 'public.public_catalogue(text,text,boolean,integer)', 'EXECUTE'), 'anonymous users may execute only the public catalogue surface');
 select ok(not has_table_privilege('anon', 'public.members', 'SELECT'), 'anonymous users cannot read members');
 select ok(not has_table_privilege('authenticated', 'public.loans', 'INSERT'), 'operators cannot bypass trusted circulation writes');
+select ok(not has_function_privilege('authenticated', 'public.admin_set_profile_status(uuid,text)', 'EXECUTE'), 'room operators cannot invoke the legacy global profile lifecycle RPC');
+select ok(has_function_privilege('authenticated', 'public.admin_assign_operator_to_room(text,uuid,text,text)', 'EXECUTE'), 'room administrators retain the room-scoped operator assignment RPC');
+select ok(position('update public.profiles set display_name' in lower(pg_get_functiondef('public.admin_assign_operator_to_room(text,uuid,text,text)'::regprocedure))) = 0, 'room assignment cannot overwrite an existing global display name');
+select ok(pg_get_functiondef('public.operator_room_audit(text,text,date,date,text)'::regprocedure) ~* 'from\s+\(\s*select[\s\S]*limit 500\s*\)\s+q', 'audit input rows are bounded before JSON aggregation');
 select is((select public_code from public.public_resolve_library(' oavmusi ')), 'OAVMUSI', 'public codes resolve case-insensitively');
 select is((select count(*)::integer from public.public_resolve_library('NOT-A-ROOM')), 0, 'unknown room codes fail closed');
-select ok(not ((select proallargnames from pg_proc where oid = 'public.public_catalogue(text,text,boolean,integer)'::regprocedure) && array['member_identifier','display_name','cover_storage_path']), 'public catalogue cannot return member identity or private storage paths');
+select ok(not ((select proargnames from pg_proc where oid = 'public.public_catalogue(text,text,boolean,integer)'::regprocedure) && array['member_identifier','display_name','cover_storage_path']), 'public catalogue cannot return member identity or private storage paths');
 
 insert into public.libraries(id, public_code, display_name)
 values ('10000000-0000-0000-0000-000000000099', 'TESTROOM', 'Isolation Test Library');

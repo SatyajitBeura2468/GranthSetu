@@ -136,3 +136,29 @@ h1, h2, h3, p { margin-top: 0; }
 .mobile-public-menu .theme-toggle { margin-top: 6px; justify-content: flex-start; }
 
 @media (max-width: 560px) { .public-actions { display: none; }.public-actions::after { content: none; }.mobile-public-menu { display: block; } }
+
+/* Final interaction and workflow hardening */
+:where(a,button,input,select,textarea,summary):focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 78%, white); outline-offset: 3px; }
+.sidebar-library select { width: 100%; min-width: 0; border: 0; appearance: auto; background: transparent; color: #fff; font: inherit; font-size: .78rem; font-weight: 750; }
+.sidebar-library select option { color: #10221a; }
+.popover-form textarea, .book-form textarea { width: 100%; padding: 10px 11px; resize: vertical; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); color: var(--ink); }
+.popover-form select[multiple] { min-height: 120px; padding: 6px; }
+.popover-form fieldset { margin: 4px 0; padding: 14px; display: grid; gap: 12px; border: 1px solid var(--line); }
+.popover-form fieldset legend { padding: 0 6px; font-weight: 750; }
+.field-note, .search-hint { color: var(--muted); font-size: .75rem; line-height: 1.5; }
+.pagination { margin-top: 36px; display: flex; justify-content: center; align-items: center; gap: 18px; }
+.pagination a { min-height: 40px; padding: 0 14px; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; }
+.pagination a[aria-disabled="true"] { opacity: .42; pointer-events: none; }
+.catalogue-full-grid .book-card { display: block !important; }
+.academic-summary { margin-top: 20px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.academic-summary article { padding: 16px; border: 1px solid var(--line); background: var(--surface-2); }
+.academic-summary p { display: grid; margin: 10px 0; }
+.academic-summary span { color: var(--muted); font-size: .72rem; }
+.checkbox-field { min-height: 38px; display: flex !important; align-items: center; gap: 8px; }
+.checkbox-field input { width: auto; min-height: 0; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-form { display: grid; gap: 10px; }
+.cover-form input[type="file"] { max-width: 100%; }
+
+@media (max-width: 820px) { .academic-summary { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .pagination { justify-content: space-between; gap: 8px; }.pagination span { font-size: .75rem; }.book-form .form-grid, .copy-form .form-grid { grid-template-columns: 1fr; } }
