@@ -1,27 +1,31 @@
 # GranthSetu V3 functional completion matrix
 
-This document records the functional foundation delivered by the Phase 5 corrective closeout and the trusted operator administration work. Demo rows in `supabase/seed.sql` remain development-only synthetic fixtures; a clean hosted database does not depend on them.
+This matrix describes the final global Library Room architecture. Seed and `DEVROOM` records are explicitly synthetic Development fixtures; public pages never expose borrower, loan, fine, audit, operator, or private cover-path data.
 
-| Capability | Implemented route/API | Trusted database operation | Allowed role | Test coverage | Status | Remaining UI polish |
-|---|---|---|---|---|---|---|
-| Operator authentication and role state | `/login`, `/operator` | `current_operator_context`, role/profile checks | Administrator, librarian | Auth/RLS and circulation suites | Implemented | Navigation and inline feedback |
-| Book catalogue CRUD and lifecycle | `/operator/catalogue`, `/operator/catalogue/[id]` | `catalogue_upsert_book`, `catalogue_set_book_status` | Administrator, librarian | Typecheck/build; DB integration pending local runtime | Implemented | Responsive editor, richer empty states |
-| Authors, publishers, categories, subjects | `/operator/catalogue` reference form | `catalogue_upsert_author`, `catalogue_upsert_publisher`, `catalogue_upsert_category`, `catalogue_upsert_subject` | Administrator, librarian | DB integration pending local runtime | Implemented | Better reference pickers and editing affordances |
-| Optional cover images | Book forms | `catalogue_set_book_cover`; private `book-covers` bucket | Administrator, librarian through server action | MIME/size/path validation; signed preview and replacement/removal cleanup implemented | Implemented | Visual treatment only |
-| Physical inventory and lifecycle | `/operator/inventory`, `/operator/inventory/[id]` | `inventory_upsert_copy`; active-loan guard | Administrator, librarian | DB integration pending local runtime | Implemented | Barcode workflow and mobile table treatment |
-| Derived availability | Catalogue/inventory/dashboard/report RPCs | `catalogue_books`, `inventory_copies`, `operator_dashboard` | Operator read | Query-derived, no editable counters | Implemented | Status badges and visual summaries |
-| Members and derived borrowing state | `/operator/members`, `/operator/members/[id]` | `member_create_with_enrollment`, `member_update_profile`, `catalogue_members_v71` | Administrator, librarian | Phase 7.1 pgTAP/integration gates | Implemented | Visual history presentation only |
-| Student enrollment/class/section/roll machinery | Member editor and `/operator/settings` | `member_set_enrollment_v71`, academic upsert RPCs | Administrator for structure; operator for enrollment | Roll uniqueness and active-enrollment invariants in Phase 7.1 gates | Implemented | Visual history presentation only |
-| Policy/settings | `/operator/settings` | `admin_upsert_setting` | Administrator | Safe missing-policy behavior covered by circulation suite | Implemented | Grouped settings UX and policy explanations |
-| Issue, return, renew, fines | `/operator/circulation` | Phase 5 RPCs plus Phase 7.1 policy authorization | Administrator, librarian; waivers policy-controlled | Circulation suite plus explicit-selection, concurrency, availability, malformed-identity, policy/search gates | Implemented | Visual treatment only |
-| Global search | `/operator?q=...` | `global_search_v71` | Administrator, librarian | Phase 7.1 search gate | Implemented | Keyboard search and result grouping |
-| Reports and CSV export | `/operator/reports`, `/operator/reports/export` | Phase 7.1 filtered report RPCs | Administrator, librarian | Filtered integration/CSV CI gates | Implemented | Charts and print layout |
-| Dashboard metrics | `/operator` | `operator_dashboard` | Administrator, librarian | DB integration pending local runtime | Implemented | Metric hierarchy and responsive composition |
-| Audit viewer | `/operator/admin/audit` | `admin_audit_events`; append-only audit rows | Administrator | Existing audit authorization coverage; new admin routes pending DB runtime | Implemented | Date/actor filters and detail drawer |
-| Legacy fine upgrade and enrollment upgrade | Migration upgrade scripts | `legacy` rows preserved; partial unique `overdue` index; duplicate active enrollments reconciled without deleting history | Database migration | `db:test:legacy-fines-upgrade`, `db:test:phase71:upgrade` | Implemented, not run here | None |
+| Capability | Room-aware surface | Authoritative operation | Boundary |
+|---|---|---|---|
+| Room discovery and creation | `/`, `/create-library` | `public_resolve_library`, `create_library_room` | Code is a locator; creation requires an authenticated active profile |
+| Operator context and switching | `/operator/[libraryCode]` | `operator_accessible_libraries`, `operator_context_for_library` | Active room assignment required on every request |
+| Catalogue and covers | `/operator/[libraryCode]/catalogue/*` | canonical catalogue RPCs through `operator_workspace_mutation` | Room-composite references; private cover bucket; signed public proxy |
+| Inventory | `/operator/[libraryCode]/inventory/*` | `inventory_upsert_copy` through the room adapter | Accession and barcode are room-local; active-loan rules preserved |
+| Members and enrollment | `/operator/[libraryCode]/members/*` | Phase 7.1 member/enrollment RPCs | Stable generated identifier; student enrollment is atomic and historical |
+| Circulation and fines | `/operator/[libraryCode]/circulation` | canonical Phase 5–7.1 circulation/fine RPCs | Server-backed full-room search; transactional business rules and idempotency |
+| Settings and academics | `/operator/[libraryCode]/settings` | typed settings/session/grade/section RPCs | Administrator only; money uses integer minor units end to end |
+| Reports and CSV | `/operator/[libraryCode]/reports` | `operator_room_report` | Identical room-scoped filters drive HTML and CSV |
+| Operators | `/operator/[libraryCode]/admin/operators` | invitation plus room assignment/status RPCs | No raw UUID workflow; tenant admin cannot change global profile lifecycle |
+| Audit | `/operator/[libraryCode]/admin/audit` | `operator_room_audit` | Administrator only; room/date/action/actor filters are server enforced |
+| Public catalogue | `/l/[libraryCode]/*` | narrow paged catalogue/detail/new-title RPCs | Active rooms only; derived availability; no private identities or paths |
 
-## Honest validation boundary
+## Isolation and policy decisions
 
-The Phase 7.1 branch adds CI gates for clean reset, pgTAP, Auth/RLS, circulation, explicit-selection issue integration, multi-active-enrollment upgrade, legacy-fine upgrade, Phase 7.1 search/identity/policy integration, database lint, generated public types, lint, typecheck, UI contract, and production build. In this Windows execution environment, Docker/Podman is unavailable, so those database gates must be verified on the final remote SHA before any visual-phase verdict. No Production database or real school data is in scope.
+- `library_id` is non-null across all tenant-owned tables and participates in composite foreign keys.
+- Natural identifiers and barcodes are unique per Library Room, not globally.
+- Direct authenticated mutations and all anonymous table access are revoked.
+- SECURITY DEFINER execution is denied by default, followed by explicit grants only for current application entry points; the room adapter invokes canonical mutations internally.
+- Room-role status is independent of the global profile lifecycle. Shared profiles may serve multiple rooms safely.
+- Every room receives a complete typed settings bootstrap; fines, overdue renewal, and librarian waiver start disabled.
+- The room mutation adapter delegates to the canonical engine. There is no second, weaker circulation implementation.
 
-Until the final CI run is green, the authoritative verdict is `NOT READY FOR VISUAL DESIGN PHASE`. Hosted Development and Vercel preview checks remain release-gate evidence to record separately when authenticated access is available.
+## Validation boundary
+
+On 2026-08-09 the complete migration sequence was applied to hosted Development project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) only. Five pgTAP suites passed there, generated TypeScript types were refreshed from that schema, and a second synthetic room proved public catalogue separation and multi-room operator discovery. Production was not touched. The exact branch SHA, GitHub Actions run, and Vercel Preview remain the authoritative release evidence recorded at handoff.

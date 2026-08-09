@@ -17,8 +17,8 @@ select ok((select count(*) from public.book_authors where book_id = '44000000-00
 
 select ok((select relrowsecurity from pg_class where oid = 'public.members'::regclass), 'RLS is enabled on members');
 select ok((select relrowsecurity from pg_class where oid = 'public.loans'::regclass), 'RLS is enabled on loans');
-select ok((select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity) = 23, 'all application tables retain RLS');
-select ok((select count(*) from pg_policies where schemaname = 'public') = 23, 'Phase 4 has one narrow policy per application table');
+select ok((select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity) = 24, 'all application tables retain RLS');
+select ok((select count(*) from pg_policies where schemaname = 'public') = 24, 'every application table has one narrow read policy');
 select ok(not has_table_privilege('anon', 'public.members', 'SELECT'), 'anon cannot read members');
 select ok(has_table_privilege('authenticated', 'public.members', 'SELECT'), 'authenticated receives only policy-filtered member read privilege');
 select ok(not has_table_privilege('authenticated', 'public.loans', 'INSERT'), 'authenticated cannot insert loans directly');
@@ -31,7 +31,7 @@ select ok(to_regnamespace('private') is not null, 'private authorization schema 
 select ok(not has_schema_privilege('authenticated', 'private', 'USAGE'), 'authenticated cannot use private authorization schema');
 select ok(has_function_privilege('authenticated', 'public.current_operator_context()', 'EXECUTE'), 'authenticated can resolve only current operator context');
 select ok(not has_function_privilege('anon', 'public.current_operator_context()', 'EXECUTE'), 'anon cannot resolve operator context');
-select ok(has_function_privilege('authenticated', 'public.admin_provision_operator_profile(uuid,text,text)', 'EXECUTE'), 'authenticated can invoke guarded provisioning RPC');
+select ok(not has_function_privilege('authenticated', 'public.admin_provision_operator_profile(uuid,text,text)', 'EXECUTE'), 'room operators cannot invoke legacy global-profile provisioning');
 select ok(has_function_privilege('service_role', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'service role can invoke bootstrap RPC');
 select ok(not has_function_privilege('authenticated', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'authenticated cannot invoke bootstrap RPC');
 select ok(not has_function_privilege('anon', 'public.bootstrap_first_administrator(uuid,text)', 'EXECUTE'), 'anon cannot invoke bootstrap RPC');

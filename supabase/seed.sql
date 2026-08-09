@@ -98,7 +98,14 @@ insert into public.fines (id, loan_id, assessed_amount_minor, waived_amount_mino
 values ('62000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', 1250, 0, 0, 'Synthetic overdue example.', '10000000-0000-0000-0000-000000000002');
 
 insert into public.library_settings (setting_key, value_kind, boolean_value, updated_by_profile_id)
-values ('fines_enabled', 'boolean', false, '10000000-0000-0000-0000-000000000001');
+values ('fines_enabled', 'boolean', false, '10000000-0000-0000-0000-000000000001')
+on conflict (library_id, setting_key) do update set
+  value_kind = excluded.value_kind,
+  boolean_value = excluded.boolean_value,
+  integer_value = null,
+  money_minor_value = null,
+  currency_code = null,
+  updated_by_profile_id = excluded.updated_by_profile_id;
 
 insert into public.audit_events (id, actor_profile_id, action, target_type, target_id, metadata)
 values ('63000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'seed.bootstrap', 'book', '44000000-0000-0000-0000-000000000001', '{"source":"synthetic-development-seed"}'::jsonb);

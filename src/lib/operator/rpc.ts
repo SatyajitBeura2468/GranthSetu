@@ -39,6 +39,14 @@ export function rpcErrorMessage(error: unknown) {
     GS_COVER_PATH_INVALID: "The cover file path was rejected.",
     GS_STATUS_INVALID: "Choose a valid lifecycle status.",
     GS_NOT_OPERATOR: "Your operator access is no longer active.",
+    GS_LIBRARY_CONTEXT_REQUIRED: "Choose a Library Room before continuing.",
+    GS_LIBRARY_ACCESS_DENIED: "You no longer have access to this Library Room.",
+    GS_CROSS_LIBRARY_WRITE_DENIED: "The selected record belongs to a different Library Room.",
+    GS_PROFILE_INACTIVE: "This account is globally inactive and cannot be reactivated by a room assignment.",
+    GS_OPERATOR_INPUT_INVALID: "Enter a valid operator email, display name, and room role.",
+    GS_AUTH_USER_NOT_FOUND: "The invited authentication account could not be found.",
+    GS_LAST_ROOM_ADMIN: "Assign another active room administrator before removing this one.",
+    GS_ADMIN_REQUIRED: "Only a Library Room administrator can perform this action.",
   };
   const code = Object.keys(messages).find((key) => raw.includes(key));
   return code ? messages[code] : "The requested operation could not be completed.";

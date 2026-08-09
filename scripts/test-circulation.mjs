@@ -10,6 +10,8 @@ if ((!url.includes("127.0.0.1") && !url.includes("localhost") && !url.includes("
 
 const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const password = "Phase5-Test-Password-2026!";
+const libraryCode = "OAVMUSI";
+const libraryId = "10000000-0000-0000-0000-000000000001";
 const createdUsers = [];
 const createdProfiles = [];
 const createdCopies = [];
@@ -32,7 +34,7 @@ async function operator(label, roleKey, metadata) {
   const profile = await admin.from("profiles").insert({ auth_user_id: created.data.user.id, display_name: `Phase 5 ${label}`, status: "active" }).select("id").single();
   assert(!profile.error, `could not create ${label} profile: ${profile.error?.message}`);
   const role = await admin.from("roles").select("id").eq("role_key", roleKey).single();
-  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, role_id: role.data.id });
+  const assignment = await admin.from("profile_roles").insert({ profile_id: profile.data.id, library_id: libraryId, role_id: role.data.id });
   assert(!assignment.error, `could not assign ${label} role: ${assignment.error?.message}`);
   const client = userClient();
   const signedIn = await client.auth.signInWithPassword({ email, password });
@@ -42,30 +44,30 @@ async function operator(label, roleKey, metadata) {
 }
 
 async function member(kind, status = "active") {
-  const result = await admin.from("members").insert({ member_identifier: `PHASE5-M-${Date.now()}-${Math.random().toString(16).slice(2)}`, member_kind: kind, display_name: `Phase 5 ${kind}`, status }).select("id").single();
+  const result = await admin.from("members").insert({ library_id: libraryId, member_identifier: `PHASE5-M-${Date.now()}-${Math.random().toString(16).slice(2)}`, member_kind: kind, display_name: `Phase 5 ${kind}`, status }).select("id").single();
   assert(!result.error, `member fixture failed: ${result.error?.message}`); createdMembers.push(result.data.id); return result.data.id;
 }
 
 async function copy(bookId, state = "active") {
-  const result = await admin.from("book_copies").insert({ book_id: bookId, accession_number: `PHASE5-C-${Date.now()}-${Math.random().toString(16).slice(2)}`, operational_state: state }).select("id").single();
+  const result = await admin.from("book_copies").insert({ library_id: libraryId, book_id: bookId, accession_number: `PHASE5-C-${Date.now()}-${Math.random().toString(16).slice(2)}`, operational_state: state }).select("id").single();
   assert(!result.error, `copy fixture failed: ${result.error?.message}`); createdCopies.push(result.data.id); return result.data.id;
 }
 
 async function policy(values) {
-  const payload = Object.entries(values).map(([setting_key, value]) => value.kind === "boolean" ? { setting_key, value_kind: "boolean", boolean_value: value.value } : value.kind === "money" ? { setting_key, value_kind: "money_minor", money_minor_value: value.value, currency_code: "INR" } : { setting_key, value_kind: "integer", integer_value: value.value });
-  const result = await admin.from("library_settings").upsert(payload); assert(!result.error, `policy fixture failed: ${result.error?.message}`);
+  const payload = Object.entries(values).map(([setting_key, value]) => value.kind === "boolean" ? { library_id: libraryId, setting_key, value_kind: "boolean", boolean_value: value.value } : value.kind === "money" ? { library_id: libraryId, setting_key, value_kind: "money_minor", money_minor_value: value.value, currency_code: "INR" } : { library_id: libraryId, setting_key, value_kind: "integer", integer_value: value.value });
+  const result = await admin.from("library_settings").upsert(payload, { onConflict: "library_id,setting_key" }); assert(!result.error, `policy fixture failed: ${result.error?.message}`);
 }
 
 async function fixtureLoan({ memberId, copyId, returned = false, overdue = false, issuedBy }) {
   const now = new Date();
   const issuedAt = overdue ? "2026-07-01T09:00:00Z" : now.toISOString();
   const dueAt = overdue ? "2026-07-02T09:00:00Z" : new Date(now.getTime() + 14 * 86400000).toISOString();
-  const result = await admin.from("loans").insert({ member_id: memberId, book_copy_id: copyId, issued_at: issuedAt, due_at: dueAt, returned_at: returned ? (overdue ? "2026-07-05T09:00:00Z" : new Date(now.getTime() + 86400000).toISOString()) : null, issued_by_profile_id: issuedBy, returned_by_profile_id: returned ? issuedBy : null, status: returned ? "returned" : "active" }).select("id, issued_at, due_at").single();
+  const result = await admin.from("loans").insert({ library_id: libraryId, member_id: memberId, book_copy_id: copyId, issued_at: issuedAt, due_at: dueAt, returned_at: returned ? (overdue ? "2026-07-05T09:00:00Z" : new Date(now.getTime() + 86400000).toISOString()) : null, issued_by_profile_id: issuedBy, returned_by_profile_id: returned ? issuedBy : null, status: returned ? "returned" : "active" }).select("id, issued_at, due_at").single();
   assert(!result.error, `loan fixture failed: ${result.error?.message}`); createdLoans.push(result.data.id); return result.data;
 }
 
 async function fine(loanId, amount = 1000) {
-  const result = await admin.from("fines").insert({ loan_id: loanId, assessed_amount_minor: amount, fine_kind: "overdue", assessed_by_profile_id: createdProfiles[0] }).select("id").single();
+  const result = await admin.from("fines").insert({ library_id: libraryId, loan_id: loanId, assessed_amount_minor: amount, fine_kind: "overdue", assessed_by_profile_id: createdProfiles[0] }).select("id").single();
   assert(!result.error, `fine fixture failed: ${result.error?.message}`); createdFines.push(result.data.id); return result.data.id;
 }
 
@@ -180,14 +182,15 @@ try {
   // Immediate database-state authorization changes without refreshing the Auth session.
   const authorizationCopy = await copy(book); const authorizationMember = await member("teacher");
   const beforeDeactivate = await rpc(librarian.client, "circulation_issue_loan", { p_member_id: authorizationMember, p_book_copy_id: authorizationCopy, p_request_id: id() }); assert(!beforeDeactivate.error, "librarian baseline authorization failed"); createdLoans.push(beforeDeactivate.data.loan_id);
-  await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "inactive" });
+  await expectError(() => rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "inactive" }), "tenant administrator altered a global profile lifecycle");
+  await rpc(adminOp.client, "admin_set_room_operator_status", { p_library_code: libraryCode, p_target_profile_id: librarian.profileId, p_status: "inactive" });
   const deactivatedMember = await member("teacher"); const deactivatedCopy = await copy(book);
   await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: deactivatedMember, p_book_copy_id: deactivatedCopy, p_request_id: id() }), "deactivated librarian retained circulation access");
-  await rpc(adminOp.client, "admin_set_profile_status", { p_target_profile_id: librarian.profileId, p_status: "active" });
-  await rpc(adminOp.client, "admin_revoke_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_assign_operator_to_room", { p_library_code: libraryCode, p_target_auth_user_id: librarian.auth.id, p_display_name: "Phase 5 librarian", p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_set_room_operator_status", { p_library_code: libraryCode, p_target_profile_id: librarian.profileId, p_status: "inactive" });
   const revokedMember = await member("teacher"); const revokedCopy = await copy(book);
   await expectError(() => librarian.client.rpc("circulation_issue_loan", { p_member_id: revokedMember, p_book_copy_id: revokedCopy, p_request_id: id() }), "revoked librarian retained circulation access");
-  await rpc(adminOp.client, "admin_assign_role", { p_target_profile_id: librarian.profileId, p_role_key: "librarian" });
+  await rpc(adminOp.client, "admin_assign_operator_to_room", { p_library_code: libraryCode, p_target_auth_user_id: librarian.auth.id, p_display_name: "Phase 5 librarian", p_role_key: "librarian" });
 
   // Data API attack surface: all normal operator writes remain outside the browser boundary.
   for (const table of ["publishers", "categories", "subjects", "authors", "books", "book_copies", "members", "academic_sessions", "grade_levels", "sections", "student_enrollments", "loans", "loan_renewals", "fines", "audit_events"]) {

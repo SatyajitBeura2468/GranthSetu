@@ -13,6 +13,7 @@ export type PublicBook = {
   publicationYear: number | null; description: string | null; totalCopies: number; availableCopies: number;
   availabilityState: "available" | "limited" | "on_loan" | "unavailable"; expectedAvailability: string | null; hasCover: boolean;
 };
+export type PublicCataloguePage = { books: PublicBook[]; total: number; page: number; pageSize: number };
 
 const demoBooks: PublicBook[] = [
   { id: "10000000-0000-0000-0000-000000000101", title: "Wings of Fire", subtitle: "An Autobiography", authorNames: "A. P. J. Abdul Kalam", isbn: "9788173711466", publisherName: "Universities Press", categoryNames: ["Biography"], subjectNames: ["India"], languageCode: "English", publicationYear: 1999, description: "A life shaped by learning, public service, and an enduring belief in young people.", totalCopies: 5, availableCopies: 3, availabilityState: "available", expectedAvailability: null, hasCover: false },
@@ -41,14 +42,64 @@ export const getPublicLibrary = cache(async (rawCode: string): Promise<PublicLib
 
 export async function getPublicCatalogue(rawCode: string, query = "", availableOnly = false): Promise<PublicBook[] | null> {
   const code = normalizeLibraryCode(rawCode);
+  const safeQuery = query.trim().slice(0, 160);
   if (isLocalDemo(code)) {
-    const needle = query.trim().toLowerCase();
+    const needle = safeQuery.toLowerCase();
     return demoBooks.filter((book) => (!availableOnly || book.availableCopies > 0) && (!needle || `${book.title} ${book.authorNames} ${book.isbn ?? ""} ${book.categoryNames.join(" ")}`.toLowerCase().includes(needle)));
   }
   if (!getOptionalPublicSupabaseEnv()) return null;
-  const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("public_catalogue", { p_library_code: code, p_query: query, p_available_only: availableOnly, p_limit: 120 });
+  const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("public_catalogue", { p_library_code: code, p_query: safeQuery, p_available_only: availableOnly, p_limit: 120 });
   if (error) return null;
   return ((data ?? []) as Array<Record<string, unknown>>).map(mapPublicBook);
+}
+
+export async function getPublicCataloguePage(rawCode: string, query = "", availableOnly = false, requestedPage = 1, pageSize = 24): Promise<PublicCataloguePage | null> {
+  const code = normalizeLibraryCode(rawCode);
+  const safeQuery = query.trim().slice(0, 160);
+  const page = Math.min(1_000_000, Math.max(1, Math.floor(requestedPage) || 1));
+  const safePageSize = Math.min(48, Math.max(6, Math.floor(pageSize) || 24));
+  if (isLocalDemo(code)) {
+    const needle = safeQuery.toLowerCase();
+    const filtered = demoBooks.filter((book) => (!availableOnly || book.availableCopies > 0) && (!needle || `${book.title} ${book.authorNames} ${book.isbn ?? ""} ${book.categoryNames.join(" ")} ${book.subjectNames.join(" ")}`.toLowerCase().includes(needle)));
+    const resolvedPage = Math.min(page, Math.max(1, Math.ceil(filtered.length / safePageSize)));
+    return { books: filtered.slice((resolvedPage - 1) * safePageSize, resolvedPage * safePageSize), total: filtered.length, page: resolvedPage, pageSize: safePageSize };
+  }
+  if (!getOptionalPublicSupabaseEnv()) return null;
+  const client = asOperatorRpcClient(await createSupabaseServerClient());
+  const fetchPage = (targetPage: number, limit = safePageSize) => client.rpc("public_catalogue_page", {
+    p_library_code: code, p_query: safeQuery, p_available_only: availableOnly, p_limit: limit,
+    p_offset: (targetPage - 1) * safePageSize, p_book_id: null,
+  });
+  const first = await fetchPage(page);
+  if (first.error) return null;
+  let rows = (first.data ?? []) as Array<Record<string, unknown>>;
+  let resolvedPage = page;
+  let total = Number(rows[0]?.total_count ?? 0);
+
+  // Empty out-of-range pages carry no aggregate count. Anchor at page one,
+  // recover the total, then return the last valid page instead of a false zero.
+  if (!rows.length && page > 1) {
+    const anchor = await fetchPage(1, 1);
+    if (anchor.error) return null;
+    const anchorRows = (anchor.data ?? []) as Array<Record<string, unknown>>;
+    total = Number(anchorRows[0]?.total_count ?? 0);
+    resolvedPage = Math.min(page, Math.max(1, Math.ceil(total / safePageSize)));
+    if (total > 0) {
+      const resolved = await fetchPage(resolvedPage);
+      if (resolved.error) return null;
+      rows = (resolved.data ?? []) as Array<Record<string, unknown>>;
+    }
+  }
+
+  return { books: rows.map(mapPublicBook), total, page: resolvedPage, pageSize: safePageSize };
+}
+
+export async function getPublicNewTitles(rawCode: string, limit = 6): Promise<PublicBook[] | null> {
+  const code = normalizeLibraryCode(rawCode);
+  if (isLocalDemo(code)) return demoBooks.slice(0, Math.max(1, limit));
+  if (!getOptionalPublicSupabaseEnv()) return null;
+  const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("public_new_titles", { p_library_code: code, p_limit: limit });
+  return error ? null : ((data ?? []) as Array<Record<string, unknown>>).map(mapPublicBook);
 }
 
 export async function getPublicBook(rawCode: string, id: string): Promise<PublicBook | null> {

@@ -25,7 +25,11 @@ select ok((select relrowsecurity from pg_class where oid='public.student_enrollm
 select ok(not has_table_privilege('authenticated','public.student_enrollments','INSERT'),'enrollment direct inserts remain closed');
 select ok(not has_table_privilege('authenticated','public.members','UPDATE'),'member direct updates remain closed');
 select ok((select count(*) from storage.buckets where id='book-covers' and public=false)=1,'book covers remain private');
-select ok((select count(*) from public.library_settings where setting_key in ('overdue_renewal_allowed','librarian_waiver_allowed'))=0,'new policy toggles default to fail-closed when absent');
+select ok(
+  (select count(*) from public.library_settings where setting_key in ('overdue_renewal_allowed','librarian_waiver_allowed'))
+    = (select count(*) * 2 from public.libraries),
+  'renewal and waiver policy toggles are explicitly bootstrapped fail-closed for every room'
+);
 
 insert into public.members(id,member_identifier,member_kind,display_name,status)
 values ('72000000-0000-0000-0000-000000000001','PHASE71-ROLL-TEST','student','Phase 7.1 Roll Test','active');

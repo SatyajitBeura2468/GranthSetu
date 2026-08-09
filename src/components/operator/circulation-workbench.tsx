@@ -1,28 +1,594 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { BookCheck, CalendarDays, Check, Clock3, RefreshCw, RotateCcw, Search, UserRound } from "lucide-react";
-import { workspaceMutationAction } from "@/app/operator/[libraryCode]/actions";
+import { useEffect, useState, useTransition } from "react";
+import {
+  BookCheck,
+  CalendarDays,
+  Check,
+  Clock3,
+  IndianRupee,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  UserRound,
+} from "lucide-react";
+import {
+  circulationSearchAction,
+  workspaceMutationAction,
+} from "@/app/operator/[libraryCode]/actions";
 
-type Member = { id: string; name: string; identifier: string; context: string; activeLoans: number; overdueLoans: number };
-type Copy = { id: string; title: string; author: string; accession: string; location: string; state: string };
-type Loan = { id: string; member: string; identifier: string; title: string; accession: string; due: string; overdue: boolean };
+type Member = {
+  id: string;
+  name: string;
+  identifier: string;
+  context: string;
+  activeLoans: number;
+  overdueLoans: number;
+};
+type Copy = {
+  id: string;
+  title: string;
+  author: string;
+  accession: string;
+  barcode?: string;
+  location: string;
+  state: string;
+};
+type Loan = {
+  id: string;
+  member: string;
+  identifier: string;
+  title: string;
+  accession: string;
+  barcode?: string;
+  due: string;
+  overdue: boolean;
+};
+type Fine = {
+  id: string;
+  member: string;
+  identifier: string;
+  title: string;
+  accession: string;
+  assessedMinor: number;
+  outstandingMinor: number;
+  reason?: string;
+};
+type Mode = "issue" | "renew" | "return" | "fines";
 
-export function CirculationWorkbench({ libraryCode, members, copies, loans, disabled = false }: { libraryCode: string; members: Member[]; copies: Copy[]; loans: Loan[]; disabled?: boolean }) {
-  const [mode, setMode] = useState<"issue" | "renew" | "return">("issue"); const [memberQuery, setMemberQuery] = useState(""); const [copyQuery, setCopyQuery] = useState(""); const [loanQuery, setLoanQuery] = useState("");
-  const [memberId, setMemberId] = useState(""); const [copyId, setCopyId] = useState(""); const [loanId, setLoanId] = useState("");
-  const visibleMembers = useMemo(() => members.filter((item) => `${item.name} ${item.identifier} ${item.context}`.toLowerCase().includes(memberQuery.toLowerCase())), [memberQuery, members]);
-  const visibleCopies = useMemo(() => copies.filter((item) => `${item.title} ${item.author} ${item.accession}`.toLowerCase().includes(copyQuery.toLowerCase())), [copyQuery, copies]);
-  const visibleLoans = useMemo(() => loans.filter((item) => `${item.member} ${item.identifier} ${item.title} ${item.accession}`.toLowerCase().includes(loanQuery.toLowerCase())), [loanQuery, loans]);
-  const member = members.find((item) => item.id === memberId); const copy = copies.find((item) => item.id === copyId); const loan = loans.find((item) => item.id === loanId);
-  return <div className="circulation-command"><div className="mode-tabs" role="tablist" aria-label="Circulation operation"><button role="tab" aria-selected={mode === "issue"} onClick={() => setMode("issue")}><BookCheck aria-hidden="true" />Issue</button><button role="tab" aria-selected={mode === "renew"} onClick={() => setMode("renew")}><RefreshCw aria-hidden="true" />Renew</button><button role="tab" aria-selected={mode === "return"} onClick={() => setMode("return")}><RotateCcw aria-hidden="true" />Return</button></div>
-    {mode === "issue" ? <form action={workspaceMutationAction} className="issue-grid"><input type="hidden" name="libraryCode" value={libraryCode} /><input type="hidden" name="operation" value="issue" /><input type="hidden" name="memberId" value={memberId} /><input type="hidden" name="copyId" value={copyId} />
-      <SelectionPanel step="1" title="Select member" query={memberQuery} onQuery={setMemberQuery} placeholder="Name, member ID, class or roll"><div className="selection-list">{visibleMembers.map((item) => <button key={item.id} type="button" aria-pressed={memberId === item.id} onClick={() => setMemberId(item.id)}><span className="selection-avatar">{item.name.slice(0, 2)}</span><span><strong>{item.name}</strong><small>{item.identifier} · {item.context}</small></span>{memberId === item.id ? <Check aria-hidden="true" /> : null}</button>)}</div>{member ? <div className="eligibility-summary"><h3>Eligibility</h3><p><Check aria-hidden="true" />Active member</p><p className={member.overdueLoans ? "is-warning" : ""}>{member.overdueLoans ? <Clock3 aria-hidden="true" /> : <Check aria-hidden="true" />}{member.overdueLoans} overdue · {member.activeLoans} active loans</p></div> : <Prompt icon={UserRound} text="Choose one borrower to inspect eligibility." />}</SelectionPanel>
-      <SelectionPanel step="2" title="Select book copy" query={copyQuery} onQuery={setCopyQuery} placeholder="Title, author, ISBN or accession"><div className="selection-list">{visibleCopies.map((item) => <button key={item.id} type="button" aria-pressed={copyId === item.id} onClick={() => setCopyId(item.id)}><span className="copy-glyph">GS</span><span><strong>{item.title}</strong><small>{item.author} · {item.accession}</small></span>{copyId === item.id ? <Check aria-hidden="true" /> : null}</button>)}</div>{copy ? <div className="copy-summary"><h3>Selected copy</h3><dl><div><dt>Accession</dt><dd>{copy.accession}</dd></div><div><dt>Location</dt><dd>{copy.location}</dd></div><div><dt>State</dt><dd><span className="status-dot status-success">{copy.state}</span></dd></div></dl></div> : <Prompt icon={BookCheck} text="Choose one physical copy. Availability is verified again on issue." />}</SelectionPanel>
-      <aside className="transaction-summary"><p>3</p><h2>Confirm issue</h2>{member && copy ? <><div><span>Member</span><strong>{member.name}</strong><small>{member.identifier}</small></div><div><span>Book copy</span><strong>{copy.title}</strong><small>{copy.accession}</small></div><label>Note (optional)<input name="notes" maxLength={2000} /></label><div className="due-preview"><CalendarDays aria-hidden="true" /><span>Due date is calculated from the current library policy.</span></div></> : <Prompt icon={Check} text="Select a member and copy to prepare this transaction." />}<button className="button button-primary button-full" type="submit" disabled={!member || !copy || disabled}><BookCheck aria-hidden="true" />Issue selected copy</button></aside>
-    </form> : <form action={workspaceMutationAction} className="loan-operation"><input type="hidden" name="libraryCode" value={libraryCode} /><input type="hidden" name="operation" value={mode} /><input type="hidden" name="loanId" value={loanId} /><label className="search-control"><Search aria-hidden="true" /><input value={loanQuery} onChange={(event) => setLoanQuery(event.target.value)} placeholder="Member, title, accession or barcode" /></label><div className="data-table-wrap"><table className="data-table"><thead><tr><th>Member</th><th>Book / copy</th><th>Due date</th><th>Status</th><th>Select</th></tr></thead><tbody>{visibleLoans.map((item) => <tr key={item.id} className={loanId === item.id ? "is-selected" : ""}><td><strong>{item.member}</strong><small>{item.identifier}</small></td><td><strong>{item.title}</strong><small>{item.accession}</small></td><td>{new Date(item.due).toLocaleDateString("en-IN")}</td><td><span className={`status-dot ${item.overdue ? "status-danger" : "status-success"}`}>{item.overdue ? "Overdue" : "Active"}</span></td><td><button type="button" className="button button-small button-secondary" onClick={() => setLoanId(item.id)}>{loanId === item.id ? "Selected" : "Select"}</button></td></tr>)}</tbody></table></div>{loan ? <aside className="loan-confirm"><div><span>{mode === "renew" ? "Renewing" : "Returning"}</span><h2>{loan.title}</h2><p>{loan.member} · {loan.identifier} · {loan.accession}</p></div>{mode === "renew" ? <p><CalendarDays aria-hidden="true" />The new due date is determined by policy after eligibility is rechecked.</p> : <p><RotateCcw aria-hidden="true" />Overdue status and fine policy are evaluated atomically.</p>}<button className="button button-primary" type="submit" disabled={disabled}>{mode === "renew" ? "Renew loan" : "Return copy"}</button></aside> : null}</form>}
-  </div>;
+function useRoomSearch<T>(
+  libraryCode: string,
+  kind: "members" | "copies" | "loans" | "fines",
+  query: string,
+  initial: T[],
+) {
+  const searchKey = `${libraryCode}:${kind}:${query.trim()}`;
+  const [result, setResult] = useState<{ key: string; rows: T[] }>({
+    key: "",
+    rows: [],
+  });
+  const [pending, startTransition] = useTransition();
+  useEffect(() => {
+    const needle = query.trim();
+    if (needle.length < 2) return;
+    let cancelled = false;
+    const requestKey = `${libraryCode}:${kind}:${needle}`;
+    const timer = window.setTimeout(
+      () =>
+        startTransition(async () => {
+          const rows = (await circulationSearchAction(
+            libraryCode,
+            kind,
+            needle,
+          )) as T[];
+          if (!cancelled) setResult({ key: requestKey, rows });
+        }),
+      220,
+    );
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [kind, libraryCode, query]);
+  return {
+    rows:
+      query.trim().length < 2
+        ? initial
+        : result.key === searchKey
+          ? result.rows
+          : [],
+    pending,
+  };
 }
 
-function SelectionPanel({ step, title, query, onQuery, placeholder, children }: { step: string; title: string; query: string; onQuery: (value: string) => void; placeholder: string; children: React.ReactNode }) { return <section className="selection-panel"><header><span>{step}</span><h2>{title}</h2></header><label className="search-control"><Search aria-hidden="true" /><input value={query} onChange={(event) => onQuery(event.target.value)} placeholder={placeholder} /></label>{children}</section>; }
-function Prompt({ icon: Icon, text }: { icon: typeof Check; text: string }) { return <div className="inline-empty"><Icon aria-hidden="true" /><span>{text}</span></div>; }
+export function CirculationWorkbench({
+  libraryCode,
+  members: initialMembers,
+  copies: initialCopies,
+  loans: initialLoans,
+  disabled = false,
+}: {
+  libraryCode: string;
+  members: Member[];
+  copies: Copy[];
+  loans: Loan[];
+  disabled?: boolean;
+}) {
+  const [mode, setMode] = useState<Mode>("issue");
+  const [memberQuery, setMemberQuery] = useState("");
+  const [copyQuery, setCopyQuery] = useState("");
+  const [loanQuery, setLoanQuery] = useState("");
+  const [fineQuery, setFineQuery] = useState("");
+  const [memberId, setMemberId] = useState("");
+  const [copyId, setCopyId] = useState("");
+  const [loanId, setLoanId] = useState("");
+  const [fineId, setFineId] = useState("");
+  const memberSearch = useRoomSearch<Member>(
+    libraryCode,
+    "members",
+    memberQuery,
+    initialMembers,
+  );
+  const copySearch = useRoomSearch<Copy>(
+    libraryCode,
+    "copies",
+    copyQuery,
+    initialCopies,
+  );
+  const loanSearch = useRoomSearch<Loan>(
+    libraryCode,
+    "loans",
+    loanQuery,
+    initialLoans,
+  );
+  const fineSearch = useRoomSearch<Fine>(libraryCode, "fines", fineQuery, []);
+  const member = memberSearch.rows.find((item) => item.id === memberId);
+  const copy = copySearch.rows.find((item) => item.id === copyId);
+  const loan = loanSearch.rows.find((item) => item.id === loanId);
+  const fine = fineSearch.rows.find((item) => item.id === fineId);
+  const emptyHint = (query: string, pending: boolean) =>
+    pending
+      ? "Searching this room…"
+      : query.trim().length < 2
+        ? "Enter at least two characters to search the complete room."
+        : "No matching records.";
+  return (
+    <div className="circulation-command">
+      <div
+        className="mode-tabs"
+        role="tablist"
+        aria-label="Circulation operation"
+      >
+        {(["issue", "renew", "return", "fines"] as Mode[]).map((item) => (
+          <button
+            key={item}
+            role="tab"
+            aria-selected={mode === item}
+            onClick={() => setMode(item)}
+          >
+            {item === "issue" ? (
+              <BookCheck aria-hidden="true" />
+            ) : item === "renew" ? (
+              <RefreshCw aria-hidden="true" />
+            ) : item === "return" ? (
+              <RotateCcw aria-hidden="true" />
+            ) : (
+              <IndianRupee aria-hidden="true" />
+            )}
+            {item === "fines" ? "Fines" : item[0].toUpperCase() + item.slice(1)}
+          </button>
+        ))}
+      </div>
+      {mode === "issue" ? (
+        <form action={workspaceMutationAction} className="issue-grid">
+          <input type="hidden" name="libraryCode" value={libraryCode} />
+          <input type="hidden" name="operation" value="issue" />
+          <input type="hidden" name="memberId" value={memberId} />
+          <input type="hidden" name="copyId" value={copyId} />
+          <SelectionPanel
+            step="1"
+            title="Select member"
+            query={memberQuery}
+            onQuery={(next) => {
+              setMemberQuery(next);
+              setMemberId("");
+            }}
+            placeholder="Name, member ID, class or roll"
+          >
+            <div className="selection-list">
+              {memberSearch.rows.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={memberId === item.id}
+                  onClick={() => setMemberId(item.id)}
+                >
+                  <span className="selection-avatar">
+                    {item.name.slice(0, 2)}
+                  </span>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>
+                      {item.identifier} · {item.context}
+                    </small>
+                  </span>
+                  {memberId === item.id ? <Check aria-hidden="true" /> : null}
+                </button>
+              ))}
+            </div>
+            {!memberSearch.rows.length ? (
+              <p className="search-hint" role="status">
+                {emptyHint(memberQuery, memberSearch.pending)}
+              </p>
+            ) : null}
+            {member ? (
+              <div className="eligibility-summary">
+                <h3>Eligibility</h3>
+                <p>
+                  <Check aria-hidden="true" />
+                  Active member
+                </p>
+                <p className={member.overdueLoans ? "is-warning" : ""}>
+                  {member.overdueLoans ? (
+                    <Clock3 aria-hidden="true" />
+                  ) : (
+                    <Check aria-hidden="true" />
+                  )}
+                  {member.overdueLoans} overdue · {member.activeLoans} active
+                  loans
+                </p>
+              </div>
+            ) : (
+              <Prompt
+                icon={UserRound}
+                text="Choose one borrower to inspect eligibility."
+              />
+            )}
+          </SelectionPanel>
+          <SelectionPanel
+            step="2"
+            title="Select book copy"
+            query={copyQuery}
+            onQuery={(next) => {
+              setCopyQuery(next);
+              setCopyId("");
+            }}
+            placeholder="Title, author, ISBN, barcode or accession"
+          >
+            <div className="selection-list">
+              {copySearch.rows.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={copyId === item.id}
+                  onClick={() => setCopyId(item.id)}
+                >
+                  <span className="copy-glyph">GS</span>
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>
+                      {item.author} · {item.accession}
+                      {item.barcode ? ` · ${item.barcode}` : ""}
+                    </small>
+                  </span>
+                  {copyId === item.id ? <Check aria-hidden="true" /> : null}
+                </button>
+              ))}
+            </div>
+            {!copySearch.rows.length ? (
+              <p className="search-hint" role="status">
+                {emptyHint(copyQuery, copySearch.pending)}
+              </p>
+            ) : null}
+            {copy ? (
+              <div className="copy-summary">
+                <h3>Selected copy</h3>
+                <dl>
+                  <div>
+                    <dt>Accession</dt>
+                    <dd>{copy.accession}</dd>
+                  </div>
+                  <div>
+                    <dt>Location</dt>
+                    <dd>{copy.location}</dd>
+                  </div>
+                  <div>
+                    <dt>State</dt>
+                    <dd>
+                      <span className="status-dot status-success">
+                        {copy.state}
+                      </span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            ) : (
+              <Prompt
+                icon={BookCheck}
+                text="Choose one physical copy. Availability is verified again on issue."
+              />
+            )}
+          </SelectionPanel>
+          <aside className="transaction-summary">
+            <p>3</p>
+            <h2>Confirm issue</h2>
+            {member && copy ? (
+              <>
+                <div>
+                  <span>Member</span>
+                  <strong>{member.name}</strong>
+                  <small>{member.identifier}</small>
+                </div>
+                <div>
+                  <span>Book copy</span>
+                  <strong>{copy.title}</strong>
+                  <small>{copy.accession}</small>
+                </div>
+                <label>
+                  Note (optional)
+                  <input name="notes" maxLength={2000} />
+                </label>
+                <div className="due-preview">
+                  <CalendarDays aria-hidden="true" />
+                  <span>Due date is calculated from current room policy.</span>
+                </div>
+              </>
+            ) : (
+              <Prompt
+                icon={Check}
+                text="Select a member and copy to prepare this transaction."
+              />
+            )}
+            <button
+              className="button button-primary button-full"
+              disabled={!member || !copy || disabled}
+            >
+              <BookCheck aria-hidden="true" />
+              Issue selected copy
+            </button>
+          </aside>
+        </form>
+      ) : mode === "fines" ? (
+        <form action={workspaceMutationAction} className="loan-operation">
+          <input type="hidden" name="libraryCode" value={libraryCode} />
+          <input type="hidden" name="fineId" value={fineId} />
+          <label className="search-control">
+            <Search aria-hidden="true" />
+            <input
+              value={fineQuery}
+              onChange={(event) => {
+                setFineQuery(event.target.value);
+                setFineId("");
+              }}
+              placeholder="Member, title, or accession"
+            />
+          </label>
+          <p className="search-hint" role="status">
+            {emptyHint(fineQuery, fineSearch.pending)}
+          </p>
+          <div className="data-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Book / copy</th>
+                  <th>Outstanding</th>
+                  <th>Select</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fineSearch.rows.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <strong>{item.member}</strong>
+                      <small>{item.identifier}</small>
+                    </td>
+                    <td>
+                      <strong>{item.title}</strong>
+                      <small>{item.accession}</small>
+                    </td>
+                    <td>₹{(item.outstandingMinor / 100).toFixed(2)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="button button-small button-secondary"
+                        onClick={() => setFineId(item.id)}
+                      >
+                        {fineId === item.id ? "Selected" : "Select"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {fine ? (
+            <aside className="loan-confirm">
+              <div>
+                <span>Outstanding fine</span>
+                <h2>₹{(fine.outstandingMinor / 100).toFixed(2)}</h2>
+                <p>
+                  {fine.member} · {fine.title}
+                </p>
+              </div>
+              <label>
+                Amount (₹)
+                <input
+                  name="amountMinor"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  max={(fine.outstandingMinor / 100).toFixed(2)}
+                  required
+                />
+              </label>
+              <label>
+                Reason / note
+                <input name="reason" maxLength={500} />
+              </label>
+              <div className="button-row">
+                <button
+                  name="operation"
+                  value="fine_settle"
+                  className="button button-primary"
+                  disabled={disabled}
+                >
+                  Record settlement
+                </button>
+                <button
+                  name="operation"
+                  value="fine_waive"
+                  className="button button-secondary"
+                  disabled={disabled}
+                >
+                  Waive amount
+                </button>
+              </div>
+            </aside>
+          ) : null}
+        </form>
+      ) : (
+        <form action={workspaceMutationAction} className="loan-operation">
+          <input type="hidden" name="libraryCode" value={libraryCode} />
+          <input type="hidden" name="operation" value={mode} />
+          <input type="hidden" name="loanId" value={loanId} />
+          <label className="search-control">
+            <Search aria-hidden="true" />
+            <input
+              value={loanQuery}
+              onChange={(event) => {
+                setLoanQuery(event.target.value);
+                setLoanId("");
+              }}
+              placeholder="Member, title, accession or barcode"
+            />
+          </label>
+          {!loanSearch.rows.length ? (
+            <p className="search-hint" role="status">
+              {emptyHint(loanQuery, loanSearch.pending)}
+            </p>
+          ) : null}
+          <div className="data-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Book / copy</th>
+                  <th>Due date</th>
+                  <th>Status</th>
+                  <th>Select</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loanSearch.rows.map((item) => (
+                  <tr
+                    key={item.id}
+                    className={loanId === item.id ? "is-selected" : ""}
+                  >
+                    <td>
+                      <strong>{item.member}</strong>
+                      <small>{item.identifier}</small>
+                    </td>
+                    <td>
+                      <strong>{item.title}</strong>
+                      <small>
+                        {item.accession}
+                        {item.barcode ? ` · ${item.barcode}` : ""}
+                      </small>
+                    </td>
+                    <td>{new Date(item.due).toLocaleDateString("en-IN")}</td>
+                    <td>
+                      <span
+                        className={`status-dot ${item.overdue ? "status-danger" : "status-success"}`}
+                      >
+                        {item.overdue ? "Overdue" : "Active"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="button button-small button-secondary"
+                        onClick={() => setLoanId(item.id)}
+                      >
+                        {loanId === item.id ? "Selected" : "Select"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {loan ? (
+            <aside className="loan-confirm">
+              <div>
+                <span>{mode === "renew" ? "Renewing" : "Returning"}</span>
+                <h2>{loan.title}</h2>
+                <p>
+                  {loan.member} · {loan.identifier} · {loan.accession}
+                </p>
+              </div>
+              {mode === "renew" ? (
+                <p>
+                  <CalendarDays aria-hidden="true" />
+                  The new due date is determined by policy after eligibility is
+                  rechecked.
+                </p>
+              ) : (
+                <p>
+                  <RotateCcw aria-hidden="true" />
+                  The return is recorded atomically against this exact active
+                  loan.
+                </p>
+              )}
+              <button className="button button-primary" disabled={disabled}>
+                {mode === "renew" ? "Renew loan" : "Return copy"}
+              </button>
+            </aside>
+          ) : null}
+        </form>
+      )}
+    </div>
+  );
+}
+
+function SelectionPanel({
+  step,
+  title,
+  query,
+  onQuery,
+  placeholder,
+  children,
+}: {
+  step: string;
+  title: string;
+  query: string;
+  onQuery: (value: string) => void;
+  placeholder: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="selection-panel">
+      <header>
+        <span>{step}</span>
+        <h2>{title}</h2>
+      </header>
+      <label className="search-control">
+        <Search aria-hidden="true" />
+        <input
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+          placeholder={placeholder}
+        />
+      </label>
+      {children}
+    </section>
+  );
+}
+function Prompt({ icon: Icon, text }: { icon: typeof Check; text: string }) {
+  return (
+    <div className="inline-empty">
+      <Icon aria-hidden="true" />
+      <span>{text}</span>
+    </div>
+  );
+}

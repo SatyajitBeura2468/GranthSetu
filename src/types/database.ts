@@ -15,6 +15,7 @@ export type Database = {
           display_label: string
           ends_on: string
           id: string
+          library_id: string
           session_code: string
           starts_on: string
           status: string
@@ -25,6 +26,7 @@ export type Database = {
           display_label: string
           ends_on: string
           id?: string
+          library_id?: string
           session_code: string
           starts_on: string
           status?: string
@@ -35,12 +37,21 @@ export type Database = {
           display_label?: string
           ends_on?: string
           id?: string
+          library_id?: string
           session_code?: string
           starts_on?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "academic_sessions_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_events: {
         Row: {
@@ -49,6 +60,7 @@ export type Database = {
           after_data: Json | null
           before_data: Json | null
           id: string
+          library_id: string
           metadata: Json
           occurred_at: string
           request_id: string | null
@@ -61,6 +73,7 @@ export type Database = {
           after_data?: Json | null
           before_data?: Json | null
           id?: string
+          library_id?: string
           metadata?: Json
           occurred_at?: string
           request_id?: string | null
@@ -73,6 +86,7 @@ export type Database = {
           after_data?: Json | null
           before_data?: Json | null
           id?: string
+          library_id?: string
           metadata?: Json
           occurred_at?: string
           request_id?: string | null
@@ -87,6 +101,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audit_events_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
         ]
       }
       authors: {
@@ -94,37 +115,51 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          library_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           display_name: string
           id?: string
+          library_id?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           display_name?: string
           id?: string
+          library_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "authors_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       book_authors: {
         Row: {
           author_id: string
           author_order: number
           book_id: string
+          library_id: string
         }
         Insert: {
           author_id: string
           author_order?: number
           book_id: string
+          library_id?: string
         }
         Update: {
           author_id?: string
           author_order?: number
           book_id?: string
+          library_id?: string
         }
         Relationships: [
           {
@@ -135,10 +170,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "book_authors_author_library_fk"
+            columns: ["author_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "authors"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
             foreignKeyName: "book_authors_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_authors_book_library_fk"
+            columns: ["book_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "book_authors_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
         ]
@@ -147,14 +203,17 @@ export type Database = {
         Row: {
           book_id: string
           category_id: string
+          library_id: string
         }
         Insert: {
           book_id: string
           category_id: string
+          library_id?: string
         }
         Update: {
           book_id?: string
           category_id?: string
+          library_id?: string
         }
         Relationships: [
           {
@@ -165,10 +224,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "book_categories_book_library_fk"
+            columns: ["book_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
             foreignKeyName: "book_categories_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_categories_category_library_fk"
+            columns: ["category_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "book_categories_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
         ]
@@ -184,6 +264,7 @@ export type Database = {
           created_at: string
           currency_code: string
           id: string
+          library_id: string
           location_id: string | null
           operational_state: string
           replacement_cost_minor: number | null
@@ -199,6 +280,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          library_id?: string
           location_id?: string | null
           operational_state?: string
           replacement_cost_minor?: number | null
@@ -214,6 +296,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          library_id?: string
           location_id?: string | null
           operational_state?: string
           replacement_cost_minor?: number | null
@@ -228,25 +311,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "book_copies_location_id_fkey"
-            columns: ["location_id"]
+            foreignKeyName: "book_copies_book_library_fk"
+            columns: ["book_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "book_copies_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_copies_location_library_fk"
+            columns: ["location_id", "library_id"]
             isOneToOne: false
             referencedRelation: "locations"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "library_id"]
           },
         ]
       }
       book_subjects: {
         Row: {
           book_id: string
+          library_id: string
           subject_id: string
         }
         Insert: {
           book_id: string
+          library_id?: string
           subject_id: string
         }
         Update: {
           book_id?: string
+          library_id?: string
           subject_id?: string
         }
         Relationships: [
@@ -258,11 +358,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "book_subjects_book_library_fk"
+            columns: ["book_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "book_subjects_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "book_subjects_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_subjects_subject_library_fk"
+            columns: ["subject_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id", "library_id"]
           },
         ]
       }
@@ -276,6 +397,7 @@ export type Database = {
           isbn: string | null
           isbn_normalized: string | null
           language_code: string | null
+          library_id: string
           publication_year: number | null
           publisher_id: string | null
           status: string
@@ -292,6 +414,7 @@ export type Database = {
           isbn?: string | null
           isbn_normalized?: string | null
           language_code?: string | null
+          library_id?: string
           publication_year?: number | null
           publisher_id?: string | null
           status?: string
@@ -308,6 +431,7 @@ export type Database = {
           isbn?: string | null
           isbn_normalized?: string | null
           language_code?: string | null
+          library_id?: string
           publication_year?: number | null
           publisher_id?: string | null
           status?: string
@@ -317,11 +441,25 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "books_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "books_publisher_id_fkey"
             columns: ["publisher_id"]
             isOneToOne: false
             referencedRelation: "publishers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "books_publisher_library_fk"
+            columns: ["publisher_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "publishers"
+            referencedColumns: ["id", "library_id"]
           },
         ]
       }
@@ -329,6 +467,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          library_id: string
           name: string
           status: string
           updated_at: string
@@ -336,6 +475,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          library_id?: string
           name: string
           status?: string
           updated_at?: string
@@ -343,11 +483,20 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          library_id?: string
           name?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fines: {
         Row: {
@@ -357,6 +506,7 @@ export type Database = {
           currency_code: string
           fine_kind: string
           id: string
+          library_id: string
           loan_id: string
           reason: string | null
           settled_amount_minor: number
@@ -370,6 +520,7 @@ export type Database = {
           currency_code?: string
           fine_kind?: string
           id?: string
+          library_id?: string
           loan_id: string
           reason?: string | null
           settled_amount_minor?: number
@@ -383,6 +534,7 @@ export type Database = {
           currency_code?: string
           fine_kind?: string
           id?: string
+          library_id?: string
           loan_id?: string
           reason?: string | null
           settled_amount_minor?: number
@@ -398,11 +550,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fines_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fines_loan_id_fkey"
             columns: ["loan_id"]
             isOneToOne: false
             referencedRelation: "loans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fines_loan_library_fk"
+            columns: ["loan_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id", "library_id"]
           },
         ]
       }
@@ -412,6 +578,7 @@ export type Database = {
           display_name: string
           grade_code: string
           id: string
+          library_id: string
           sort_order: number
         }
         Insert: {
@@ -419,6 +586,7 @@ export type Database = {
           display_name: string
           grade_code: string
           id?: string
+          library_id?: string
           sort_order?: number
         }
         Update: {
@@ -426,9 +594,56 @@ export type Database = {
           display_name?: string
           grade_code?: string
           id?: string
+          library_id?: string
           sort_order?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "grade_levels_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      libraries: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string | null
+          display_name: string
+          id: string
+          public_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          display_name: string
+          id?: string
+          public_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          display_name?: string
+          id?: string
+          public_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "libraries_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       library_settings: {
         Row: {
@@ -436,6 +651,7 @@ export type Database = {
           created_at: string
           currency_code: string | null
           integer_value: number | null
+          library_id: string
           money_minor_value: number | null
           setting_key: string
           updated_at: string
@@ -447,6 +663,7 @@ export type Database = {
           created_at?: string
           currency_code?: string | null
           integer_value?: number | null
+          library_id?: string
           money_minor_value?: number | null
           setting_key: string
           updated_at?: string
@@ -458,6 +675,7 @@ export type Database = {
           created_at?: string
           currency_code?: string | null
           integer_value?: number | null
+          library_id?: string
           money_minor_value?: number | null
           setting_key?: string
           updated_at?: string
@@ -465,6 +683,13 @@ export type Database = {
           value_kind?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "library_settings_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "library_settings_updated_by_profile_id_fkey"
             columns: ["updated_by_profile_id"]
@@ -478,6 +703,7 @@ export type Database = {
         Row: {
           approved_by_profile_id: string
           id: string
+          library_id: string
           loan_id: string
           new_due_at: string
           previous_due_at: string
@@ -486,6 +712,7 @@ export type Database = {
         Insert: {
           approved_by_profile_id: string
           id?: string
+          library_id?: string
           loan_id: string
           new_due_at: string
           previous_due_at: string
@@ -494,6 +721,7 @@ export type Database = {
         Update: {
           approved_by_profile_id?: string
           id?: string
+          library_id?: string
           loan_id?: string
           new_due_at?: string
           previous_due_at?: string
@@ -508,11 +736,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "loan_renewals_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "loan_renewals_loan_id_fkey"
             columns: ["loan_id"]
             isOneToOne: false
             referencedRelation: "loans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_renewals_loan_library_fk"
+            columns: ["loan_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id", "library_id"]
           },
         ]
       }
@@ -523,6 +765,7 @@ export type Database = {
           id: string
           issued_at: string
           issued_by_profile_id: string
+          library_id: string
           member_id: string
           notes: string | null
           returned_at: string | null
@@ -535,6 +778,7 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by_profile_id: string
+          library_id?: string
           member_id: string
           notes?: string | null
           returned_at?: string | null
@@ -547,6 +791,7 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by_profile_id?: string
+          library_id?: string
           member_id?: string
           notes?: string | null
           returned_at?: string | null
@@ -562,10 +807,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "loans_copy_library_fk"
+            columns: ["book_copy_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "book_copies"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
             foreignKeyName: "loans_issued_by_profile_id_fkey"
             columns: ["issued_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loans_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
           {
@@ -574,6 +833,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loans_member_library_fk"
+            columns: ["member_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "library_id"]
           },
           {
             foreignKeyName: "loans_returned_by_profile_id_fkey"
@@ -589,6 +855,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          library_id: string
           location_code: string
           status: string
           updated_at: string
@@ -597,6 +864,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          library_id?: string
           location_code: string
           status?: string
           updated_at?: string
@@ -605,17 +873,27 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          library_id?: string
           location_code?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locations_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
           created_at: string
           display_name: string
           id: string
+          library_id: string
           member_identifier: string
           member_kind: string
           profile_id: string | null
@@ -626,6 +904,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          library_id?: string
           member_identifier: string
           member_kind: string
           profile_id?: string | null
@@ -636,6 +915,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          library_id?: string
           member_identifier?: string
           member_kind?: string
           profile_id?: string | null
@@ -644,9 +924,16 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "members_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "members_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -656,20 +943,26 @@ export type Database = {
         Row: {
           assigned_at: string
           assigned_by_profile_id: string | null
+          library_id: string
           profile_id: string
           role_id: string
+          status: string
         }
         Insert: {
           assigned_at?: string
           assigned_by_profile_id?: string | null
+          library_id?: string
           profile_id: string
           role_id: string
+          status?: string
         }
         Update: {
           assigned_at?: string
           assigned_by_profile_id?: string | null
+          library_id?: string
           profile_id?: string
           role_id?: string
+          status?: string
         }
         Relationships: [
           {
@@ -677,6 +970,13 @@ export type Database = {
             columns: ["assigned_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_roles_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
           {
@@ -726,6 +1026,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          library_id: string
           name: string
           status: string
           updated_at: string
@@ -733,6 +1034,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          library_id?: string
           name: string
           status?: string
           updated_at?: string
@@ -740,11 +1042,20 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          library_id?: string
           name?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "publishers_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roles: {
         Row: {
@@ -775,6 +1086,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          library_id: string
           section_code: string
           sort_order: number
         }
@@ -782,6 +1094,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          library_id?: string
           section_code: string
           sort_order?: number
         }
@@ -789,10 +1102,19 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          library_id?: string
           section_code?: string
           sort_order?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sections_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_enrollments: {
         Row: {
@@ -800,6 +1122,7 @@ export type Database = {
           created_at: string
           grade_level_id: string
           id: string
+          library_id: string
           member_id: string
           roll_number: string | null
           section_id: string
@@ -811,6 +1134,7 @@ export type Database = {
           created_at?: string
           grade_level_id: string
           id?: string
+          library_id?: string
           member_id: string
           roll_number?: string | null
           section_id: string
@@ -822,6 +1146,7 @@ export type Database = {
           created_at?: string
           grade_level_id?: string
           id?: string
+          library_id?: string
           member_id?: string
           roll_number?: string | null
           section_id?: string
@@ -844,11 +1169,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "student_enrollments_grade_library_fk"
+            columns: ["grade_level_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "grade_levels"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "student_enrollments_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_member_library_fk"
+            columns: ["member_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "library_id"]
           },
           {
             foreignKeyName: "student_enrollments_section_id_fkey"
@@ -857,12 +1203,27 @@ export type Database = {
             referencedRelation: "sections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "student_enrollments_section_library_fk"
+            columns: ["section_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id", "library_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_session_library_fk"
+            columns: ["academic_session_id", "library_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id", "library_id"]
+          },
         ]
       }
       subjects: {
         Row: {
           created_at: string
           id: string
+          library_id: string
           name: string
           status: string
           updated_at: string
@@ -870,6 +1231,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          library_id?: string
           name: string
           status?: string
           updated_at?: string
@@ -877,17 +1239,35 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          library_id?: string
           name?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subjects_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_operator_to_room: {
+        Args: {
+          p_display_name: string
+          p_library_code: string
+          p_role_key: string
+          p_target_auth_user_id: string
+        }
+        Returns: string
+      }
       admin_assign_role: {
         Args: { p_role_key: string; p_target_profile_id: string }
         Returns: boolean
@@ -924,6 +1304,14 @@ export type Database = {
       }
       admin_set_profile_status: {
         Args: { p_status: string; p_target_profile_id: string }
+        Returns: boolean
+      }
+      admin_set_room_operator_status: {
+        Args: {
+          p_library_code: string
+          p_status: string
+          p_target_profile_id: string
+        }
         Returns: boolean
       }
       admin_upsert_academic_session: {
@@ -1178,6 +1566,14 @@ export type Database = {
         }
         Returns: Json
       }
+      create_library_room: {
+        Args: {
+          p_creator_display_name: string
+          p_display_name: string
+          p_public_code: string
+        }
+        Returns: string
+      }
       current_operator_context: {
         Args: never
         Returns: {
@@ -1294,6 +1690,31 @@ export type Database = {
         }
         Returns: string
       }
+      operator_accessible_libraries: {
+        Args: never
+        Returns: {
+          library_code: string
+          library_id: string
+          library_name: string
+          roles: string[]
+        }[]
+      }
+      operator_circulation_search: {
+        Args: { p_kind: string; p_library_code: string; p_query: string }
+        Returns: Json
+      }
+      operator_context_for_library: {
+        Args: { p_library_code: string }
+        Returns: {
+          display_name: string
+          library_code: string
+          library_id: string
+          library_name: string
+          profile_id: string
+          roles: string[]
+          user_id: string
+        }[]
+      }
       operator_dashboard: {
         Args: never
         Returns: {
@@ -1312,6 +1733,160 @@ export type Database = {
           librarian_waiver_allowed: boolean
           overdue_renewal_allowed: boolean
           policy_ready: boolean
+        }[]
+      }
+      operator_room_audit: {
+        Args: {
+          p_action?: string
+          p_actor?: string
+          p_from?: string
+          p_library_code: string
+          p_to?: string
+        }
+        Returns: Json
+      }
+      operator_room_operators: {
+        Args: { p_library_code: string }
+        Returns: Json
+      }
+      operator_room_report: {
+        Args: {
+          p_from?: string
+          p_kind: string
+          p_library_code: string
+          p_outstanding_only?: boolean
+          p_query?: string
+          p_status?: string
+          p_to?: string
+        }
+        Returns: Json
+      }
+      operator_workspace_data: {
+        Args: {
+          p_id?: string
+          p_library_code: string
+          p_query?: string
+          p_resource: string
+        }
+        Returns: Json
+      }
+      operator_workspace_mutation: {
+        Args: {
+          p_library_code: string
+          p_operation: string
+          p_payload: Json
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      public_book_cover_path: {
+        Args: { p_book_id: string; p_library_code: string }
+        Returns: string
+      }
+      public_book_detail: {
+        Args: { p_book_id: string; p_library_code: string }
+        Returns: {
+          author_names: string
+          availability_state: string
+          available_copies: number
+          category_names: string[]
+          description: string
+          expected_availability: string
+          has_cover: boolean
+          id: string
+          isbn: string
+          language_code: string
+          publication_year: number
+          publisher_name: string
+          subject_names: string[]
+          subtitle: string
+          title: string
+          total_copies: number
+        }[]
+      }
+      public_catalogue: {
+        Args: {
+          p_available_only?: boolean
+          p_library_code: string
+          p_limit?: number
+          p_query?: string
+        }
+        Returns: {
+          author_names: string
+          availability_state: string
+          available_copies: number
+          category_names: string[]
+          description: string
+          expected_availability: string
+          has_cover: boolean
+          id: string
+          isbn: string
+          language_code: string
+          publication_year: number
+          publisher_name: string
+          subject_names: string[]
+          subtitle: string
+          title: string
+          total_copies: number
+        }[]
+      }
+      public_catalogue_page: {
+        Args: {
+          p_available_only?: boolean
+          p_book_id?: string
+          p_library_code: string
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+        }
+        Returns: {
+          author_names: string
+          availability_state: string
+          available_copies: number
+          category_names: string[]
+          description: string
+          expected_availability: string
+          has_cover: boolean
+          id: string
+          isbn: string
+          language_code: string
+          publication_year: number
+          publisher_name: string
+          subject_names: string[]
+          subtitle: string
+          title: string
+          total_copies: number
+          total_count: number
+        }[]
+      }
+      public_new_titles: {
+        Args: { p_library_code: string; p_limit?: number }
+        Returns: {
+          author_names: string
+          availability_state: string
+          available_copies: number
+          category_names: string[]
+          description: string
+          expected_availability: string
+          has_cover: boolean
+          id: string
+          isbn: string
+          language_code: string
+          publication_year: number
+          publisher_name: string
+          subject_names: string[]
+          subtitle: string
+          title: string
+          total_copies: number
+        }[]
+      }
+      public_resolve_library: {
+        Args: { p_library_code: string }
+        Returns: {
+          display_name: string
+          id: string
+          public_code: string
+          status: string
         }[]
       }
       report_circulation: {

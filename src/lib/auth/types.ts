@@ -16,3 +16,5 @@ export type LibraryOperatorContext = OperatorContext & {
   libraryName: string;
   demo?: boolean;
 };
+
+export type AccessibleLibrary = { libraryId: string; libraryCode: string; libraryName: string; roles: OperatorRole[] };
