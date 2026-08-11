@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   BookCheck,
   CalendarDays,
@@ -17,7 +17,6 @@ import {
   workspaceMutationAction,
 } from "@/app/operator/[libraryCode]/actions";
 import { formatLibraryDate, formatMinorUnitsForInput, formatMoneyMinorUnits, moneyInputStep } from "@/lib/i18n/library-localization";
-import { stableRequestId } from "@/components/operator/mutation-controls";
 
 type Member = {
   id: string;
@@ -57,6 +56,10 @@ type Fine = {
   reason?: string;
 };
 type Mode = "issue" | "renew" | "return" | "fines";
+
+function useCirculationRequestIds() {
+  return useMemo<Record<"issue" | "renew" | "return" | "fine_settle" | "fine_waive", string>>(() => typeof window === "undefined" ? { issue: "", renew: "", return: "", fine_settle: "", fine_waive: "" } : { issue: crypto.randomUUID(), renew: crypto.randomUUID(), return: crypto.randomUUID(), fine_settle: crypto.randomUUID(), fine_waive: crypto.randomUUID() }, []);
+}
 
 function useRoomSearch<T>(
   libraryCode: string,
@@ -131,8 +134,7 @@ export function CirculationWorkbench({
   const [copyId, setCopyId] = useState("");
   const [loanId, setLoanId] = useState("");
   const [fineId, setFineId] = useState("");
-  const requestSeed = useId();
-  const requestIds = { issue: stableRequestId(`${requestSeed}:issue`), renew: stableRequestId(`${requestSeed}:renew`), return: stableRequestId(`${requestSeed}:return`), fine_settle: stableRequestId(`${requestSeed}:fine-settle`), fine_waive: stableRequestId(`${requestSeed}:fine-waive`) };
+  const requestIds = useCirculationRequestIds();
   const memberSearch = useRoomSearch<Member>(
     libraryCode,
     "members",

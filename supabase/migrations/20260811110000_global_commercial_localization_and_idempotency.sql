@@ -34,6 +34,7 @@ create table if not exists public.workspace_mutation_receipts (
 );
 alter table public.workspace_mutation_receipts enable row level security;
 revoke all on table public.workspace_mutation_receipts from public, anon, authenticated;
+grant all on table public.libraries, public.workspace_mutation_receipts to service_role;
 create index if not exists workspace_mutation_receipts_library_actor_created_idx on public.workspace_mutation_receipts(library_id, actor_profile_id, created_at desc);
 
 -- The Supabase advisor checks the leading FK column, so these indexes are
