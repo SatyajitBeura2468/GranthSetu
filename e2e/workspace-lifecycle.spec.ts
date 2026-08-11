@@ -100,7 +100,7 @@ test("rapid duplicate book submission and zero-cost copy creation have exactly o
   await page.goto(`/operator/${room.code}/catalogue`);
   await page.getByText("Add book", { exact: true }).click();
   const book = page.locator("form.book-form");
-  await book.getByLabel("Title").fill("Tokyo Zero Decimal Book");
+  await book.getByLabel("Title", { exact: true }).fill("Tokyo Zero Decimal Book");
   await book.getByLabel("Author names").fill("E2E Author");
   await Promise.all([page.waitForURL(/success=/), book.getByRole("button", { name: "Create book" }).dblclick()]);
   const admin = adminClient();
