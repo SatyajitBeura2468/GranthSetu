@@ -152,7 +152,7 @@ jobs:
           source <(supabase status -o env)
           set +a
           export NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL"
-          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$SUPABASE_ANON_KEY"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${SUPABASE_ANON_KEY:-$ANON_KEY}"
           export NEXT_PUBLIC_SITE_URL="http://127.0.0.1:3000"
           npm run build
       - name: Run Playwright browser tests
@@ -162,7 +162,7 @@ jobs:
           source <(supabase status -o env)
           set +a
           export NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL"
-          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$SUPABASE_ANON_KEY"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${SUPABASE_ANON_KEY:-$ANON_KEY}"
           export NEXT_PUBLIC_SITE_URL="http://127.0.0.1:3000"
           npm run test:e2e
       - name: Upload Playwright report

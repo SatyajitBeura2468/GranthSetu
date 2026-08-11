@@ -14,7 +14,8 @@ test("public room catalogue resolves only valid rooms", async ({ page }) => {
 
 test("room authentication and tenancy boundaries hold in the browser", async ({ page }) => {
   await page.goto("/operator/OAVMUSI");
-  await expect(page).toHaveURL(/\/l\/OAVMUSI\/login/);
+  await expect(page).toHaveURL(/\/staff\?next=%2Foperator%2FOAVMUSI/);
+  await page.goto("/l/OAVMUSI/login");
   await page.getByLabel("Email").fill("wrong@example.invalid");
   await page.getByLabel("Password").fill("not-the-password");
   await page.getByRole("button", { name: "Sign in" }).click();
