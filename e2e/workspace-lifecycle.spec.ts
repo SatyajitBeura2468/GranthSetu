@@ -114,8 +114,11 @@ test("rapid duplicate book submission and zero-cost copy creation have exactly o
   const copy = page.locator("form.copy-form");
   await copy.getByLabel("Book").selectOption({ label: "Tokyo Zero Decimal Book" });
   await copy.getByLabel("Accession number").fill("TOKYO-E2E-001");
-  await copy.getByLabel("Replacement cost (₹)").fill("0");
+  await copy.getByLabel("Replacement cost (JPY)").fill("0");
   await submitAndWait(page, copy.getByRole("button", { name: "Create copy" }));
+  const { data: zeroCostCopy, error: zeroCostCopyError } = await admin.from("book_copies").select("replacement_cost_minor,currency_code").eq("library_id", id).eq("accession_number", "TOKYO-E2E-001").single();
+  expect(zeroCostCopyError).toBeNull();
+  expect(zeroCostCopy).toEqual({ replacement_cost_minor: 0, currency_code: "JPY" });
 });
 
 test("browser issue action creates an active loan", async ({ page }) => {
