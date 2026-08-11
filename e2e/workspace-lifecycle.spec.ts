@@ -89,9 +89,7 @@ test("rapid duplicate member submission has exactly one logical effect", async (
   await page.getByText("Add member", { exact: true }).click();
   const member = page.locator("form.member-form");
   await member.getByLabel("Display name").fill("Tokyo Test Member");
-  await member.getByLabel("Academic session").selectOption({ label: "E2E 2026" });
-  await member.getByLabel("Grade / class").selectOption({ label: "E2E Grade 10" });
-  await member.getByLabel("Section").selectOption({ label: "E2E Section A" });
+  await member.getByLabel("Member kind").selectOption("staff");
   await Promise.all([page.waitForURL(/success=/), member.getByRole("button", { name: "Create member" }).dblclick()]);
   const { count } = await adminClient().from("members").select("id", { count: "exact", head: true }).eq("library_id", await libraryId()).eq("display_name", "Tokyo Test Member");
   expect(count).toBe(1);
