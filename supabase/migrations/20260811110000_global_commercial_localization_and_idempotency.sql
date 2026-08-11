@@ -15,6 +15,7 @@ alter table public.book_copies drop constraint if exists book_copies_currency_ch
 alter table public.book_copies drop constraint if exists book_copies_cost_currency_check;
 alter table public.book_copies add constraint book_copies_currency_code_check check (currency_code = upper(currency_code) and currency_code ~ '^[A-Z]{3}$');
 alter table public.library_settings drop constraint if exists library_settings_value_check;
+alter table public.library_settings drop constraint if exists library_settings_one_typed_value_check;
 alter table public.library_settings add constraint library_settings_value_check check (
   (value_kind = 'boolean' and boolean_value is not null and integer_value is null and money_minor_value is null and currency_code is null)
   or (value_kind = 'integer' and boolean_value is null and integer_value is not null and integer_value >= 0 and money_minor_value is null and currency_code is null)

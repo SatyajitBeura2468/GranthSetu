@@ -1,4 +1,5 @@
 import { strict as assert } from "node:assert";
+import { readFile } from "node:fs/promises";
 import { canonicalizeCurrencyCode, formatDateOnly, libraryDateKey, moneyInputStep, parseMoneyToMinorUnits } from "../src/lib/i18n/library-localization.ts";
 import { getLibraryOnboardingContinuation } from "../src/lib/onboarding/continuation.ts";
 assert.equal(canonicalizeCurrencyCode(" usd "), "USD");
@@ -33,4 +34,6 @@ assert.equal(continuation.searchParams.get("localeCode"), "ja-JP");
 assert.equal(continuation.searchParams.get("timeZone"), "Asia/Tokyo");
 assert.equal(continuation.searchParams.get("confirmation"), "1");
 assert.equal(continuation.searchParams.has("password"), false);
+const migration = await readFile(new URL("../supabase/migrations/20260811110000_global_commercial_localization_and_idempotency.sql", import.meta.url), "utf8");
+assert.match(migration, /drop constraint if exists library_settings_one_typed_value_check;/, "the legacy INR-only setting constraint must be removed before global currency support is enabled");
 console.log("Library localization money contract passed.");
