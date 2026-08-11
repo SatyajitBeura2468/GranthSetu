@@ -19,6 +19,10 @@ function normaliseAppUrl(raw: string) {
   return `${parsed.protocol}//${parsed.host}${parsed.pathname}`.replace(/\/$/, "");
 }
 
+function isLocalhost(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 export function sanitizeNextPath(value: string | null | undefined, fallback = "/operator") {
   if (!value) return fallback;
 
@@ -43,26 +47,25 @@ export function sanitizeNextPath(value: string | null | undefined, fallback = "/
 }
 
 export function getTrustedAppUrl() {
+  // Preview always returns to this exact Vercel deployment, even if a shared
+  // production environment variable contains the canonical production URL.
+  if (process.env.VERCEL_ENV === "preview") {
+    const previewUrl = trustedPreviewUrl();
+    if (previewUrl) return previewUrl;
+    throw new Error("A valid Vercel Preview deployment origin is required.");
+  }
+
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   try {
     if (configured) {
       const appUrl = normaliseAppUrl(configured);
-      if (process.env.NODE_ENV === "production" && new URL(appUrl).hostname === "127.0.0.1") {
+      if (process.env.NODE_ENV === "production" && isLocalhost(new URL(appUrl).hostname)) {
         throw new Error("Production cannot use a localhost canonical application URL.");
       }
       return appUrl;
     }
   } catch {
     if (process.env.NODE_ENV === "production") throw new Error("A valid NEXT_PUBLIC_SITE_URL is required in production.");
-  }
-
-  // Vercel injects these values for its own Preview deployments. They are not
-  // request headers, so they cannot be influenced by a caller. Production is
-  // deliberately excluded and must always use NEXT_PUBLIC_SITE_URL.
-  if (process.env.VERCEL_ENV === "preview") {
-    const previewUrl = trustedPreviewUrl();
-    if (previewUrl) return previewUrl;
-    throw new Error("A valid Vercel Preview deployment origin is required.");
   }
 
   if (process.env.NODE_ENV === "production") throw new Error("NEXT_PUBLIC_SITE_URL is required in production.");

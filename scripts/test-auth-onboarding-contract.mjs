@@ -14,6 +14,7 @@ const [redirects, actions, confirm, page, submit, login, code] = await Promise.a
 assert(redirects.includes('process.env.NEXT_PUBLIC_SITE_URL?.trim()'), "canonical URL helper ignores NEXT_PUBLIC_SITE_URL");
 assert(redirects.includes('NODE_ENV === "production"') && redirects.includes('NEXT_PUBLIC_SITE_URL is required in production'), "production can silently fall back to localhost");
 assert(redirects.includes('process.env.VERCEL_ENV === "preview"') && redirects.includes('VERCEL_BRANCH_URL') && redirects.includes('VERCEL_URL'), "Preview callbacks cannot use Vercel's trusted deployment origin");
+assert(redirects.includes('hostname === "localhost"') && redirects.includes('hostname === "127.0.0.1"') && redirects.includes('hostname === "::1"'), "production callback permits a localhost origin");
 assert(!redirects.includes('x-forwarded-host') && !redirects.includes('headers()'), "callback origin can be derived from request headers");
 assert(redirects.includes('candidate.startsWith("//")') && redirects.includes('candidate.includes("\\\\")'), "external continuation variants are not rejected");
 assert(actions.includes('emailRedirectTo: getAuthCallbackUrl(continuation(name, code, person, currencyCode, localeCode, timeZone))'), "signup does not use the trusted callback helper");
