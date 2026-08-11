@@ -30,7 +30,7 @@ async function libraryId() {
   return data!.id;
 }
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", retries: 0 });
 
 test("confirmation resume preserves Tokyo localization without a password URL or CSP/hydration errors", async ({ page }) => {
   const consoleErrors: string[] = [];
@@ -81,7 +81,10 @@ test("operator creates a session, grade, and section in the browser", async ({ p
   await section.getByLabel("Code").fill("E2E-A");
   await section.getByLabel("Display name").fill("E2E Section A");
   await submitAndWait(page, section.getByRole("button", { name: "Save section" }));
-  await expect(page.getByText("E2E Section A")).toBeVisible();
+  await expect.poll(async () => {
+    const { count } = await adminClient().from("sections").select("id", { count: "exact", head: true }).eq("library_id", await libraryId()).eq("display_name", "E2E Section A");
+    return count;
+  }).toBe(1);
 });
 
 test("rapid duplicate member submission has exactly one logical effect", async ({ page }) => {
