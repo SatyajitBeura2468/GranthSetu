@@ -1,5 +1,16 @@
 const FALLBACK_APP_URL = "http://127.0.0.1:3000";
 
+function trustedPreviewUrl() {
+  const deploymentHost = process.env.VERCEL_BRANCH_URL?.trim() || process.env.VERCEL_URL?.trim();
+  if (!deploymentHost) return null;
+
+  try {
+    return normaliseAppUrl(deploymentHost.startsWith("https://") ? deploymentHost : `https://${deploymentHost}`);
+  } catch {
+    return null;
+  }
+}
+
 function normaliseAppUrl(raw: string) {
   const parsed = new URL(raw);
   if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash) {
@@ -43,6 +54,15 @@ export function getTrustedAppUrl() {
     }
   } catch {
     if (process.env.NODE_ENV === "production") throw new Error("A valid NEXT_PUBLIC_SITE_URL is required in production.");
+  }
+
+  // Vercel injects these values for its own Preview deployments. They are not
+  // request headers, so they cannot be influenced by a caller. Production is
+  // deliberately excluded and must always use NEXT_PUBLIC_SITE_URL.
+  if (process.env.VERCEL_ENV === "preview") {
+    const previewUrl = trustedPreviewUrl();
+    if (previewUrl) return previewUrl;
+    throw new Error("A valid Vercel Preview deployment origin is required.");
   }
 
   if (process.env.NODE_ENV === "production") throw new Error("NEXT_PUBLIC_SITE_URL is required in production.");
