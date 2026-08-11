@@ -1,0 +1,12 @@
+import { strict as assert } from "node:assert";
+import { canonicalizeCurrencyCode, moneyInputStep, parseMoneyToMinorUnits } from "../src/lib/i18n/library-localization.ts";
+assert.equal(canonicalizeCurrencyCode(" usd "), "USD");
+assert.equal(parseMoneyToMinorUnits("12.34", "USD"), 1234);
+assert.equal(parseMoneyToMinorUnits("12", "JPY"), 12);
+assert.equal(parseMoneyToMinorUnits("12.1", "JPY"), null);
+assert.equal(parseMoneyToMinorUnits("12.345", "BHD"), 12345);
+assert.equal(parseMoneyToMinorUnits("12.3456", "BHD"), null);
+assert.equal(moneyInputStep("JPY"), "1");
+assert.equal(moneyInputStep("USD"), "0.01");
+assert.equal(moneyInputStep("BHD"), "0.001");
+console.log("Library localization money contract passed.");

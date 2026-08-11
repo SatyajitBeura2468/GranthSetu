@@ -2,6 +2,7 @@
   "name": "granthsetu",
   "version": "0.1.0",
   "private": true,
+  "engines": { "node": "24.x" },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -21,6 +22,7 @@
     "db:test:phase71:upgrade": "node scripts/test-phase71-upgrade.mjs",
     "test:phase71:ui": "node scripts/test-phase71-ui-contract.mjs",
     "test:auth:onboarding": "node scripts/test-auth-onboarding-contract.mjs",
+    "test:localization": "node --experimental-strip-types scripts/test-library-localization.mjs",
     "db:lint": "npx supabase@2.112.0 db lint --local --schema public --level error --fail-on error",
     "db:types": "npx supabase@2.112.0 gen types typescript --local --schema public > src/types/database.ts"
   },

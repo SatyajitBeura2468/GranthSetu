@@ -1,14 +1,13 @@
-export function parseMinorUnits(value: string): number | null {
-  const normalized = value.trim();
-  if (!/^(?:\d+)(?:\.\d{1,2})?$/.test(normalized)) return null;
-  const [whole, fraction = ""] = normalized.split(".");
-  const minor = Number(`${whole}${fraction.padEnd(2, "0")}`);
-  if (!Number.isSafeInteger(minor) || minor <= 0) return null;
-  return minor;
+import { formatMoneyMinorUnits, parseMoneyToMinorUnits } from "@/lib/i18n/library-localization";
+
+export { formatMoneyMinorUnits, parseMoneyToMinorUnits } from "@/lib/i18n/library-localization";
+
+// Compatibility alias for the existing INR room until all callers receive
+// their room-scoped localization context.
+export function parseMinorUnits(value: string) {
+  return parseMoneyToMinorUnits(value, "INR");
 }
 
 export function formatInrMinorUnits(value: number | string | null | undefined) {
-  const minor = Number(value ?? 0);
-  if (!Number.isSafeInteger(minor)) return "₹—";
-  return `₹${(minor / 100).toFixed(2)}`;
+  return formatMoneyMinorUnits(value, "INR", "en-IN");
 }
