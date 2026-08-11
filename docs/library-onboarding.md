@@ -2,7 +2,7 @@
 
 ## Create a room
 
-1. Open `/create-library` and enter the library name, a public code, creator name, and email.
+1. Open `/create-library` and enter the library name, public code, creator name, email, operating currency, display locale, and IANA timezone.
 2. The code is normalized to uppercase and must be 5–16 letters, digits, or single hyphens. Reserved platform words are rejected.
 3. Confirm the email through Supabase Auth when email confirmation is enabled.
 4. GranthSetu creates the room and assigns the creator as its first administrator in one trusted database operation.
@@ -10,6 +10,9 @@
 
 ## Configure safely
 
+- Currency is explicitly chosen; it is never inferred from locale or timezone. Existing money is stored as integer minor units and is never converted by an FX operation.
+- Administrators may change currency only while there are no fines, no non-zero replacement costs, and no non-zero money settings. Locale and timezone stay independently editable.
+- The room timezone defines business dates, report boundaries, due-date presentation, and date-only rendering. Stored timestamps remain UTC instants.
 - Review loan period, checkout limit, renewal limit, and fine settings before circulation.
 - Add only synthetic test members/books first.
 - Invite an existing authenticated user from **Administration → Operators** and assign librarian or administrator deliberately.

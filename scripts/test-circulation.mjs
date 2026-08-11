@@ -66,11 +66,6 @@ async function fixtureLoan({ memberId, copyId, returned = false, overdue = false
   assert(!result.error, `loan fixture failed: ${result.error?.message}`); createdLoans.push(result.data.id); return result.data;
 }
 
-async function fine(loanId, amount = 1000) {
-  const result = await admin.from("fines").insert({ library_id: libraryId, loan_id: loanId, assessed_amount_minor: amount, fine_kind: "overdue", assessed_by_profile_id: createdProfiles[0] }).select("id").single();
-  assert(!result.error, `fine fixture failed: ${result.error?.message}`); createdFines.push(result.data.id); return result.data.id;
-}
-
 async function assertNoAudit(requestId) {
   const result = await admin.from("audit_events").select("id").eq("request_id", requestId);
   assert(!result.error && result.data.length === 0, `failed request ${requestId} created a success audit`);

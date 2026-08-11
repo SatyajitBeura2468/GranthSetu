@@ -6,6 +6,7 @@ import { getAuthCallbackUrl } from "@/lib/auth/redirects";
 import { normalizeLibraryCode, validLibraryCode } from "@/lib/library/code";
 import { asOperatorRpcClient } from "@/lib/operator/rpc";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { canonicalizeCurrencyCode, canonicalizeLocale, isSupportedTimeZone } from "@/lib/i18n/library-localization";
 
 function value(form: FormData, key: string) { return String(form.get(key) ?? "").trim(); }
 
@@ -70,8 +71,12 @@ export async function createLibraryAction(formData: FormData) {
   const person = value(formData, "personName");
   const email = value(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const currencyCode = canonicalizeCurrencyCode(value(formData, "currencyCode"));
+  const localeCode = canonicalizeLocale(value(formData, "localeCode"));
+  const timeZone = value(formData, "timeZone");
   const invalid = validationError(name, code, person);
   if (invalid) redirect(continuation(name, code, person, false, invalid));
+  if (!currencyCode || !localeCode || !isSupportedTimeZone(timeZone)) redirect(continuation(name, code, person, false, "Choose a valid currency, locale, and IANA timezone."));
 
   const supabase = await createSupabaseServerClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -98,6 +103,9 @@ export async function createLibraryAction(formData: FormData) {
     p_display_name: name,
     p_public_code: code,
     p_creator_display_name: person,
+    p_currency_code: currencyCode,
+    p_locale_code: localeCode,
+    p_time_zone: timeZone,
   });
   if (error || !data) {
     redirect(continuation(name, code, person, false, error?.message.includes("GS_LIBRARY_CODE_TAKEN")

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import {
   BookCheck,
   CalendarDays,
   Check,
   Clock3,
-  IndianRupee,
+  Banknote,
   RefreshCw,
   RotateCcw,
   Search,
@@ -16,6 +16,8 @@ import {
   circulationSearchAction,
   workspaceMutationAction,
 } from "@/app/operator/[libraryCode]/actions";
+import { formatLibraryDate, formatMinorUnitsForInput, formatMoneyMinorUnits, moneyInputStep } from "@/lib/i18n/library-localization";
+import { stableRequestId } from "@/components/operator/mutation-controls";
 
 type Member = {
   id: string;
@@ -106,12 +108,18 @@ export function CirculationWorkbench({
   members: initialMembers,
   copies: initialCopies,
   loans: initialLoans,
+  currencyCode = "INR",
+  localeCode = "en-IN",
+  timeZone = "Asia/Kolkata",
   disabled = false,
 }: {
   libraryCode: string;
   members: Member[];
   copies: Copy[];
   loans: Loan[];
+  currencyCode?: string;
+  localeCode?: string;
+  timeZone?: string;
   disabled?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("issue");
@@ -123,6 +131,8 @@ export function CirculationWorkbench({
   const [copyId, setCopyId] = useState("");
   const [loanId, setLoanId] = useState("");
   const [fineId, setFineId] = useState("");
+  const requestSeed = useId();
+  const requestIds = { issue: stableRequestId(`${requestSeed}:issue`), renew: stableRequestId(`${requestSeed}:renew`), return: stableRequestId(`${requestSeed}:return`), fine_settle: stableRequestId(`${requestSeed}:fine-settle`), fine_waive: stableRequestId(`${requestSeed}:fine-waive`) };
   const memberSearch = useRoomSearch<Member>(
     libraryCode,
     "members",
@@ -173,7 +183,7 @@ export function CirculationWorkbench({
             ) : item === "return" ? (
               <RotateCcw aria-hidden="true" />
             ) : (
-              <IndianRupee aria-hidden="true" />
+              <Banknote aria-hidden="true" />
             )}
             {item === "fines" ? "Fines" : item[0].toUpperCase() + item.slice(1)}
           </button>
@@ -183,6 +193,7 @@ export function CirculationWorkbench({
         <form action={workspaceMutationAction} className="issue-grid">
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="operation" value="issue" />
+          <input type="hidden" name="requestId" value={requestIds.issue ?? ""} />
           <input type="hidden" name="memberId" value={memberId} />
           <input type="hidden" name="copyId" value={copyId} />
           <SelectionPanel
@@ -341,7 +352,7 @@ export function CirculationWorkbench({
             )}
             <button
               className="button button-primary button-full"
-              disabled={!member || !copy || disabled}
+              disabled={!member || !copy || disabled || !requestIds.issue}
             >
               <BookCheck aria-hidden="true" />
               Issue selected copy
@@ -352,6 +363,8 @@ export function CirculationWorkbench({
         <form action={workspaceMutationAction} className="loan-operation">
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="fineId" value={fineId} />
+          <input type="hidden" name="requestIdFineSettle" value={requestIds.fine_settle ?? ""} />
+          <input type="hidden" name="requestIdFineWaive" value={requestIds.fine_waive ?? ""} />
           <label className="search-control">
             <Search aria-hidden="true" />
             <input
@@ -387,7 +400,7 @@ export function CirculationWorkbench({
                       <strong>{item.title}</strong>
                       <small>{item.accession}</small>
                     </td>
-                    <td>₹{(item.outstandingMinor / 100).toFixed(2)}</td>
+                    <td>{formatMoneyMinorUnits(item.outstandingMinor, currencyCode, localeCode)}</td>
                     <td>
                       <button
                         type="button"
@@ -406,19 +419,19 @@ export function CirculationWorkbench({
             <aside className="loan-confirm">
               <div>
                 <span>Outstanding fine</span>
-                <h2>₹{(fine.outstandingMinor / 100).toFixed(2)}</h2>
+                <h2>{formatMoneyMinorUnits(fine.outstandingMinor, currencyCode, localeCode)}</h2>
                 <p>
                   {fine.member} · {fine.title}
                 </p>
               </div>
               <label>
-                Amount (₹)
+                Amount ({currencyCode})
                 <input
                   name="amountMinor"
                   type="number"
-                  min="0.01"
-                  step="0.01"
-                  max={(fine.outstandingMinor / 100).toFixed(2)}
+                  min={moneyInputStep(currencyCode) ?? "0.01"}
+                  step={moneyInputStep(currencyCode) ?? "0.01"}
+                  max={formatMinorUnitsForInput(fine.outstandingMinor, currencyCode)}
                   required
                 />
               </label>
@@ -431,7 +444,7 @@ export function CirculationWorkbench({
                   name="operation"
                   value="fine_settle"
                   className="button button-primary"
-                  disabled={disabled}
+                  disabled={disabled || !requestIds.fine_settle}
                 >
                   Record settlement
                 </button>
@@ -439,7 +452,7 @@ export function CirculationWorkbench({
                   name="operation"
                   value="fine_waive"
                   className="button button-secondary"
-                  disabled={disabled}
+                  disabled={disabled || !requestIds.fine_waive}
                 >
                   Waive amount
                 </button>
@@ -452,6 +465,7 @@ export function CirculationWorkbench({
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="operation" value={mode} />
           <input type="hidden" name="loanId" value={loanId} />
+          <input type="hidden" name="requestId" value={requestIds[mode] ?? ""} />
           <label className="search-control">
             <Search aria-hidden="true" />
             <input
@@ -496,7 +510,7 @@ export function CirculationWorkbench({
                         {item.barcode ? ` · ${item.barcode}` : ""}
                       </small>
                     </td>
-                    <td>{new Date(item.due).toLocaleDateString("en-IN")}</td>
+                    <td>{formatLibraryDate(item.due, localeCode, timeZone)}</td>
                     <td>
                       <span
                         className={`status-dot ${item.overdue ? "status-danger" : "status-success"}`}
@@ -540,7 +554,7 @@ export function CirculationWorkbench({
                   loan.
                 </p>
               )}
-              <button className="button button-primary" disabled={disabled}>
+              <button className="button button-primary" disabled={disabled || !requestIds[mode]}>
                 {mode === "renew" ? "Renew loan" : "Return copy"}
               </button>
             </aside>

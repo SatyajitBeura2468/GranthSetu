@@ -47,6 +47,10 @@ export function rpcErrorMessage(error: unknown) {
     GS_AUTH_USER_NOT_FOUND: "The invited authentication account could not be found.",
     GS_LAST_ROOM_ADMIN: "Assign another active room administrator before removing this one.",
     GS_ADMIN_REQUIRED: "Only a Library Room administrator can perform this action.",
+    GS_REQUEST_ID_REQUIRED: "This form is still preparing. Please try again.",
+    GS_REQUEST_ID_REUSED: "This request ID belongs to a different operation. Refresh the page and try again.",
+    GS_LIBRARY_LOCALIZATION_INVALID: "Choose a valid currency, locale, and IANA timezone.",
+    GS_CURRENCY_LOCKED: "Currency cannot change after replacement costs, fine settings, or fines have meaningful values.",
   };
   const code = Object.keys(messages).find((key) => raw.includes(key));
   return code ? messages[code] : "The requested operation could not be completed.";

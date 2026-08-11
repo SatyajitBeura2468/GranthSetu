@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { canonicalizeCurrencyCode, moneyInputStep, parseMoneyToMinorUnits } from "../src/lib/i18n/library-localization.ts";
+import { canonicalizeCurrencyCode, formatDateOnly, libraryDateKey, moneyInputStep, parseMoneyToMinorUnits } from "../src/lib/i18n/library-localization.ts";
 assert.equal(canonicalizeCurrencyCode(" usd "), "USD");
 assert.equal(parseMoneyToMinorUnits("12.34", "USD"), 1234);
 assert.equal(parseMoneyToMinorUnits("12", "JPY"), 12);
@@ -12,4 +12,10 @@ assert.equal(parseMoneyToMinorUnits("-1", "USD", true), -100);
 assert.equal(moneyInputStep("JPY"), "1");
 assert.equal(moneyInputStep("USD"), "0.01");
 assert.equal(moneyInputStep("BHD"), "0.001");
+const instant = "2026-08-11T02:30:00.000Z";
+assert.equal(libraryDateKey(instant, "America/New_York"), "2026-08-10");
+assert.equal(libraryDateKey(instant, "Asia/Kolkata"), "2026-08-11");
+assert.equal(libraryDateKey(instant, "Asia/Tokyo"), "2026-08-11");
+assert.match(formatDateOnly("2026-08-11", "en-US"), /2026/);
+assert.match(formatDateOnly("2026-08-11", "ja-JP"), /2026/);
 console.log("Library localization money contract passed.");

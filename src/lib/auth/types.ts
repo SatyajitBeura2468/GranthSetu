@@ -14,7 +14,10 @@ export type LibraryOperatorContext = OperatorContext & {
   libraryId: string;
   libraryCode: string;
   libraryName: string;
+  currencyCode: string;
+  localeCode: string;
+  timeZone: string;
   demo?: boolean;
 };
 
-export type AccessibleLibrary = { libraryId: string; libraryCode: string; libraryName: string; roles: OperatorRole[] };
+export type AccessibleLibrary = { libraryId: string; libraryCode: string; libraryName: string; currencyCode: string; localeCode: string; timeZone: string; roles: OperatorRole[] };

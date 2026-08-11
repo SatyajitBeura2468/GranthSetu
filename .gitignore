@@ -167,5 +167,7 @@ Thumbs.db
 desktop.ini
 
 .vercel
+playwright-report/
+test-results/
 .env*
 !.env.example

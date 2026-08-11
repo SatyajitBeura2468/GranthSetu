@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeLibraryCode, validLibraryCode } from "./code";
 import { asOperatorRpcClient } from "@/lib/operator/rpc";
 
-export type PublicLibrary = { id: string; code: string; displayName: string; status: "active"; demo?: boolean };
+export type PublicLibrary = { id: string; code: string; displayName: string; status: "active"; currencyCode: string; localeCode: string; timeZone: string; demo?: boolean };
 export type PublicBook = {
   id: string; title: string; subtitle: string | null; authorNames: string; isbn: string | null;
   publisherName: string | null; categoryNames: string[]; subjectNames: string[]; languageCode: string | null;
@@ -24,7 +24,7 @@ const demoBooks: PublicBook[] = [
   { id: "10000000-0000-0000-0000-000000000106", title: "The Ministry of Utmost Happiness", subtitle: null, authorNames: "Arundhati Roy", isbn: "9780241303979", publisherName: "Hamish Hamilton", categoryNames: ["Fiction"], subjectNames: ["Literature"], languageCode: "English", publicationYear: 2017, description: "A novel of people living at the edges of a changing nation.", totalCopies: 3, availableCopies: 1, availabilityState: "limited", expectedAvailability: null, hasCover: false },
 ];
 
-const demoLibrary: PublicLibrary = { id: "10000000-0000-0000-0000-000000000001", code: "OAVMUSI", displayName: "OAV Musiguda Library", status: "active", demo: true };
+const demoLibrary: PublicLibrary = { id: "10000000-0000-0000-0000-000000000001", code: "OAVMUSI", displayName: "OAV Musiguda Library", status: "active", currencyCode: "INR", localeCode: "en-IN", timeZone: "Asia/Kolkata", demo: true };
 
 function isLocalDemo(code: string) { return process.env.NODE_ENV === "development" && !getOptionalPublicSupabaseEnv() && code === demoLibrary.code; }
 
@@ -35,9 +35,9 @@ export const getPublicLibrary = cache(async (rawCode: string): Promise<PublicLib
   if (!getOptionalPublicSupabaseEnv()) return null;
   const client = await createSupabaseServerClient();
   const { data, error } = await asOperatorRpcClient(client).rpc("public_resolve_library", { p_library_code: code });
-  const row = (Array.isArray(data) ? data[0] : data) as { id?: string; public_code?: string; display_name?: string; status?: string } | null;
+  const row = (Array.isArray(data) ? data[0] : data) as { id?: string; public_code?: string; display_name?: string; status?: string; currency_code?: string; locale_code?: string; time_zone?: string } | null;
   if (error || !row?.id || row.status !== "active") return null;
-  return { id: row.id, code: row.public_code ?? code, displayName: row.display_name ?? "Library Room", status: "active" };
+  return { id: row.id, code: row.public_code ?? code, displayName: row.display_name ?? "Library Room", status: "active", currencyCode: row.currency_code ?? "INR", localeCode: row.locale_code ?? "en-IN", timeZone: row.time_zone ?? "Asia/Kolkata" };
 });
 
 export async function getPublicCatalogue(rawCode: string, query = "", availableOnly = false): Promise<PublicBook[] | null> {

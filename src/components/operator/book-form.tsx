@@ -1,4 +1,5 @@
 import { workspaceMutationAction } from "@/app/operator/[libraryCode]/actions";
+import { MutationRequestId, MutationSubmitButton } from "@/components/operator/mutation-controls";
 
 type Ref = { id: string; name: string };
 type Book = { id?: string; title?: string; subtitle?: string; isbn?: string; edition?: string; publication_year?: number; language_code?: string; publisher_id?: string; description?: string; updated_at?: string; category_ids?: string[]; subject_ids?: string[] };
@@ -16,6 +17,6 @@ export function BookForm({ libraryCode, book, author, publishers, categories, su
     <label>Publisher<select name="publisherId" defaultValue={book?.publisher_id ?? ""} disabled={disabled}><option value="">Not listed</option>{publishers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     <div className="form-grid"><label>Categories<select name="categoryIds" multiple defaultValue={book?.category_ids ?? []} disabled={disabled}>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Subjects<select name="subjectIds" multiple defaultValue={book?.subject_ids ?? []} disabled={disabled}>{subjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
     <label>Description<textarea name="description" defaultValue={book?.description} maxLength={10000} rows={5} disabled={disabled} /></label>
-    <button className="button button-primary" type="submit" disabled={disabled}>{submitLabel}</button>
+    <MutationRequestId /><MutationSubmitButton idleLabel={submitLabel} pendingLabel={book?.id ? "Saving…" : "Creating…"} disabled={disabled} />
   </form>;
 }

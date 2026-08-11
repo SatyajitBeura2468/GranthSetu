@@ -1,6 +1,5 @@
 "use server";
 
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthCallbackUrl } from "@/lib/auth/redirects";
@@ -10,6 +9,7 @@ import { rpcErrorMessage, asOperatorRpcClient } from "@/lib/operator/rpc";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createBookCoverUpload, removeBookCoverObject } from "@/lib/operator/cover-storage";
+import { parseMoneyToMinorUnits } from "@/lib/i18n/library-localization";
 
 function value(form: FormData, key: string) { const result = String(form.get(key) ?? "").trim(); return result || null; }
 function destination(operation: string) {
@@ -17,45 +17,40 @@ function destination(operation: string) {
   if (operation.startsWith("book") || operation === "reference_save") return "catalogue";
   if (operation.startsWith("copy")) return "inventory";
   if (operation.startsWith("member")) return "members";
-  if (operation.startsWith("setting") || operation.includes("_save") && ["academic_session_save","grade_save","section_save"].includes(operation) || operation === "library_update") return "settings";
+  if (operation.startsWith("setting") || operation.includes("_save") && ["academic_session_save","grade_save","section_save"].includes(operation) || ["library_update", "library_localization_update"].includes(operation)) return "settings";
   return "admin/operators";
 }
+const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function workspaceMutationAction(formData: FormData) {
   const libraryCode = normalizeLibraryCode(String(formData.get("libraryCode") ?? ""));
   const operation = String(formData.get("operation") ?? ""); const section = destination(operation);
   const context = await getLibraryOperatorContext(libraryCode);
   if (!context || context.demo) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This mutation is unavailable in the local demonstration workspace.")}`);
-  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","copy_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","operator_assign","operator_status","reference_save"]);
+  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","book_cover","copy_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","library_localization_update","operator_assign","operator_status","reference_save"]);
   if (!allowed.has(operation)) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Unsupported operation.")}`);
+  const requestId = value(formData, operation === "fine_settle" ? "requestIdFineSettle" : operation === "fine_waive" ? "requestIdFineWaive" : "requestId");
+  if (!requestIdPattern.test(requestId ?? "")) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This form is still preparing. Please try again.")}`);
 
   const payload: Record<string, string | string[] | null> = {};
-  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
+  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code","currencyCode","localeCode","timeZone"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
   payload.categoryIds = formData.getAll("categoryIds").map(String); payload.subjectIds = formData.getAll("subjectIds").map(String);
   if (operation === "copy_save" && payload.replacementCostMinor) {
-    const rupees = Number(payload.replacementCostMinor); if (!Number.isFinite(rupees) || rupees < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid replacement cost.")}`);
-    payload.replacementCostMinor = String(Math.round(rupees * 100));
+    const minor = parseMoneyToMinorUnits(String(payload.replacementCostMinor), context.currencyCode); if (minor === null || minor < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid replacement cost.")}`);
+    payload.replacementCostMinor = String(minor);
   }
   if (["fine_settle", "fine_waive"].includes(operation) && payload.amountMinor) {
-    const rupees = Number(payload.amountMinor); if (!Number.isFinite(rupees) || rupees <= 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid amount in rupees.")}`);
-    payload.amountMinor = String(Math.round(rupees * 100));
+    const minor = parseMoneyToMinorUnits(String(payload.amountMinor), context.currencyCode); if (minor === null || minor <= 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid amount.")}`);
+    payload.amountMinor = String(minor);
     if (operation === "fine_settle") payload.note = payload.reason;
   }
   if (operation === "setting_update" && payload.valueKind === "money_minor") {
-    const rupees = Number(payload.value); if (!Number.isFinite(rupees) || rupees < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid rupee amount.")}`);
-    payload.value = String(Math.round(rupees * 100));
+    const minor = parseMoneyToMinorUnits(String(payload.value), context.currencyCode); if (minor === null || minor < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid amount.")}`);
+    payload.value = String(minor);
   }
 
   try {
-    if (operation === "reference_save") {
-      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_reference_save", {
-        p_library_code: libraryCode,
-        p_kind: payload.kind,
-        p_name: payload.name,
-        p_code: payload.code,
-      });
-      if (error) throw new Error(error.message);
-    } else if (operation === "operator_assign") {
+    if (operation === "operator_assign") {
       if (!context.roles.includes("administrator")) throw new Error("GS_ADMIN_REQUIRED");
       const email = String(payload.email ?? "").toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("GS_OPERATOR_INPUT_INVALID");
@@ -73,22 +68,12 @@ export async function workspaceMutationAction(formData: FormData) {
         const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: getAuthCallbackUrl(`/l/${libraryCode}/login`) });
         if (error) throw error; authUser = data.user;
       }
-      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("admin_assign_operator_to_room", {
-        p_library_code: libraryCode, p_target_auth_user_id: authUser.id,
-        p_display_name: String(payload.displayName ?? email.split("@")[0]), p_role_key: payload.role,
-      });
-      if (error) throw new Error(error.message);
-    } else if (operation === "operator_status") {
-      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("admin_set_room_operator_status", {
-        p_library_code: libraryCode, p_target_profile_id: payload.profileId, p_status: payload.status,
-      });
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_workspace_mutation", {
-        p_library_code: libraryCode, p_operation: operation, p_payload: payload, p_request_id: randomUUID(),
-      });
-      if (error) throw new Error(error.message);
+      payload.targetAuthUserId = authUser.id;
     }
+    const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_workspace_mutation", {
+      p_library_code: libraryCode, p_operation: operation, p_payload: payload, p_request_id: requestId,
+    });
+    if (error) throw new Error(error.message);
   } catch (error) {
     redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent(rpcErrorMessage(error))}`);
   }
@@ -115,9 +100,11 @@ export async function changeRoomBookCoverAction(formData: FormData) {
       if (!(cover instanceof File) || cover.size === 0) throw new Error("Choose a JPEG, PNG, or WebP cover up to 5 MB.");
       nextPath = await createBookCoverUpload(id, cover);
     }
+    const requestId = value(formData, "requestId");
+    if (!requestIdPattern.test(requestId ?? "")) throw new Error("GS_REQUEST_ID_REQUIRED");
     const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_workspace_mutation", {
       p_library_code: libraryCode, p_operation: "book_cover",
-      p_payload: { id, coverPath: nextPath, expectedCoverPath: current.cover_storage_path }, p_request_id: randomUUID(),
+      p_payload: { id, coverPath: nextPath, expectedCoverPath: current.cover_storage_path }, p_request_id: requestId,
     });
     if (error) throw new Error(error.message);
     const previousPath = (data as { previousPath?: string } | null)?.previousPath;

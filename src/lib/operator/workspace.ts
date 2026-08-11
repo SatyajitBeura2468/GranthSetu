@@ -5,6 +5,7 @@ import { normalizeLibraryCode } from "@/lib/library/code";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { asOperatorRpcClient } from "@/lib/operator/rpc";
 import { getLibraryOperatorContext } from "@/lib/auth/authorization";
+import { libraryDateKey } from "@/lib/i18n/library-localization";
 
 export type WorkspaceData = Record<string, unknown> & { error?: string; demo?: boolean };
 
@@ -33,16 +34,17 @@ export async function getWorkspaceData(rawCode: string, resource: keyof typeof d
     return { ...payload, [listKey]: rows.filter((row) => Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(needle))) };
   }
   if (!getOptionalPublicSupabaseEnv()) return { error: "The authoritative data service is not configured." };
+  const context = await getLibraryOperatorContext(code);
+  if (!context) return { error: "Your room access could not be verified." };
   const client = await createSupabaseServerClient();
   const { data, error } = await asOperatorRpcClient(client).rpc("operator_workspace_data", { p_library_code: code, p_resource: resource, p_query: query || null, p_id: id ?? null });
   if (error || !data) return { error: "Authoritative workspace data could not be read." };
-  const payload = data as WorkspaceData;
+  const payload = { ...(data as WorkspaceData), room: { currencyCode: context.currencyCode, localeCode: context.localeCode, timeZone: context.timeZone } };
   if (resource === "operators") {
     const { data: operators, error: operatorsError } = await asOperatorRpcClient(client).rpc("operator_room_operators", { p_library_code: code });
     return operatorsError ? payload : { ...payload, operators: Array.isArray(operators) ? operators : [] };
   }
   if (!["catalogue", "inventory", "members", "settings"].includes(resource)) return payload;
-  const context = await getLibraryOperatorContext(code); if (!context) return payload;
   if (resource === "catalogue") {
     const [publishers, categories, subjects, detail, authors, bookAuthors, bookCategories, bookSubjects] = await Promise.all([
       client.from("publishers").select("id,name").or(`library_id.eq.${context.libraryId}`).order("name"),
@@ -70,7 +72,7 @@ export async function getWorkspaceData(rawCode: string, resource: keyof typeof d
     return { ...payload, bookOptions: books.data ?? [], locations: locations.data ?? [], copy: detail.data ?? undefined };
   }
   if (resource === "members") {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = libraryDateKey(new Date(), context.timeZone);
     const [sessions, grades, sections, detail, enrollment] = await Promise.all([
       client.from("academic_sessions").select("id,display_label,status,starts_on,ends_on").or(`library_id.eq.${context.libraryId}`).order("starts_on", { ascending: false }),
       client.from("grade_levels").select("id,display_name,sort_order").or(`library_id.eq.${context.libraryId}`).order("sort_order"),
