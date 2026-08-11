@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   BookCheck,
   CalendarDays,
   Check,
   Clock3,
-  IndianRupee,
+  Banknote,
   RefreshCw,
   RotateCcw,
   Search,
@@ -16,6 +16,8 @@ import {
   circulationSearchAction,
   workspaceMutationAction,
 } from "@/app/operator/[libraryCode]/actions";
+import { formatLibraryDate, formatMinorUnitsForInput, formatMoneyMinorUnits, moneyInputStep } from "@/lib/i18n/library-localization";
+import { MutationRequestId, MutationSubmitButton } from "@/components/operator/mutation-controls";
 
 type Member = {
   id: string;
@@ -56,6 +58,9 @@ type Fine = {
 };
 type Mode = "issue" | "renew" | "return" | "fines";
 
+function useCirculationRequestIds() {
+  return useMemo<Record<"issue" | "renew" | "return" | "fine_settle" | "fine_waive", string>>(() => typeof window === "undefined" ? { issue: "", renew: "", return: "", fine_settle: "", fine_waive: "" } : { issue: crypto.randomUUID(), renew: crypto.randomUUID(), return: crypto.randomUUID(), fine_settle: crypto.randomUUID(), fine_waive: crypto.randomUUID() }, []);
+}
 function useRoomSearch<T>(
   libraryCode: string,
   kind: "members" | "copies" | "loans" | "fines",
@@ -106,12 +111,18 @@ export function CirculationWorkbench({
   members: initialMembers,
   copies: initialCopies,
   loans: initialLoans,
+  currencyCode = "INR",
+  localeCode = "en-IN",
+  timeZone = "Asia/Kolkata",
   disabled = false,
 }: {
   libraryCode: string;
   members: Member[];
   copies: Copy[];
   loans: Loan[];
+  currencyCode?: string;
+  localeCode?: string;
+  timeZone?: string;
   disabled?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("issue");
@@ -123,6 +134,7 @@ export function CirculationWorkbench({
   const [copyId, setCopyId] = useState("");
   const [loanId, setLoanId] = useState("");
   const [fineId, setFineId] = useState("");
+  const requestIds = useCirculationRequestIds();
   const memberSearch = useRoomSearch<Member>(
     libraryCode,
     "members",
@@ -173,7 +185,7 @@ export function CirculationWorkbench({
             ) : item === "return" ? (
               <RotateCcw aria-hidden="true" />
             ) : (
-              <IndianRupee aria-hidden="true" />
+              <Banknote aria-hidden="true" />
             )}
             {item === "fines" ? "Fines" : item[0].toUpperCase() + item.slice(1)}
           </button>
@@ -181,8 +193,10 @@ export function CirculationWorkbench({
       </div>
       {mode === "issue" ? (
         <form action={workspaceMutationAction} className="issue-grid">
+          <MutationRequestId />
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="operation" value="issue" />
+          <input type="hidden" name="requestId" value={requestIds.issue ?? ""} />
           <input type="hidden" name="memberId" value={memberId} />
           <input type="hidden" name="copyId" value={copyId} />
           <SelectionPanel
@@ -339,19 +353,16 @@ export function CirculationWorkbench({
                 text="Select a member and copy to prepare this transaction."
               />
             )}
-            <button
-              className="button button-primary button-full"
-              disabled={!member || !copy || disabled}
-            >
-              <BookCheck aria-hidden="true" />
-              Issue selected copy
-            </button>
+            <MutationSubmitButton idleLabel="Issue selected copy" pendingLabel="Issuing copy…" className="button button-primary button-full" disabled={!member || !copy || disabled || !requestIds.issue} />
           </aside>
         </form>
       ) : mode === "fines" ? (
         <form action={workspaceMutationAction} className="loan-operation">
+          <MutationRequestId />
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="fineId" value={fineId} />
+          <input type="hidden" name="requestIdFineSettle" value={requestIds.fine_settle ?? ""} />
+          <input type="hidden" name="requestIdFineWaive" value={requestIds.fine_waive ?? ""} />
           <label className="search-control">
             <Search aria-hidden="true" />
             <input
@@ -387,7 +398,7 @@ export function CirculationWorkbench({
                       <strong>{item.title}</strong>
                       <small>{item.accession}</small>
                     </td>
-                    <td>₹{(item.outstandingMinor / 100).toFixed(2)}</td>
+                    <td>{formatMoneyMinorUnits(item.outstandingMinor, currencyCode, localeCode)}</td>
                     <td>
                       <button
                         type="button"
@@ -406,19 +417,19 @@ export function CirculationWorkbench({
             <aside className="loan-confirm">
               <div>
                 <span>Outstanding fine</span>
-                <h2>₹{(fine.outstandingMinor / 100).toFixed(2)}</h2>
+                <h2>{formatMoneyMinorUnits(fine.outstandingMinor, currencyCode, localeCode)}</h2>
                 <p>
                   {fine.member} · {fine.title}
                 </p>
               </div>
               <label>
-                Amount (₹)
+                Amount ({currencyCode})
                 <input
                   name="amountMinor"
                   type="number"
-                  min="0.01"
-                  step="0.01"
-                  max={(fine.outstandingMinor / 100).toFixed(2)}
+                  min={moneyInputStep(currencyCode) ?? "0.01"}
+                  step={moneyInputStep(currencyCode) ?? "0.01"}
+                  max={formatMinorUnitsForInput(fine.outstandingMinor, currencyCode)}
                   required
                 />
               </label>
@@ -427,31 +438,19 @@ export function CirculationWorkbench({
                 <input name="reason" maxLength={500} />
               </label>
               <div className="button-row">
-                <button
-                  name="operation"
-                  value="fine_settle"
-                  className="button button-primary"
-                  disabled={disabled}
-                >
-                  Record settlement
-                </button>
-                <button
-                  name="operation"
-                  value="fine_waive"
-                  className="button button-secondary"
-                  disabled={disabled}
-                >
-                  Waive amount
-                </button>
+                <MutationSubmitButton name="operation" value="fine_settle" idleLabel="Record settlement" pendingLabel="Recording settlement…" disabled={disabled || !requestIds.fine_settle} />
+                <MutationSubmitButton name="operation" value="fine_waive" idleLabel="Waive amount" pendingLabel="Waiving amount…" className="button button-secondary" disabled={disabled || !requestIds.fine_waive} />
               </div>
             </aside>
           ) : null}
         </form>
       ) : (
         <form action={workspaceMutationAction} className="loan-operation">
+          <MutationRequestId />
           <input type="hidden" name="libraryCode" value={libraryCode} />
           <input type="hidden" name="operation" value={mode} />
           <input type="hidden" name="loanId" value={loanId} />
+          <input type="hidden" name="requestId" value={requestIds[mode] ?? ""} />
           <label className="search-control">
             <Search aria-hidden="true" />
             <input
@@ -496,7 +495,7 @@ export function CirculationWorkbench({
                         {item.barcode ? ` · ${item.barcode}` : ""}
                       </small>
                     </td>
-                    <td>{new Date(item.due).toLocaleDateString("en-IN")}</td>
+                    <td>{formatLibraryDate(item.due, localeCode, timeZone)}</td>
                     <td>
                       <span
                         className={`status-dot ${item.overdue ? "status-danger" : "status-success"}`}
@@ -540,9 +539,7 @@ export function CirculationWorkbench({
                   loan.
                 </p>
               )}
-              <button className="button button-primary" disabled={disabled}>
-                {mode === "renew" ? "Renew loan" : "Return copy"}
-              </button>
+              <MutationSubmitButton idleLabel={mode === "renew" ? "Renew loan" : "Return copy"} pendingLabel={mode === "renew" ? "Renewing loan…" : "Returning copy…"} disabled={disabled || !requestIds[mode]} />
             </aside>
           ) : null}
         </form>

@@ -20,5 +20,7 @@ The Development database baseline and Phase 4 operator authentication/authorizat
 - Production data is never used casually in Preview deployments.
 - Credentials and services follow least privilege.
 - Migrations are repeatable, reviewable, and reversible.
+- Every important workspace write includes a stable client logical-request UUID. The trusted database gateway validates actor and room, acquires a transaction advisory lock, and replays the canonical receipt result for retries. Receipt rows have RLS enabled and no direct browser privileges.
+- Room-local currency, locale, and timezone are non-sensitive public identity fields; member, operator, audit, and private setting data remain non-public.
 
 The current repository contains no real school data, Supabase secret, database password, or Production connection. The isolated `granthsetu-dev` project is the only Development database target, and Vercel Production must remain without Supabase credentials. Hosted Auth settings and an initial administrator require an independently verified authenticated setup step.

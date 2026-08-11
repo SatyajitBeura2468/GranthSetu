@@ -27,9 +27,9 @@ For Production, set `NEXT_PUBLIC_SITE_URL=https://granthsetu.vercel.app` exactly
 ## Pre-deployment gates
 
 1. Confirm a clean working tree and intended commit.
-2. Run `npm ci`, lint, type-check, UI contract tests, and production build.
+2. Run `npm ci`, lint, type-check, money/localization contracts, UI/onboarding contracts, browser E2E, and a production build on Node 24.
 3. Start local Supabase, reset from zero, lint the database, and run all pgTAP suites including `db:test:tenancy`.
-4. Generate `src/types/database.ts` from the reset schema and rerun the web gates.
+4. Generate `src/types/database.ts` from the reset schema and rerun the web gates. CI requires `validate`, `database`, and `e2e` jobs.
 5. Inspect `/`, `/l/OAVMUSI`, catalogue/detail, staff/login/create-library, and every operator area at desktop and mobile widths.
 6. Test keyboard focus, light/dark themes, reduced motion, empty/error states, redirects, CSV export, and no-console-error behavior.
 
@@ -61,7 +61,9 @@ GET /create-library
 GET /operator            -> authenticated room chooser or /staff redirect
 ```
 
-Then test one synthetic room end to end: public discovery, catalogue search, room login, issue, return, renewal, member creation, catalogue creation, inventory creation, report export, operator assignment, and audit visibility.
+Then test one synthetic room end to end: public discovery, catalogue search, room login, issue, return, renewal, member creation, catalogue creation, inventory creation, report export, operator assignment, and audit visibility. Use USD/en-US/America/New_York for the production smoke room, test a rapid duplicate renewal and a duplicate member or book submit, and retain only clearly synthetic data.
+
+Vercel Production uses Node 24 and `bom1` through `vercel.json`. Verify the production response contains CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, and `Permissions-Policy`, with no `X-Powered-By` and no CSP `unsafe-eval`.
 
 ## Rollback
 

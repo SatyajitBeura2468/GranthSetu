@@ -5,10 +5,19 @@ import { getPublicSupabaseEnv } from "@/lib/env/public";
 function getProjectRef(url: string) {
   const parsed = new URL(url);
   const [ref] = parsed.hostname.split(".");
-  if (parsed.protocol !== "https:" || !ref || parsed.hostname !== `${ref}.supabase.co`) {
-    throw new Error("Supabase URL is not a valid hosted Supabase project URL.");
+  if (parsed.protocol === "https:" && ref && parsed.hostname === `${ref}.supabase.co`) {
+    return ref;
   }
-  return ref;
+
+  // Local Supabase is accepted only by the isolated CI browser harness. Every
+  // deployed environment continues to require a canonical hosted project URL.
+  const localCiMode = process.env.SUPABASE_LOCAL_TEST_MODE === "true";
+  const localHost = parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+  if (localCiMode && parsed.protocol === "http:" && localHost) {
+    return "local";
+  }
+
+  throw new Error("Supabase URL is not a valid hosted Supabase project URL.");
 }
 
 export function getServerSupabaseEnv() {

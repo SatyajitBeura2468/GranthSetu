@@ -611,28 +611,37 @@ export type Database = {
         Row: {
           created_at: string
           created_by_profile_id: string | null
+          currency_code: string
           display_name: string
           id: string
+          locale_code: string
           public_code: string
           status: string
+          time_zone: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by_profile_id?: string | null
+          currency_code?: string
           display_name: string
           id?: string
+          locale_code?: string
           public_code: string
           status?: string
+          time_zone?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by_profile_id?: string | null
+          currency_code?: string
           display_name?: string
           id?: string
+          locale_code?: string
           public_code?: string
           status?: string
+          time_zone?: string
           updated_at?: string
         }
         Relationships: [
@@ -1254,6 +1263,48 @@ export type Database = {
           },
         ]
       }
+      workspace_mutation_receipts: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          library_id: string
+          operation: string
+          request_id: string
+          result: Json
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          library_id: string
+          operation: string
+          request_id: string
+          result: Json
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          library_id?: string
+          operation?: string
+          request_id?: string
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_mutation_receipts_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_mutation_receipts_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1569,8 +1620,11 @@ export type Database = {
       create_library_room: {
         Args: {
           p_creator_display_name: string
+          p_currency_code: string
           p_display_name: string
+          p_locale_code: string
           p_public_code: string
+          p_time_zone: string
         }
         Returns: string
       }
@@ -1693,10 +1747,13 @@ export type Database = {
       operator_accessible_libraries: {
         Args: never
         Returns: {
+          currency_code: string
           library_code: string
           library_id: string
           library_name: string
+          locale_code: string
           roles: string[]
+          time_zone: string
         }[]
       }
       operator_circulation_search: {
@@ -1710,12 +1767,15 @@ export type Database = {
       operator_context_for_library: {
         Args: { p_library_code: string }
         Returns: {
+          currency_code: string
           display_name: string
           library_code: string
           library_id: string
           library_name: string
+          locale_code: string
           profile_id: string
           roles: string[]
+          time_zone: string
           user_id: string
         }[]
       }
@@ -1904,10 +1964,13 @@ export type Database = {
       public_resolve_library: {
         Args: { p_library_code: string }
         Returns: {
+          currency_code: string
           display_name: string
           id: string
+          locale_code: string
           public_code: string
           status: string
+          time_zone: string
         }[]
       }
       report_circulation: {

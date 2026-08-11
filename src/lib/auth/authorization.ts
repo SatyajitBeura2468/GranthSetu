@@ -87,17 +87,17 @@ export async function assertAdministrator() {
 export async function getLibraryOperatorContext(rawCode: string): Promise<LibraryOperatorContext | null> {
   const libraryCode = normalizeLibraryCode(rawCode);
   if (process.env.NODE_ENV === "development" && !getOptionalPublicSupabaseEnv() && libraryCode === "OAVMUSI") {
-    return { userId: "demo-user", profileId: "demo-profile", displayName: "Demo Librarian", status: "active", roles: ["administrator", "librarian"], libraryId: "10000000-0000-0000-0000-000000000001", libraryCode, libraryName: "OAV Musiguda Library", demo: true };
+    return { userId: "demo-user", profileId: "demo-profile", displayName: "Demo Librarian", status: "active", roles: ["administrator", "librarian"], libraryId: "10000000-0000-0000-0000-000000000001", libraryCode, libraryName: "OAV Musiguda Library", currencyCode: "INR", localeCode: "en-IN", timeZone: "Asia/Kolkata", demo: true };
   }
   const supabase = await createSupabaseServerClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   if (!claimsData?.claims?.sub) return null;
   const { data, error } = await asOperatorRpcClient(supabase).rpc("operator_context_for_library", { p_library_code: libraryCode });
-  const row = (Array.isArray(data) ? data[0] : null) as { user_id?: string; profile_id?: string; display_name?: string; library_id?: string; library_code?: string; library_name?: string; roles?: string[] } | null;
+  const row = (Array.isArray(data) ? data[0] : null) as { user_id?: string; profile_id?: string; display_name?: string; library_id?: string; library_code?: string; library_name?: string; currency_code?: string; locale_code?: string; time_zone?: string; roles?: string[] } | null;
   if (error || !row?.profile_id || row.user_id !== claimsData.claims.sub) return null;
   const roles = (row.roles ?? []).filter(isOperatorRole);
   if (!roles.length) return null;
-  return { userId: row.user_id!, profileId: row.profile_id, displayName: row.display_name ?? "Operator", status: "active", roles, libraryId: row.library_id!, libraryCode: row.library_code ?? libraryCode, libraryName: row.library_name ?? "Library Room" };
+  return { userId: row.user_id!, profileId: row.profile_id, displayName: row.display_name ?? "Operator", status: "active", roles, libraryId: row.library_id!, libraryCode: row.library_code ?? libraryCode, libraryName: row.library_name ?? "Library Room", currencyCode: row.currency_code ?? "INR", localeCode: row.locale_code ?? "en-IN", timeZone: row.time_zone ?? "Asia/Kolkata" };
 }
 
 export async function requireLibraryOperator(code: string) {
@@ -114,15 +114,15 @@ export async function requireLibraryAdministrator(code: string) {
 
 export async function getAccessibleLibraries(): Promise<AccessibleLibrary[]> {
   if (process.env.NODE_ENV === "development" && !getOptionalPublicSupabaseEnv()) {
-    return [{ libraryId: "10000000-0000-0000-0000-000000000001", libraryCode: "OAVMUSI", libraryName: "OAV Musiguda Library", roles: ["administrator", "librarian"] }];
+    return [{ libraryId: "10000000-0000-0000-0000-000000000001", libraryCode: "OAVMUSI", libraryName: "OAV Musiguda Library", currencyCode: "INR", localeCode: "en-IN", timeZone: "Asia/Kolkata", roles: ["administrator", "librarian"] }];
   }
   const supabase = await createSupabaseServerClient();
   const { data, error } = await asOperatorRpcClient(supabase).rpc("operator_accessible_libraries");
   if (error || !Array.isArray(data)) return [];
-  return (data as Array<{ library_id?: string; library_code?: string; library_name?: string; roles?: string[] }>).flatMap((row) => {
+  return (data as Array<{ library_id?: string; library_code?: string; library_name?: string; currency_code?: string; locale_code?: string; time_zone?: string; roles?: string[] }>).flatMap((row) => {
     const roles = (row.roles ?? []).filter(isOperatorRole);
     return row.library_id && row.library_code && row.library_name && roles.length
-      ? [{ libraryId: row.library_id, libraryCode: row.library_code, libraryName: row.library_name, roles }]
+      ? [{ libraryId: row.library_id, libraryCode: row.library_code, libraryName: row.library_name, currencyCode: row.currency_code ?? "INR", localeCode: row.locale_code ?? "en-IN", timeZone: row.time_zone ?? "Asia/Kolkata", roles }]
       : [];
   });
 }

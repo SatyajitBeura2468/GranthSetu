@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, BookCheck, BookOpen, Clock3, IndianRupee, Repeat2, Users } from "lucide-react";
+import { ArrowRight, Banknote, BookCheck, BookOpen, Clock3, Repeat2, Users } from "lucide-react";
 import { Feedback, OperatorPageHeader } from "@/components/operator/page-header";
+import { formatMoneyMinorUnits } from "@/lib/i18n/library-localization";
 import { getWorkspaceData } from "@/lib/operator/workspace";
 
 type Metric = { label: string; value: string | number; icon: typeof Repeat2; urgent?: boolean; detail: string };
@@ -8,13 +9,13 @@ type Metric = { label: string; value: string | number; icon: typeof Repeat2; urg
 export default async function DashboardPage({ params, searchParams }: { params: Promise<{ libraryCode: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
   const [{ libraryCode }, query] = await Promise.all([params, searchParams]);
   const data = await getWorkspaceData(libraryCode, "dashboard");
-  const m = (data.metrics ?? {}) as Record<string, number>;
+  const m = (data.metrics ?? {}) as Record<string, number>; const room = data.room as { currencyCode?: string; localeCode?: string } | undefined;
   const metrics: Metric[] = [
     { label: "Active loans", value: m.activeLoans ?? "—", icon: Repeat2, detail: "Currently borrowed" },
     { label: "Overdue", value: m.overdueLoans ?? "—", icon: Clock3, urgent: Boolean(m.overdueLoans), detail: "Needs attention" },
     { label: "Available copies", value: m.availableCopies ?? "—", icon: BookCheck, detail: `${m.totalBooks ?? "—"} catalogue titles` },
     { label: "Active members", value: m.activeMembers ?? "—", icon: Users, detail: "Eligible member records" },
-    { label: "Outstanding fines", value: typeof m.finesOutstandingMinor === "number" ? `₹${(m.finesOutstandingMinor / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—", icon: IndianRupee, detail: "Recorded balance" },
+    { label: "Outstanding fines", value: typeof m.finesOutstandingMinor === "number" ? formatMoneyMinorUnits(m.finesOutstandingMinor, room?.currencyCode ?? "INR", room?.localeCode ?? "en-IN") : "—", icon: Banknote, detail: "Recorded balance" },
   ];
   const attention = ((data.attention ?? []) as Array<{ label: string; detail: string; tone: string }>).filter((item) => !/^0\s/.test(item.label));
   const activity = (data.activity ?? []) as Array<{ time: string; action: string; member: string; item: string }>;

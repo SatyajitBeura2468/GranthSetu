@@ -66,11 +66,6 @@ async function fixtureLoan({ memberId, copyId, returned = false, overdue = false
   assert(!result.error, `loan fixture failed: ${result.error?.message}`); createdLoans.push(result.data.id); return result.data;
 }
 
-async function fine(loanId, amount = 1000) {
-  const result = await admin.from("fines").insert({ library_id: libraryId, loan_id: loanId, assessed_amount_minor: amount, fine_kind: "overdue", assessed_by_profile_id: createdProfiles[0] }).select("id").single();
-  assert(!result.error, `fine fixture failed: ${result.error?.message}`); createdFines.push(result.data.id); return result.data.id;
-}
-
 async function assertNoAudit(requestId) {
   const result = await admin.from("audit_events").select("id").eq("request_id", requestId);
   assert(!result.error && result.data.length === 0, `failed request ${requestId} created a success audit`);
@@ -100,8 +95,11 @@ try {
   const todayCutoffUpdate = await admin.from("loans").update({ due_at: dueLaterToday }).eq("id", todayCutoffLoan.id); assert(!todayCutoffUpdate.error, `today cutoff fixture update failed: ${todayCutoffUpdate.error?.message}`);
   const defaultOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: null, p_query: null });
   assert(!defaultOverdueReport.error && !defaultOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "default overdue report included a loan due later today");
-  // Tie the explicit end-of-day cutoff to the fixture's UTC due date if CI crosses midnight.
-  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: dueLaterToday.slice(0, 10), p_query: null });
+  // Tie the explicit end-of-day cutoff to the fixture's library-local date.
+  const localDueParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(dueLaterToday));
+  const localDuePart = (type) => localDueParts.find((part) => part.type === type)?.value;
+  const localDueDate = `${localDuePart("year")}-${localDuePart("month")}-${localDuePart("day")}`;
+  const explicitOverdueReport = await librarian.client.rpc("report_overdue_filtered", { p_as_of: localDueDate, p_query: null });
   assert(!explicitOverdueReport.error && explicitOverdueReport.data.some((row) => row.loan_id === todayCutoffLoan.id), "explicit end-of-day overdue report omitted today's cutoff loan");
   const globalLoanSearch = await librarian.client.rpc("global_search_v71", { p_query: activeBookTitle });
   assert(!globalLoanSearch.error && globalLoanSearch.data.some((row) => row.result_type === "loan" && row.result_id === todayCutoffLoan.id), "global search omitted the active loan result");

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { workspaceMutationAction } from "@/app/operator/[libraryCode]/actions";
+import { MutationRequestId, MutationSubmitButton } from "@/components/operator/mutation-controls";
 
 type Option = { id: string; display_label?: string; display_name?: string };
 type MemberRecord = { id?: string; member_identifier?: string; display_name?: string; member_kind?: string; status?: string; updated_at?: string };
@@ -26,6 +27,6 @@ export function MemberForm({ libraryCode, member, enrollment, sessions, grades, 
       <input type="hidden" name="enrollmentStatus" value={enrollment?.status ?? "active"} />
     </fieldset>
     {student && (!sessions.length || !grades.length || !sections.length) ? <p className="notice notice-error" role="alert">Configure an active session, grade, and section before creating a student.</p> : null}
-    <button className="button button-primary" type="submit" disabled={disabled || (student && (!sessions.length || !grades.length || !sections.length))}>{submitLabel}</button>
+    <MutationRequestId /><MutationSubmitButton idleLabel={submitLabel} pendingLabel={member?.id ? "Saving…" : "Creating…"} disabled={disabled || (student && (!sessions.length || !grades.length || !sections.length))} />
   </form>;
 }
