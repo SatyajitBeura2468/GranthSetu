@@ -6,7 +6,7 @@ const account = { email: "e2e-owner@granthsetu.test", password: "E2e-Owner-Passw
 
 function adminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY;
   if (!url || !serviceRole) throw new Error("Missing local E2E Supabase environment.");
   return createClient(url, serviceRole, { auth: { autoRefreshToken: false, persistSession: false } });
 }
@@ -16,7 +16,7 @@ async function submitAndWait(page: Page, button: Locator) {
 }
 
 async function signInAsOperator(page: Page) {
-  await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currency=JPY&locale=ja-JP&timeZone=Asia%2FTokyo`);
+  await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currencyCode=JPY&localeCode=ja-JP&timeZone=Asia%2FTokyo`);
   await page.locator("details").getByText("Already confirmed? Sign in to finish creating your Library Room.").click();
   const recovery = page.locator("details form");
   await recovery.getByLabel("Email").fill(account.email);
@@ -37,7 +37,7 @@ test("confirmation resume preserves Tokyo localization without a password URL or
   const pageErrors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  const response = await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currency=JPY&locale=ja-JP&timeZone=Asia%2FTokyo`);
+  const response = await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currencyCode=JPY&localeCode=ja-JP&timeZone=Asia%2FTokyo`);
   expect(response?.headers()["content-security-policy"]).toBeTruthy();
   expect(response?.headers()["content-security-policy"]).not.toContain("unsafe-eval");
   await page.locator("details").getByText("Already confirmed? Sign in to finish creating your Library Room.").click();
@@ -46,8 +46,8 @@ test("confirmation resume preserves Tokyo localization without a password URL or
   await recovery.getByLabel("Password").fill(account.password);
   await Promise.all([page.waitForURL(/\/create-library\?/), recovery.getByRole("button", { name: "Continue onboarding" }).click()]);
   const resumed = new URL(page.url());
-  expect(resumed.searchParams.get("currency")).toBe("JPY");
-  expect(resumed.searchParams.get("locale")).toBe("ja-JP");
+  expect(resumed.searchParams.get("currencyCode")).toBe("JPY");
+  expect(resumed.searchParams.get("localeCode")).toBe("ja-JP");
   expect(resumed.searchParams.get("timeZone")).toBe("Asia/Tokyo");
   expect(resumed.searchParams.has("password")).toBe(false);
   await Promise.all([page.waitForURL(/\/create-library\/success\?/), page.getByRole("button", { name: "Create Library Room" }).click()]);
