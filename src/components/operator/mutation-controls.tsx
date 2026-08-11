@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
 
 export function MutationRequestId() {
@@ -12,6 +12,6 @@ export function MutationSubmitButton({ idleLabel, pendingLabel = "Saving…", cl
   idleLabel: string; pendingLabel?: string; className?: string; disabled?: boolean; name?: string; value?: string;
 }) {
   const { pending } = useFormStatus();
-  const ready = typeof window !== "undefined";
+  const ready = useSyncExternalStore(() => () => {}, () => true, () => false);
   return <button className={className} type="submit" name={name} value={value} disabled={disabled || pending || !ready} aria-disabled={disabled || pending || !ready} aria-live="polite">{pending ? pendingLabel : idleLabel}</button>;
 }

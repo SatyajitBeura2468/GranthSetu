@@ -10,6 +10,7 @@ const [actions, circulation, controls, migration] = await Promise.all([
 
 assert(actions.includes("p_request_id: requestId"), "workspace RPC does not receive the stable browser identifier");
 assert(controls.includes("crypto.randomUUID") && controls.includes('name="requestId"'), "mutation forms do not send a stable request identifier");
+assert(controls.includes("useSyncExternalStore") && controls.includes("() => true") && controls.includes("() => false"), "mutation controls never enable after hydration");
 assert(circulation.includes("MutationSubmitButton") && circulation.includes("Issuing copy…") && circulation.includes("Renewing loan…") && circulation.includes("Returning copy…"), "circulation submissions lack visible pending feedback");
 assert(circulation.includes("MutationRequestId") && controls.includes("useFormStatus"), "circulation duplicate submission protection is absent");
 assert(migration.includes("workspace_mutation_receipts") && migration.includes("pg_advisory_xact_lock"), "database mutation replay protection is absent");

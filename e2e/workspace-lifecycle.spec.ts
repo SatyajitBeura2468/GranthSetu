@@ -71,6 +71,7 @@ test("operator creates a session, grade, and section in the browser", async ({ p
   await session.getByLabel("Starts").fill("2026-01-01");
   await session.getByLabel("Ends").fill("2026-12-31");
   await session.getByLabel("Status").selectOption("active");
+  await expect(session.getByRole("button", { name: "Save session" })).toBeEnabled();
   await submitAndWait(page, session.getByRole("button", { name: "Save session" }));
   const grade = page.locator("form").filter({ hasText: "Add grade / class" });
   await grade.getByLabel("Code").fill("E2E-10");
