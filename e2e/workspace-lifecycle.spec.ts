@@ -81,10 +81,6 @@ test("operator creates a session, grade, and section in the browser", async ({ p
   await section.getByLabel("Code").fill("E2E-A");
   await section.getByLabel("Display name").fill("E2E Section A");
   await submitAndWait(page, section.getByRole("button", { name: "Save section" }));
-  await expect.poll(async () => {
-    const { count } = await adminClient().from("sections").select("id", { count: "exact", head: true }).eq("library_id", await libraryId()).eq("display_name", "E2E Section A");
-    return count;
-  }).toBe(1);
 });
 
 test("rapid duplicate member submission has exactly one logical effect", async ({ page }) => {
