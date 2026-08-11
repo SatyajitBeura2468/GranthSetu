@@ -245,3 +245,111 @@ revoke execute on function public.create_library_room(text,text,text,text,text,t
 grant execute on function public.create_library_room(text,text,text,text,text,text), public.operator_context_for_library(text), public.operator_accessible_libraries(), public.operator_workspace_mutation(text,text,jsonb,uuid), public.operator_room_report(text,text,date,date,text,text,boolean) to authenticated;
 grant execute on function public.public_resolve_library(text) to anon, authenticated;
 comment on function public.operator_workspace_mutation(text,text,jsonb,uuid) is 'Trusted room mutation gateway with request UUID replay, tenant validation, and transaction-scoped receipt locking.';
+
+-- `require_operator` deliberately sets the transaction timezone to the room's
+-- business timezone so date-only policy checks use the library's local day.
+-- Keep instants as `timestamptz`: `timezone('utc', now())` returns a timestamp
+-- without timezone and would otherwise be reinterpreted in that room timezone.
+create or replace function public.circulation_issue_loan(
+  p_member_id uuid,
+  p_book_copy_id uuid,
+  p_request_id uuid,
+  p_notes text default null
+)
+returns jsonb
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_actor uuid; v_existing record; v_member public.members%rowtype; v_copy public.book_copies%rowtype;
+  v_book public.books%rowtype; v_period bigint; v_limit bigint; v_active_count bigint;
+  v_now timestamptz; v_loan public.loans%rowtype;
+begin
+  v_actor := private.require_operator();
+  if p_member_id is null or p_book_copy_id is null or p_request_id is null then raise exception using errcode='22023', message='GS_INPUT_INVALID'; end if;
+  if p_notes is not null and char_length(btrim(p_notes)) > 2000 then raise exception using errcode='22023', message='GS_NOTES_TOO_LONG'; end if;
+  select * into v_existing from private.circulation_request_lock(p_request_id,'circulation.loan_issued');
+  if v_existing.existing_action is not null then
+    if v_existing.existing_action <> 'circulation.loan_issued' then raise exception using errcode='23505', message='GS_REQUEST_ID_REUSED'; end if;
+    return v_existing.existing_metadata || jsonb_build_object('idempotent',true);
+  end if;
+  select * into v_member from public.members where id=p_member_id for update;
+  if not found then raise exception using errcode='P0001', message='GS_MEMBER_NOT_FOUND'; end if;
+  if v_member.status <> 'active' then raise exception using errcode='P0001', message='GS_MEMBER_INACTIVE'; end if;
+  if v_member.member_kind='student' and not exists (
+    select 1 from public.student_enrollments se join public.academic_sessions s on s.id=se.academic_session_id
+    where se.member_id=v_member.id and se.status='active' and s.status='active' and current_date between s.starts_on and s.ends_on
+  ) then raise exception using errcode='P0001', message='GS_STUDENT_ENROLMENT_REQUIRED'; end if;
+  v_period:=private.policy_integer('default_loan_period_days'); v_limit:=private.policy_integer('checkout_limit');
+  if v_period is null or v_period<=0 or v_limit is null or v_limit<0 then raise exception using errcode='P0001', message='GS_POLICY_NOT_CONFIGURED'; end if;
+  select count(*) into v_active_count from public.loans where member_id=v_member.id and status='active';
+  if v_active_count>=v_limit then raise exception using errcode='P0001', message='GS_CHECKOUT_LIMIT_REACHED'; end if;
+  select * into v_copy from public.book_copies where id=p_book_copy_id for update;
+  if not found then raise exception using errcode='P0001', message='GS_COPY_NOT_FOUND'; end if;
+  if v_copy.operational_state<>'active' then raise exception using errcode='P0001', message='GS_COPY_NOT_CIRCULATABLE'; end if;
+  select * into v_book from public.books where id=v_copy.book_id;
+  if not found or v_book.status<>'active' then raise exception using errcode='P0001', message='GS_BOOK_ARCHIVED'; end if;
+  if exists(select 1 from public.loans where book_copy_id=v_copy.id and status='active') then raise exception using errcode='P0001', message='GS_COPY_ALREADY_ON_LOAN'; end if;
+  v_now:=now();
+  insert into public.loans(member_id,book_copy_id,issued_at,due_at,issued_by_profile_id,status,notes)
+    values(v_member.id,v_copy.id,v_now,v_now+make_interval(days=>v_period::integer),v_actor,'active',nullif(btrim(p_notes),'')) returning * into v_loan;
+  v_existing.existing_metadata:=jsonb_build_object('loan_id',v_loan.id,'member_id',v_loan.member_id,'copy_id',v_loan.book_copy_id,'issued_at',v_loan.issued_at,'due_at',v_loan.due_at,'status',v_loan.status,'idempotent',false);
+  perform private.append_circulation_audit(v_actor,'circulation.loan_issued','loan',v_loan.id,p_request_id,v_existing.existing_metadata);
+  return v_existing.existing_metadata;
+end;
+$$;
+
+create or replace function public.circulation_return_loan(p_loan_id uuid, p_request_id uuid)
+returns jsonb
+language plpgsql volatile security definer set search_path = '' as $$
+declare v_actor uuid; v_existing record; v_loan public.loans%rowtype; v_now timestamptz; v_result jsonb;
+begin
+  v_actor:=private.require_operator();
+  select * into v_existing from private.circulation_request_lock(p_request_id,'circulation.loan_returned');
+  if v_existing.existing_action is not null then
+    if v_existing.existing_action <> 'circulation.loan_returned' then raise exception using errcode='23505', message='GS_REQUEST_ID_REUSED'; end if;
+    return v_existing.existing_metadata || jsonb_build_object('idempotent',true);
+  end if;
+  select * into v_loan from public.loans where id=p_loan_id for update;
+  if not found then raise exception using errcode='P0001', message='GS_LOAN_NOT_FOUND'; end if;
+  if v_loan.status<>'active' or v_loan.returned_at is not null then raise exception using errcode='P0001', message='GS_LOAN_ALREADY_RETURNED'; end if;
+  v_now:=now();
+  update public.loans set returned_at=v_now,returned_by_profile_id=v_actor,status='returned' where id=v_loan.id returning * into v_loan;
+  v_result:=jsonb_build_object('loan_id',v_loan.id,'member_id',v_loan.member_id,'copy_id',v_loan.book_copy_id,'due_at',v_loan.due_at,'returned_at',v_loan.returned_at,'status',v_loan.status,'overdue',v_loan.returned_at>v_loan.due_at,'idempotent',false);
+  perform private.append_circulation_audit(v_actor,'circulation.loan_returned','loan',v_loan.id,p_request_id,v_result);
+  return v_result;
+end;
+$$;
+
+create or replace function public.circulation_renew_loan(p_loan_id uuid, p_request_id uuid)
+returns jsonb language plpgsql volatile security definer set search_path = '' as $$
+declare v_actor uuid; v_existing record; v_loan public.loans%rowtype; v_member public.members%rowtype; v_copy public.book_copies%rowtype; v_book public.books%rowtype; v_period bigint; v_limit bigint; v_count bigint; v_now timestamptz; v_renewal public.loan_renewals%rowtype; v_result jsonb;
+begin
+  v_actor:=private.require_operator();
+  select * into v_existing from private.circulation_request_lock(p_request_id,'circulation.loan_renewed');
+  if v_existing.existing_action is not null then
+    if v_existing.existing_action <> 'circulation.loan_renewed' then raise exception using errcode='23505', message='GS_REQUEST_ID_REUSED'; end if;
+    return v_existing.existing_metadata || jsonb_build_object('idempotent',true);
+  end if;
+  select * into v_loan from public.loans where id=p_loan_id for update;
+  if not found then raise exception using errcode='P0001', message='GS_LOAN_NOT_FOUND'; end if;
+  if v_loan.status<>'active' then raise exception using errcode='P0001', message='GS_LOAN_NOT_ACTIVE'; end if;
+  v_now:=now();
+  if v_now>v_loan.due_at and not coalesce(private.policy_boolean('overdue_renewal_allowed'),false) then raise exception using errcode='P0001', message='GS_LOAN_OVERDUE'; end if;
+  select * into v_member from public.members where id=v_loan.member_id;
+  if v_member.status<>'active' then raise exception using errcode='P0001', message='GS_MEMBER_INACTIVE'; end if;
+  if v_member.member_kind='student' and not exists(select 1 from public.student_enrollments se join public.academic_sessions s on s.id=se.academic_session_id where se.member_id=v_member.id and se.status='active' and s.status='active' and current_date between s.starts_on and s.ends_on) then raise exception using errcode='P0001', message='GS_STUDENT_ENROLMENT_REQUIRED'; end if;
+  select * into v_copy from public.book_copies where id=v_loan.book_copy_id;
+  if v_copy.operational_state<>'active' then raise exception using errcode='P0001', message='GS_COPY_NOT_CIRCULATABLE'; end if;
+  select * into v_book from public.books where id=v_copy.book_id;
+  if v_book.status<>'active' then raise exception using errcode='P0001', message='GS_BOOK_ARCHIVED'; end if;
+  v_period:=private.policy_integer('default_loan_period_days'); v_limit:=private.policy_integer('renewal_limit');
+  if v_period is null or v_period<=0 or v_limit is null or v_limit<0 then raise exception using errcode='P0001', message='GS_POLICY_NOT_CONFIGURED'; end if;
+  select count(*) into v_count from public.loan_renewals where loan_id=v_loan.id;
+  if v_count>=v_limit then raise exception using errcode='P0001', message='GS_RENEWAL_LIMIT_REACHED'; end if;
+  insert into public.loan_renewals(loan_id,approved_by_profile_id,previous_due_at,new_due_at,renewed_at)
+    values(v_loan.id,v_actor,v_loan.due_at,greatest(v_loan.due_at,v_now)+make_interval(days=>v_period::integer),v_now) returning * into v_renewal;
+  update public.loans set due_at=v_renewal.new_due_at where id=v_loan.id returning * into v_loan;
+  v_result:=jsonb_build_object('loan_id',v_loan.id,'renewal_id',v_renewal.id,'previous_due_at',v_renewal.previous_due_at,'new_due_at',v_renewal.new_due_at,'renewal_count',v_count+1,'status',v_loan.status,'idempotent',false);
+  perform private.append_circulation_audit(v_actor,'circulation.loan_renewed','loan',v_loan.id,p_request_id,v_result);
+  return v_result;
+end;
+$$;

@@ -154,6 +154,7 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_URL="${SUPABASE_URL:-$API_URL}"
           export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${SUPABASE_ANON_KEY:-$ANON_KEY}"
           export NEXT_PUBLIC_SITE_URL="http://127.0.0.1:3000"
+          export SUPABASE_LOCAL_TEST_MODE="true"
           npm run build
       - name: Run Playwright browser tests
         shell: bash
@@ -164,6 +165,7 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_URL="${SUPABASE_URL:-$API_URL}"
           export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${SUPABASE_ANON_KEY:-$ANON_KEY}"
           export NEXT_PUBLIC_SITE_URL="http://127.0.0.1:3000"
+          export SUPABASE_LOCAL_TEST_MODE="true"
           npm run test:e2e
       - name: Upload Playwright report
         if: failure()
