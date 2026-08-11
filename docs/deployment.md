@@ -22,6 +22,8 @@ The web deployment and data-plane migration are independent. Never copy a Develo
 
 Use separate values for Local, Preview, and Production. Confirm variable names and targets without printing secrets into logs.
 
+For Production, set `NEXT_PUBLIC_SITE_URL=https://granthsetu.vercel.app` exactly. The application fails closed for auth callbacks when this value is absent or invalid in a production build; it never substitutes localhost. In Supabase Auth URL Configuration, set the Site URL to the same canonical origin and allow `https://granthsetu.vercel.app/auth/confirm` as a Redirect URL. Supabase accepting a signup request does not prove email delivery; reliable delivery may require configuring an approved custom SMTP provider in the Supabase dashboard.
+
 ## Pre-deployment gates
 
 1. Confirm a clean working tree and intended commit.
