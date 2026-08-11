@@ -30,6 +30,8 @@ jobs:
         run: npm run test:auth:onboarding
       - name: Verify global money contract
         run: npm run test:localization
+      - name: Verify workspace mutation contract
+        run: npm run test:workspace-mutations
 
   database:
     runs-on: ubuntu-latest

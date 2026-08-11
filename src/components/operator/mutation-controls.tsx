@@ -8,10 +8,10 @@ export function MutationRequestId() {
   return <input type="hidden" name="requestId" value={requestId} readOnly />;
 }
 
-export function MutationSubmitButton({ idleLabel, pendingLabel = "Saving…", className = "button button-primary", disabled = false }: {
-  idleLabel: string; pendingLabel?: string; className?: string; disabled?: boolean;
+export function MutationSubmitButton({ idleLabel, pendingLabel = "Saving…", className = "button button-primary", disabled = false, name, value }: {
+  idleLabel: string; pendingLabel?: string; className?: string; disabled?: boolean; name?: string; value?: string;
 }) {
   const { pending } = useFormStatus();
   const ready = typeof window !== "undefined";
-  return <button className={className} type="submit" disabled={disabled || pending || !ready} aria-disabled={disabled || pending || !ready}>{pending ? pendingLabel : idleLabel}</button>;
+  return <button className={className} type="submit" name={name} value={value} disabled={disabled || pending || !ready} aria-disabled={disabled || pending || !ready} aria-live="polite">{pending ? pendingLabel : idleLabel}</button>;
 }

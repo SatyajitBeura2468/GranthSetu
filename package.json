@@ -27,6 +27,8 @@
     "test:localization": "node --experimental-strip-types scripts/test-library-localization.mjs",
     "test:e2e": "playwright test",
     "db:test:global-launch": "node scripts/test-global-launch-hardening.mjs",
+    "test:workspace-mutations": "node scripts/test-workspace-mutation-contract.mjs",
+    "test:e2e": "playwright test",
     "db:lint": "npx supabase@2.112.0 db lint --local --schema public --level error --fail-on error",
     "db:types": "npx supabase@2.112.0 gen types typescript --local --schema public > src/types/database.ts"
   },
