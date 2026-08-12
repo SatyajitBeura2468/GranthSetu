@@ -156,9 +156,17 @@ try {
   assert(!storageError && storageRows?.length === 0, "public signup listed private cover storage");
 
   await expectError(() => anonymous.from("members").select("id"), "anonymous member read unexpectedly succeeded");
+  await expectError(() => anonymous.rpc("operator_accessible_libraries"), "anonymous resolved operator libraries");
+  await expectError(() => anonymous.rpc("operator_context_for_library", { p_library_code: libraryCode }), "anonymous resolved an operator room context");
+  const { data: anonymousCatalogue, error: anonymousCatalogueError } = await anonymous.rpc("public_catalogue", { p_library_code: libraryCode, p_query: null, p_available_only: false, p_limit: 5 });
+  assert(!anonymousCatalogueError && Array.isArray(anonymousCatalogue), "anonymous catalogue RPC no longer works");
 
   const { data: adminContext, error: adminContextError } = await adminAClient.rpc("current_operator_context");
   assert(!adminContextError && adminContext?.[0]?.roles?.includes("administrator"), "administrator context did not resolve");
+  const { data: accessibleLibraries, error: accessibleLibrariesError } = await adminAClient.rpc("operator_accessible_libraries");
+  assert(!accessibleLibrariesError && accessibleLibraries?.some((library) => library.library_code === libraryCode), "authorized operator could not resolve accessible libraries");
+  const { data: roomContext, error: roomContextError } = await adminAClient.rpc("operator_context_for_library", { p_library_code: libraryCode });
+  assert(!roomContextError && roomContext?.[0]?.library_code === libraryCode, "authorized operator could not resolve room context");
   const { data: librarianContext, error: librarianContextError } = await librarianClient.rpc("current_operator_context");
   assert(!librarianContextError && librarianContext?.[0]?.roles?.includes("librarian"), "librarian context did not resolve");
   const { data: unmappedContext, error: unmappedContextError } = await unmappedClient.rpc("current_operator_context");

@@ -68,7 +68,7 @@ npm run db:test:tenancy
 
 Database commands require the local Supabase containers. Do not apply migrations to an unknown or unreviewed Production project. The synthetic seed contains no school records or policy claims.
 
-The 2026-08-09 final migration rehearsal and smoke test targeted Development project `granthsetu-dev` (`jyvvxseeytjyhuinyzgn`) only. Production was not migrated, linked, reset, or queried. Development retains an explicitly synthetic `DEVROOM` isolation room so room switching and public/operator separation remain reproducible.
+Environment policy: Local Supabase is Development and uses synthetic data only; GitHub Actions starts a disposable local Supabase CI/staging stack; after its three required jobs pass, `main` deploys directly to Vercel Production using the existing hosted project `jyvvxseeytjyhuinyzgn` and real production data only. That project may still display the historical name `granthsetu-dev`; its project ref is authoritative.
 
 ## Environment
 
@@ -90,6 +90,7 @@ Only the `NEXT_PUBLIC_` variables may enter browser bundles. `SUPABASE_SECRET_KE
 - [UI design system](docs/ui-design-system.md)
 - [Database development](docs/database-development.md)
 - [Deployment runbook](docs/deployment.md)
+- [Free-tier production environment ADR](docs/adr/0012-free-tier-production-environment-strategy.md)
 - [Global Library Room tenancy ADR](docs/adr/0010-global-library-room-tenancy.md)
 - [Functional completion matrix](docs/v3-functional-completion.md)
 

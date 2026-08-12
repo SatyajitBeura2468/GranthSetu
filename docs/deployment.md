@@ -6,9 +6,9 @@
 - Production branch: `main`
 - Vercel project: `granthsetu`
 - Canonical web host: `https://granthsetu.vercel.app`
-- Database: a separately reviewed Supabase project per environment
+- Production database: existing Supabase project `jyvvxseeytjyhuinyzgn` (historical display name may be `granthsetu-dev`)
 
-The web deployment and data-plane migration are independent. Never copy a Development database credential into Production merely to make a deployment appear complete.
+The web deployment and data-plane migration are independent. Local Supabase is Development with synthetic data only; GitHub Actions is disposable local CI/staging; the hosted project above is Production-only. No hosted development or Preview environment is used under the current Free-plan constraint. Never copy Production credentials to local development or GitHub Actions.
 
 ## Required environment variables
 
@@ -20,7 +20,7 @@ The web deployment and data-plane migration are independent. Never copy a Develo
 | `SUPABASE_EXPECTED_PROJECT_REF` | Server only | Optional fail-closed match for the approved project ref |
 | `NEXT_PUBLIC_SITE_URL` | Browser/server | Exact canonical origin, without a trailing slash |
 
-Use separate values for Local, Preview, and Production. Confirm variable names and targets without printing secrets into logs.
+Production values are scoped to Vercel Production only. Confirm variable names and targets without printing secrets into logs. No Preview configuration, deployment, or release check is part of this workflow.
 
 For Production, set `NEXT_PUBLIC_SITE_URL=https://granthsetu.vercel.app` exactly. The application fails closed for auth callbacks when this value is absent or invalid in a production build; it never substitutes localhost. In Supabase Auth URL Configuration, set the Site URL to the same canonical origin and allow `https://granthsetu.vercel.app/auth/confirm` as a Redirect URL. Supabase accepting a signup request does not prove email delivery; reliable delivery may require configuring an approved custom SMTP provider in the Supabase dashboard.
 
@@ -33,20 +33,23 @@ For Production, set `NEXT_PUBLIC_SITE_URL=https://granthsetu.vercel.app` exactly
 5. Inspect `/`, `/l/OAVMUSI`, catalogue/detail, staff/login/create-library, and every operator area at desktop and mobile widths.
 6. Test keyboard focus, light/dark themes, reduced motion, empty/error states, redirects, CSV export, and no-console-error behavior.
 
-## Production database gate
+## Production database safety and release procedure
 
-Before applying the V3 tenancy migration:
+For every production migration:
 
-1. Identify the exact Supabase project and owner.
-2. Take a recoverable backup and record its timestamp.
-3. Confirm the source schema matches the reviewed migration base.
-4. Rehearse the migration against a restored copy.
-5. Verify every tenant-owned table maps existing rows to `OAVMUSI` and no primary IDs change.
-6. Run the isolation matrix with two synthetic rooms and two users.
-7. Apply only through the approved migration workflow; never via ad-hoc dashboard edits.
-8. Generate types from the migrated target and retain the test evidence.
+1. Create a feature branch and write a forward-only migration.
+2. Run the local reset/test suite with synthetic data.
+3. Push a PR; require green `validate`, `database`, and `e2e` jobs.
+4. Review the migration and merge `main`.
+5. Confirm the target project ref exactly equals `jyvvxseeytjyhuinyzgn` through independent signals.
+6. Take or verify a recoverable backup, run migration-list/dry-run equivalent, and apply only pending migrations.
+7. Rerun advisors, verify production health and headers, then run a controlled non-destructive smoke.
 
-If any item is unavailable, publish only the web application and label the production data plane pending configuration.
+Forbidden: `supabase db reset --linked` against Production, production `--include-seed`, fixtures/pgTAP/E2E against Production, manual dashboard schema drift, and ad-hoc destructive SQL.
+
+## Free-tier production backups
+
+An approved operator takes a schema dump and a data-only logical dump using Supabase/Postgres tooling with credentials kept outside the repository. Store encrypted dumps outside Git with a documented retention rotation. Record whether Auth users and Storage objects/metadata require separate export procedures, and perform a periodic restore drill into an isolated non-production target. Never commit dumps, use public artifacts, or expose database secrets in CI logs. A scheduled backup is permitted only when secrets remain in encrypted secret storage and the resulting encrypted backup has private, short-retention storage.
 
 ## Web release and smoke test
 

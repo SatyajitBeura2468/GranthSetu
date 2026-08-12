@@ -2,14 +2,7 @@
 
 ## Environment boundary
 
-GranthSetu has one isolated Development Supabase project:
-
-- Project: `granthsetu-dev`
-- Project ref: `jyvvxseeytjyhuinyzgn`
-- Region: `ap-south-1` (Mumbai), the available South Asian region closest to Odisha
-- Purpose: disposable Development validation and synthetic data only
-
-There is no Production Supabase project. Vercel Preview may use Development credentials; Vercel Production must remain without Supabase credentials until a later approved phase. Never place a database password, secret key, service-role key, or access token in this document or Git.
+GranthSetu has no hosted Development or Preview database. Local Supabase is Development and GitHub Actions starts a disposable local Supabase stack for CI/staging; both use synthetic data only. The existing hosted project `jyvvxseeytjyhuinyzgn` in `ap-south-1` is canonical Production. Its historical display name may remain `granthsetu-dev`; the project ref is authoritative. Never place a database password, secret key, service-role key, or access token in this document or Git.
 
 ## Source of truth
 
@@ -43,13 +36,13 @@ The local Supabase stack requires a Docker-compatible runtime. `db reset` recrea
 6. Commit the migration, tests, generated types, and documentation together.
 7. Review `npx supabase@2.112.0 db diff --local` or the current CLI equivalent for unexplained drift before publishing.
 
-For a linked Development project, authenticate with the CLI, link using its project ref, preview with `npx supabase@2.112.0 db push --dry-run`, and apply with `npx supabase@2.112.0 db push`. Use `--include-seed` only for a disposable Development target. Never run `db reset --linked` without independently verifying the linked project is the throwaway Development project.
+After a reviewed PR has green `validate`, `database`, and `e2e` jobs and has merged to `main`, an approved operator may authenticate with the CLI, verify the linked project ref is exactly `jyvvxseeytjyhuinyzgn`, inspect `db push --dry-run` or the current migration-list equivalent, and apply only pending migrations. Never use `--include-seed` on Production and never run `db reset --linked` against it.
 
 ## Testing and linting
 
 Database tests use pgTAP under `supabase/tests/database/` and run with `npm run db:test`. They cover table existence, keys, relationship support, lifecycle checks, the one-active-loan-per-copy concurrency constraint, money arithmetic, and the fail-closed RLS/grant baseline. `npm run db:lint` runs the pinned CLI's local database linting at error level.
 
-GitHub Actions runs the same local Supabase reset, pgTAP tests, lint, and generated-type drift check in an ephemeral Ubuntu environment. CI does not connect to `granthsetu-dev` and does not require Supabase secrets.
+GitHub Actions runs the same local Supabase reset, pgTAP tests, lint, generated-type drift check, and browser tests in an ephemeral Ubuntu environment. CI never connects to Production and does not require Production Supabase secrets.
 
 ## Type generation
 
@@ -65,21 +58,21 @@ The browser and server Supabase utilities use `Database` as their client generic
 
 The seed contains fake `DEV-*` members, profiles without Auth users, catalogue records, multiple copies, lifecycle states, historical and active loans, a renewal, a normalized INR fine example, and a disabled-fines setting. It contains no real student, teacher, librarian, contact, Google Sheet, or production record. The seed is for local/Development testing and is not an authoritative school-policy configuration.
 
-## Remote Development verification
+## Production migration verification
 
-The current Development project was created only after account, organization, project-name, region, and cost checks. Its migration history must exactly match the ordered set of version-controlled SQL migrations under `supabase/migrations/`. The repository migration set remains the source of truth; the hosted Development database must not contain unexplained migration drift. Before any future push, inspect migration history, tables, constraints, RLS, privileges, policies, and synthetic row counts. Resolve drift by adding a reviewed migration; do not edit the Dashboard and leave the change uncaptured.
+The repository migration set remains the source of truth. Before an approved production apply, inspect the exact project ref, migration history, tables, constraints, RLS, privileges, policies, and backup evidence. Resolve drift by adding a reviewed migration; do not edit the Dashboard and leave the change uncaptured.
 
 ## Secret handling
 
 - Public application values use `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` only.
 - `SUPABASE_SECRET_KEY` is reserved for trusted server-only invitation/bootstrap actions and is not committed or configured by this repository change.
-- Never expose a secret/service-role key through `NEXT_PUBLIC_*`, browser code, generated types, CI logs, Preview client bundles, or Git.
+- Never expose a secret/service-role key through `NEXT_PUBLIC_*`, browser code, generated types, CI logs, or Git.
 - Local values belong in ignored `.env.local`; `.env.example` contains names only.
 
 ## Phase 4 Auth boundary
 
 The local Auth configuration enables confirmed public email signup, disables anonymous sign-in, and requires 12-character passwords. Signup creates no Library Room role; the trusted room-creation workflow or a room-local administrator assignment is required before an identity can operate a library. `current_operator_context()` derives active roles from database tables. `profiles`, `profile_roles`, and `audit_events` are administrator-readable; operational/reference tables are readable by active operators; direct authenticated writes remain denied. See [authentication development](authentication-development.md).
 
-## Production prohibition
+## Production safety
 
-Do not create `granthsetu-prod`, a staging project, Production Vercel Supabase variables, real Auth users, real school data, or a production migration pipeline in this phase. The next security phase must approve authentication, complete administrator/librarian RLS policies, trusted business mutation functions, and environment handling before Production is considered.
+Do not create another GranthSetu project, copy/rebuild production data, or use Production for tests. Production changes are migration-only: local validation, disposable CI, review, merge, target verification, pending migration apply, advisor checks, and controlled non-destructive smoke.
