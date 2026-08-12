@@ -67,8 +67,7 @@ test("fresh signup confirms from the local email and creates one administrator r
   await Promise.all([page.waitForURL(/confirmation=1/), form.getByRole("button", { name: "Create Library Room" }).click()]);
   await expect(page.getByRole("heading", { name: "Verify your email" })).toBeVisible();
   await expect(page.getByLabel("Password")).toHaveCount(0);
-  await page.goto(await localConfirmationLink(email));
-  await page.waitForURL(/\/create-library\/success\?/);
+  await Promise.all([page.waitForURL(/\/create-library\/success\?/), page.goto(await localConfirmationLink(email))]);
   const admin = adminClient();
   const { count } = await admin.from("libraries").select("id", { count: "exact", head: true }).eq("public_code", code);
   expect(count).toBe(1);
