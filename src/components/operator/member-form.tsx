@@ -28,7 +28,7 @@ export function MemberForm({ libraryCode, member, enrollment, sessions, grades, 
       <label>Roll number<input name="rollNumber" defaultValue={enrollment?.roll_number ?? ""} maxLength={40} /></label>
       <input type="hidden" name="enrollmentStatus" value={enrollment?.status ?? "active"} />
     </fieldset> : null}
-    {student ? <p className={`academic-guidance${!sessions.length || !grades.length || !sections.length ? " is-incomplete" : ""}`} role="status"><Info aria-hidden="true" />{!sessions.length ? "No academic session yet. " : !grades.length || !sections.length ? "Add classes and sections in " : "Need a session, class, or section? Add them in "}<Link href={`/operator/${libraryCode}/settings#academic`}>Settings → Academic structure</Link>.</p> : null}
+    {student ? <p className="academic-guidance" role="status"><Info aria-hidden="true" /><span>Can’t find the session, class, or section you need? Add it in <Link href={`/operator/${libraryCode}/settings#academic`}>Settings → Academic structure</Link>.</span></p> : null}
     <MutationRequestId /><MutationSubmitButton idleLabel={submitLabel} pendingLabel={member?.id ? "Saving…" : "Creating…"} disabled={disabled} />
   </form>;
 }

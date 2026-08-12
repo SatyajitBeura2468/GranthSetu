@@ -156,9 +156,11 @@ h1, h2, h3, p { margin-top: 0; }
 .popover-form select[multiple] { min-height: 120px; padding: 6px; }
 .popover-form fieldset { margin: 4px 0; padding: 14px; display: grid; gap: 12px; border: 1px solid var(--line); }
 .popover-form fieldset legend { padding: 0 6px; font-weight: 750; }
-.academic-guidance { margin: 0; padding: 9px 11px; display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid var(--info); color: var(--muted); font-size: .8rem; line-height: 1.45; }
-.academic-guidance.is-incomplete { border: 1px solid color-mix(in srgb, var(--info) 30%, var(--line)); border-left: 3px solid var(--info); background: var(--info-soft); color: var(--ink); }
-.academic-guidance svg { width: 16px; margin-top: 2px; color: var(--info); }.academic-guidance a { color: var(--brand); font-weight: 750; }
+.academic-guidance { margin: 0; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; color: var(--muted); font-size: .78rem; font-style: italic; line-height: 1.45; }
+.academic-guidance > svg { flex: 0 0 auto; width: 14px; height: 14px; margin-top: .12em; color: var(--subtle); }
+.academic-guidance > span { flex: 1 1 220px; min-width: 0; }
+.academic-guidance a { color: inherit; font-weight: 650; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 2px; }
+.academic-guidance a:hover { color: var(--ink); text-decoration-color: currentColor; }
 .book-status-control { display: grid; gap: 8px; margin-top: 16px; }.book-status-control p { max-width: 48ch; margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.45; }
 .field-note, .search-hint { color: var(--muted); font-size: .75rem; line-height: 1.5; }
 .pagination { margin-top: 36px; display: flex; justify-content: center; align-items: center; gap: 18px; }
