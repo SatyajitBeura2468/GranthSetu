@@ -2,11 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { getOperatorContextFromClient } from "@/lib/auth/authorization";
-import { getAuthCallbackUrl } from "@/lib/auth/redirects";
+import { getLibraryOnboardingCallbackUrl } from "@/lib/auth/redirects";
 import { canonicalizeCurrencyCode, canonicalizeLocale, isSupportedTimeZone } from "@/lib/i18n/library-localization";
 import { normalizeLibraryCode, validLibraryCode } from "@/lib/library/code";
 import { getLibraryOnboardingContinuation } from "@/lib/onboarding/continuation";
-import { asOperatorRpcClient } from "@/lib/operator/rpc";
+import { finalizeLibraryOnboarding } from "@/lib/onboarding/finalize-library";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function value(form: FormData, key: string) { return String(form.get(key) ?? "").trim(); }
@@ -27,9 +27,18 @@ function signupCredentialError(email: string, password: string) {
 function signupErrorMessage(message: string | undefined) {
   const normalized = message?.toLowerCase() ?? "";
   if (normalized.includes("rate limit") || normalized.includes("email rate")) return "Too many account or email requests. Please wait a little before trying again.";
-  if (normalized.includes("already registered") || normalized.includes("already exists")) return "This account may already exist. Confirm it, then use the sign-in option below to finish onboarding.";
+  if (normalized.includes("already registered") || normalized.includes("already exists")) return "We could not start another verification email. If this address belongs to a GranthSetu account, sign in to continue.";
   if (normalized.includes("password") || normalized.includes("email")) return "Check your email address and password, then try again.";
   return "We could not create that account right now. Please try again or sign in if the account is already confirmed.";
+}
+
+function asOnboarding(name: string, code: string, person: string, currencyCode: string, localeCode: string, timeZone: string) {
+  return { displayName: name, libraryCode: code, personName: person, currencyCode, localeCode, timeZone };
+}
+
+function redirectFinalization(result: Awaited<ReturnType<typeof finalizeLibraryOnboarding>>, name: string, code: string, person: string, currencyCode: string, localeCode: string, timeZone: string): never {
+  if (!result.ok) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, result.message));
+  redirect(`/create-library/success?code=${code}&name=${encodeURIComponent(name)}`);
 }
 
 export async function resumeLibraryOnboardingAction(formData: FormData) {
@@ -39,12 +48,30 @@ export async function resumeLibraryOnboardingAction(formData: FormData) {
   const localeCode = canonicalizeLocale(value(formData, "localeCode")) ?? "en-IN";
   const timeZone = value(formData, "timeZone") || "Asia/Kolkata";
   if (!email || email.length > 320 || !password || password.length > 1024) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Enter your confirmed account email and password."));
+  const supabase = await createSupabaseServerClient();
   let signInError = true; let isExistingOperator = false;
-  try { const supabase = await createSupabaseServerClient(); const { error } = await supabase.auth.signInWithPassword({ email, password }); signInError = Boolean(error); if (!signInError) isExistingOperator = Boolean(await getOperatorContextFromClient(supabase)); }
+  try { const { error } = await supabase.auth.signInWithPassword({ email, password }); signInError = Boolean(error); if (!signInError) isExistingOperator = Boolean(await getOperatorContextFromClient(supabase)); }
   catch { redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Unable to sign in right now. Please try again.")); }
   if (signInError) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Unable to sign in with those credentials. Confirm your email first, then try again."));
   if (isExistingOperator) redirect("/operator");
-  redirect(continuation(name, code, person, currencyCode, localeCode, timeZone));
+  const result = await finalizeLibraryOnboarding(supabase, asOnboarding(name, code, person, currencyCode, localeCode, timeZone));
+  redirectFinalization(result, name, code, person, currencyCode, localeCode, timeZone);
+}
+
+export async function resendLibraryVerificationAction(formData: FormData) {
+  const name = value(formData, "displayName"); const code = normalizeLibraryCode(value(formData, "libraryCode")); const person = value(formData, "personName");
+  const email = value(formData, "email").toLowerCase(); const currencyCode = canonicalizeCurrencyCode(value(formData, "currencyCode")) ?? "INR"; const localeCode = canonicalizeLocale(value(formData, "localeCode")) ?? "en-IN"; const timeZone = value(formData, "timeZone") || "Asia/Kolkata";
+  if (!email || email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, true, "Enter a valid email address."));
+  let resendError: string | undefined;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: getLibraryOnboardingCallbackUrl(continuation(name, code, person, currencyCode, localeCode, timeZone)) } });
+    resendError = error ? signupErrorMessage(error.message) : undefined;
+  } catch {
+    resendError = "We could not send another verification email yet. Please wait a moment and try again.";
+  }
+  if (resendError) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, true, resendError));
+  redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, true));
 }
 
 export async function createLibraryAction(formData: FormData) {
@@ -60,12 +87,11 @@ export async function createLibraryAction(formData: FormData) {
     const invalidCredentials = signupCredentialError(email, password);
     if (invalidCredentials) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, invalidCredentials));
     let signup: Awaited<ReturnType<typeof supabase.auth.signUp>> | null = null;
-    try { signup = await supabase.auth.signUp({ email, password, options: { data: { display_name: person }, emailRedirectTo: getAuthCallbackUrl(continuation(name, code, person, currencyCode, localeCode, timeZone)) } }); }
+    try { signup = await supabase.auth.signUp({ email, password, options: { data: { display_name: person }, emailRedirectTo: getLibraryOnboardingCallbackUrl(continuation(name, code, person, currencyCode, localeCode, timeZone)) } }); }
     catch { redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "We could not start account creation right now. Please try again.")); }
     if (!signup || signup.error) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, signupErrorMessage(signup?.error?.message)));
     if (!signup.data.session) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, true));
   }
-  const { data, error } = await asOperatorRpcClient(supabase).rpc("create_library_room", { p_display_name: name, p_public_code: code, p_creator_display_name: person, p_currency_code: currencyCode, p_locale_code: localeCode, p_time_zone: timeZone });
-  if (error || !data) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, error?.message.includes("GS_LIBRARY_CODE_TAKEN") ? "That Library Code is already in use." : error?.message.includes("GS_PROFILE_INACTIVE") ? "This account is globally inactive. A Library Room cannot reactivate it." : "The Library Room could not be created."));
-  redirect(`/create-library/success?code=${code}&name=${encodeURIComponent(name)}`);
+  const result = await finalizeLibraryOnboarding(supabase, asOnboarding(name, code, person, currencyCode, localeCode, timeZone));
+  redirectFinalization(result, name, code, person, currencyCode, localeCode, timeZone);
 }

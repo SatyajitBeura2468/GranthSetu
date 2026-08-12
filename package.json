@@ -23,7 +23,7 @@
     "db:test:phase71:issue-selection": "node scripts/test-phase71-issue-selection.mjs",
     "db:test:phase71:upgrade": "node scripts/test-phase71-upgrade.mjs",
     "test:phase71:ui": "node scripts/test-phase71-ui-contract.mjs",
-    "test:auth:onboarding": "node scripts/test-auth-onboarding-contract.mjs",
+    "test:auth:onboarding": "node --experimental-strip-types scripts/test-auth-onboarding-contract.mjs",
     "test:localization": "node --experimental-strip-types scripts/test-library-localization.mjs",
     "test:e2e": "playwright test",
     "db:test:global-launch": "node scripts/test-global-launch-hardening.mjs",

@@ -6,6 +6,7 @@ export type LibraryOnboardingContinuation = {
   localeCode: string;
   timeZone: string;
   confirmation?: boolean;
+  signIn?: boolean;
   error?: string;
 };
 
@@ -18,6 +19,7 @@ export function getLibraryOnboardingContinuation({
   localeCode,
   timeZone,
   confirmation = false,
+  signIn = false,
   error,
 }: LibraryOnboardingContinuation) {
   const query = new URLSearchParams({
@@ -29,6 +31,7 @@ export function getLibraryOnboardingContinuation({
     timeZone,
   });
   if (confirmation) query.set("confirmation", "1");
+  if (signIn) query.set("signin", "1");
   if (error) query.set("error", error);
   return `/create-library?${query.toString()}`;
 }

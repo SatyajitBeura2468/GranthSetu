@@ -4,8 +4,8 @@
 
 1. Open `/create-library` and enter the library name, public code, creator name, email, operating currency, display locale, and IANA timezone.
 2. The code is normalized to uppercase and must be 5–16 letters, digits, or single hyphens. Reserved platform words are rejected.
-3. Confirm the email through Supabase Auth when email confirmation is enabled.
-4. GranthSetu creates the room and assigns the creator as its first administrator in one trusted database operation.
+3. Confirm the email through the dedicated onboarding link when email confirmation is enabled. That confirmation establishes the session and completes the saved Library Room request; it never includes a password in the URL.
+4. GranthSetu creates the room and assigns the creator as its first administrator in one trusted database operation. If the account was already confirmed but has no room, use the onboarding-only **Sign in to continue** route; it completes the saved request without changing normal operator login behavior.
 5. Open `/l/CODE` to verify the public identity, then `/l/CODE/login` to enter the workspace.
 
 ## Configure safely
