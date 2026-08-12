@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
+import { getLibraryOnboardingCallbackUrl, getTrustedAppUrl } from "../src/lib/auth/trusted-app-url.ts";
 
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const [redirects, actions, confirm, libraryConfirm, finalizer, page, submit, login, code] = await Promise.all([
-  readFile(new URL("../src/lib/auth/redirects.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/auth/trusted-app-url.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/app/create-library/actions.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/app/auth/confirm/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/app/auth/confirm-library/route.ts", import.meta.url), "utf8"),
@@ -17,6 +18,7 @@ assert(redirects.includes('process.env.NEXT_PUBLIC_SITE_URL?.trim()'), "canonica
 assert(redirects.includes('NODE_ENV === "production"') && redirects.includes('NEXT_PUBLIC_SITE_URL is required in production'), "production can silently fall back to localhost");
 assert(redirects.includes('process.env.VERCEL_ENV === "preview"') && redirects.includes('VERCEL_BRANCH_URL') && redirects.includes('VERCEL_URL'), "Preview callbacks cannot use Vercel's trusted deployment origin");
 assert(redirects.includes('hostname === "localhost"') && redirects.includes('hostname === "127.0.0.1"') && redirects.includes('hostname === "::1"'), "production callback permits a localhost origin");
+assert(redirects.includes('SUPABASE_LOCAL_TEST_MODE === "true"'), "the local E2E callback exception is not explicit and server-side");
 assert(!redirects.includes('x-forwarded-host') && !redirects.includes('headers()'), "callback origin can be derived from request headers");
 assert(redirects.includes('candidate.startsWith("//")') && redirects.includes('candidate.includes("\\\\")'), "external continuation variants are not rejected");
 assert(actions.includes('getLibraryOnboardingCallbackUrl') && actions.includes('emailRedirectTo: getLibraryOnboardingCallbackUrl'), "signup does not use the dedicated trusted library callback");
@@ -35,4 +37,25 @@ assert(submit.includes('useFormStatus') && submit.includes('disabled={isDisabled
 assert(page.includes('pendingLabel="Signing in…"') && page.includes('pendingLabel="Sending verification email…"'), "recovery or resend pending state is absent");
 assert(code.includes('RESERVED_LIBRARY_CODES') && code.includes('!normalized.includes("--")'), "Library Code rules regressed");
 assert(login.includes('getOperatorContextFromClient') && login.includes('signOut()'), "normal operator login no longer rejects no-room identities");
+const redirectEnvironment = ["NODE_ENV", "NEXT_PUBLIC_SITE_URL", "SUPABASE_LOCAL_TEST_MODE", "VERCEL_ENV", "VERCEL_BRANCH_URL", "VERCEL_URL"];
+const previousEnvironment = new Map(redirectEnvironment.map((name) => [name, process.env[name]]));
+try {
+  process.env.NODE_ENV = "production";
+  process.env.NEXT_PUBLIC_SITE_URL = "http://127.0.0.1:3000";
+  process.env.SUPABASE_LOCAL_TEST_MODE = "true";
+  delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL_BRANCH_URL;
+  delete process.env.VERCEL_URL;
+  assert(getTrustedAppUrl() === "http://127.0.0.1:3000", "explicit local E2E mode cannot use the trusted localhost origin");
+  assert(getLibraryOnboardingCallbackUrl("/create-library?code=LOCAL-E2E").startsWith("http://127.0.0.1:3000/auth/confirm-library?next="), "explicit local E2E mode cannot build the library confirmation callback");
+  delete process.env.SUPABASE_LOCAL_TEST_MODE;
+  let rejectedProductionLocalhost = false;
+  try { getTrustedAppUrl(); } catch { rejectedProductionLocalhost = true; }
+  assert(rejectedProductionLocalhost, "real production accepts a localhost canonical URL without explicit local test mode");
+} finally {
+  for (const name of redirectEnvironment) {
+    const previous = previousEnvironment.get(name);
+    if (previous === undefined) delete process.env[name]; else process.env[name] = previous;
+  }
+}
 console.log("Auth onboarding contract passed: safe confirmation finalization, verification recovery, validation, trusted room creation, and pending form controls.");
