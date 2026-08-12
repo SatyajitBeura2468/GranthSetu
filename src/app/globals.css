@@ -60,7 +60,7 @@ h1, h2, h3, p { margin-top: 0; }
   .gateway-shell { height: 100svh; min-height: 0; }
   .gateway-topbar { padding-block: clamp(16px, 2.25svh, 22px); }
   .gateway-stage { min-height: 0; margin: 0 auto; padding: clamp(32px, 4.8svh, 56px) 0 clamp(54px, 8svh, 84px); gap: clamp(56px, 7vw, 112px); }
-  .gateway-entry { padding: clamp(26px, 3.1vh, 32px); }
+  .gateway-entry { min-height: 444px; padding: clamp(26px, 3.1vh, 32px); display: grid; align-content: center; }
   .gateway-motif { width: min(56vw, 820px); left: max(-48px, calc((100vw - 1400px) / 2 - 28px)); bottom: clamp(44px, 6.2svh, 64px); }
   .gateway-footer { padding: clamp(12px, 1.7svh, 16px) 0 clamp(15px, 2.2svh, 20px); }
 }
