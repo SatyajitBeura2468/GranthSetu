@@ -76,4 +76,9 @@ export function getAuthCallbackUrl(next: string | null | undefined) {
   const safeNext = sanitizeNextPath(next, "/update-password");
   return `${getTrustedAppUrl()}/auth/confirm?next=${encodeURIComponent(safeNext)}`;
 }
+
+export function getLibraryOnboardingCallbackUrl(next: string) {
+  const safeNext = sanitizeNextPath(next, "/create-library");
+  return `${getTrustedAppUrl()}/auth/confirm-library?next=${encodeURIComponent(safeNext)}`;
+}
 import "server-only";

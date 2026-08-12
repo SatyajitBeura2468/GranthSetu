@@ -17,11 +17,11 @@ async function submitAndWait(page: Page, button: Locator) {
 
 async function signInAsOperator(page: Page) {
   await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currencyCode=JPY&localeCode=ja-JP&timeZone=Asia%2FTokyo`);
-  await page.locator("details").getByText("Already confirmed? Sign in to finish creating your Library Room.").click();
-  const recovery = page.locator("details form");
+  await page.getByRole("link", { name: "Sign in to continue" }).click();
+  const recovery = page.locator("form");
   await recovery.getByLabel("Email").fill(account.email);
   await recovery.getByLabel("Password").fill(account.password);
-  await Promise.all([page.waitForURL(/\/operator/), recovery.getByRole("button", { name: "Continue onboarding" }).click()]);
+  await Promise.all([page.waitForURL(/\/operator\//), recovery.getByRole("button", { name: "Continue onboarding" }).click()]);
 }
 
 async function libraryId() {
@@ -30,9 +30,52 @@ async function libraryId() {
   return data!.id;
 }
 
+async function localConfirmationLink(email: string) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const response = await fetch("http://127.0.0.1:54324/api/v1/messages");
+    if (response.ok) {
+      const body = JSON.stringify(await response.json()).replaceAll("\\u0026", "&");
+      if (body.includes(email)) {
+        const link = body.match(/https?:\/\/[^\s"<>]+auth\/v1\/verify[^\s"<>]+/i)?.[0];
+        if (link) return link.replaceAll("\\\\", "");
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`No local Supabase confirmation link arrived for ${email}.`);
+}
+
 test.describe.configure({ mode: "serial", retries: 0 });
 
-test("confirmation resume preserves Tokyo localization without a password URL or CSP/hydration errors", async ({ page }) => {
+test("fresh signup confirms from the local email and creates one administrator room", async ({ page }) => {
+  const suffix = Date.now().toString(36).toUpperCase();
+  const code = `MAIL-${suffix}`;
+  const email = `signup-${suffix.toLowerCase()}@granthsetu.test`;
+  await page.goto("/create-library");
+  const form = page.locator("form");
+  await form.getByLabel("Your display name").fill("Mail E2E Owner");
+  await form.getByLabel("Email").fill(email);
+  await form.getByLabel("Password").fill("Mail-E2E-Password-2026!");
+  await form.getByLabel("Institution or library name").fill("Mail E2E Library");
+  await form.getByLabel("Library Code").fill(code);
+  await form.getByLabel("Operating currency").fill("INR");
+  await form.getByLabel("Display locale").fill("en-IN");
+  await form.getByLabel("Library timezone").fill("Asia/Kolkata");
+  await Promise.all([page.waitForURL(/confirmation=1/), form.getByRole("button", { name: "Create Library Room" }).click()]);
+  await expect(page.getByRole("heading", { name: "Verify your email" })).toBeVisible();
+  await expect(page.getByLabel("Password")).toHaveCount(0);
+  await page.goto(await localConfirmationLink(email));
+  await page.waitForURL(/\/create-library\/success\?/);
+  const admin = adminClient();
+  const { count } = await admin.from("libraries").select("id", { count: "exact", head: true }).eq("public_code", code);
+  expect(count).toBe(1);
+  await page.getByRole("link", { name: "Enter staff workspace" }).click();
+  await page.waitForURL(new RegExp(`/operator/${code}`));
+  await page.goto(`/l/${code}`);
+  await expect(page.getByRole("heading", { name: "Mail E2E Library" })).toBeVisible();
+});
+
+test("confirmed no-room recovery preserves Tokyo localization without a password URL or CSP/hydration errors", async ({ page }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
@@ -40,17 +83,12 @@ test("confirmation resume preserves Tokyo localization without a password URL or
   const response = await page.goto(`/create-library?name=${encodeURIComponent(room.name)}&code=${room.code}&person=${encodeURIComponent(room.person)}&currencyCode=JPY&localeCode=ja-JP&timeZone=Asia%2FTokyo`);
   expect(response?.headers()["content-security-policy"]).toBeTruthy();
   expect(response?.headers()["content-security-policy"]).not.toContain("unsafe-eval");
-  await page.locator("details").getByText("Already confirmed? Sign in to finish creating your Library Room.").click();
-  const recovery = page.locator("details form");
+  await page.getByRole("link", { name: "Sign in to continue" }).click();
+  const recovery = page.locator("form");
   await recovery.getByLabel("Email").fill(account.email);
   await recovery.getByLabel("Password").fill(account.password);
-  await Promise.all([page.waitForURL(/\/create-library\?/), recovery.getByRole("button", { name: "Continue onboarding" }).click()]);
-  const resumed = new URL(page.url());
-  expect(resumed.searchParams.get("currencyCode")).toBe("JPY");
-  expect(resumed.searchParams.get("localeCode")).toBe("ja-JP");
-  expect(resumed.searchParams.get("timeZone")).toBe("Asia/Tokyo");
-  expect(resumed.searchParams.has("password")).toBe(false);
-  await Promise.all([page.waitForURL(/\/create-library\/success\?/), page.getByRole("button", { name: "Create Library Room" }).click()]);
+  await Promise.all([page.waitForURL(/\/create-library\/success\?/), recovery.getByRole("button", { name: "Continue onboarding" }).click()]);
+  expect(new URL(page.url()).searchParams.has("password")).toBe(false);
   const admin = adminClient();
   const { data: library, error } = await admin.from("libraries").select("id,currency_code,locale_code,time_zone").eq("public_code", room.code).single();
   expect(error).toBeNull();

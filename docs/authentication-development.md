@@ -20,9 +20,13 @@ Run `npm run db:start`, `npm run db:reset`, `npm run db:test`, and `npm run db:t
 
 The first administrator bootstrap RPC is service-role-only and Development-only. It is not exposed as a public route and should be run once through a controlled operator script or SQL session after the Auth user exists.
 
-## Recovery and redirects
+## Signup onboarding, recovery and redirects
 
-Recovery responses are intentionally generic. Callback paths are sanitized and restricted to same-origin application paths. Invite and recovery templates contain token placeholders only; passwords, token hashes, cookies, and email addresses are not logged. Hosted Auth template, signup, and redirect settings must be independently verified in the Supabase Dashboard or authenticated management tooling before claiming hosted end-to-end readiness.
+Recovery responses are intentionally generic. New Library Room signup uses `/auth/confirm-library`, which exchanges the confirmation code, revalidates only the non-sensitive Library Room continuation, and calls the authenticated `create_library_room` RPC exactly once. The normal `/auth/confirm` route remains for invite and password-recovery links.
+
+An authenticated user with no operator room may use `/create-library`â€™s onboarding-only **Sign in to continue** flow to finish a saved room request. Ordinary `/login` remains operator-only and signs a no-room account back out. Resend uses Supabase Authâ€™s signup resend endpoint; the UI does not claim delivery or reveal whether an address exists.
+
+Callback paths are sanitized and restricted to same-origin application paths. Invite and recovery templates contain token placeholders only; passwords, token hashes, cookies, and email addresses are not logged. Hosted Auth must allow the exact production callback `https://granthsetu.vercel.app/auth/confirm-library` (alongside the existing generic callback) and its signup confirmation template must preserve Supabaseâ€™s confirmation URL. Verify hosted SMTP/delivery and redirect settings independently before claiming hosted email readiness.
 
 ## Authorization boundary
 
