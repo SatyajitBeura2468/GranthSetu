@@ -12,6 +12,12 @@ import { createBookCoverUpload, removeBookCoverObject } from "@/lib/operator/cov
 import { parseMoneyToMinorUnits } from "@/lib/i18n/library-localization";
 
 function value(form: FormData, key: string) { const result = String(form.get(key) ?? "").trim(); return result || null; }
+function validIsbn(value: string) {
+  const isbn = value.replace(/[\s-]/g, "").toUpperCase(); if (!isbn) return true;
+  if (/^\d{9}[\dX]$/.test(isbn)) return [...isbn].reduce((sum, char, index) => sum + (char === "X" ? 10 : Number(char)) * (10 - index), 0) % 11 === 0;
+  if (!/^\d{13}$/.test(isbn)) return false;
+  return [...isbn].reduce((sum, char, index) => sum + Number(char) * (index % 2 ? 3 : 1), 0) % 10 === 0;
+}
 function destination(operation: string) {
   if (["issue","renew","return","fine_settle","fine_waive"].includes(operation)) return "circulation";
   if (operation.startsWith("book") || operation === "reference_save") return "catalogue";
@@ -35,6 +41,19 @@ export async function workspaceMutationAction(formData: FormData) {
   const payload: Record<string, string | string[] | null> = {};
   for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code","currencyCode","localeCode","timeZone"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
   payload.categoryIds = formData.getAll("categoryIds").map(String); payload.subjectIds = formData.getAll("subjectIds").map(String);
+  if (operation === "book_save") {
+    const isbn = String(payload.isbn ?? "").replace(/[\s-]/g, "").toUpperCase();
+    if (!validIsbn(String(payload.isbn ?? ""))) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid ISBN-10 or ISBN-13, or leave it blank.")}`);
+    payload.isbn = isbn || null;
+    const year = payload.publicationYear; if (year && (!/^\d{4}$/.test(String(year)) || Number(year) < 1000 || Number(year) > new Date().getFullYear() + 1)) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid four-digit publication year.")}`);
+    const categoryId = value(formData, "categoryId"); const categoryName = value(formData, "categoryName");
+    if (categoryName) {
+      const categoryRequestId = crypto.randomUUID();
+      const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_workspace_mutation", { p_library_code: libraryCode, p_operation: "reference_save", p_payload: { kind: "category", name: categoryName, code: null }, p_request_id: categoryRequestId });
+      if (error) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent(rpcErrorMessage(new Error(error.message)))}`);
+      const createdId = (data as { id?: string } | null)?.id; if (createdId) payload.categoryIds = [createdId];
+    } else if (categoryId) payload.categoryIds = [categoryId];
+  }
   if (operation === "copy_save" && payload.replacementCostMinor) {
     const minor = parseMoneyToMinorUnits(String(payload.replacementCostMinor), context.currencyCode); if (minor === null || minor < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid replacement cost.")}`);
     payload.replacementCostMinor = String(minor);

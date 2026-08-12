@@ -7,6 +7,7 @@ export type LibraryOnboardingContinuation = {
   timeZone: string;
   confirmation?: boolean;
   signIn?: boolean;
+  emailConfirmedReturn?: boolean;
   error?: string;
 };
 
@@ -20,6 +21,7 @@ export function getLibraryOnboardingContinuation({
   timeZone,
   confirmation = false,
   signIn = false,
+  emailConfirmedReturn = false,
   error,
 }: LibraryOnboardingContinuation) {
   const query = new URLSearchParams({
@@ -32,6 +34,7 @@ export function getLibraryOnboardingContinuation({
   });
   if (confirmation) query.set("confirmation", "1");
   if (signIn) query.set("signin", "1");
+  if (emailConfirmedReturn) query.set("emailConfirmedReturn", "1");
   if (error) query.set("error", error);
   return `/create-library?${query.toString()}`;
 }

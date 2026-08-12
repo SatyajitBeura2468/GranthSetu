@@ -52,7 +52,7 @@ export async function resumeLibraryOnboardingAction(formData: FormData) {
   let signInError = true; let isExistingOperator = false;
   try { const { error } = await supabase.auth.signInWithPassword({ email, password }); signInError = Boolean(error); if (!signInError) isExistingOperator = Boolean(await getOperatorContextFromClient(supabase)); }
   catch { redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Unable to sign in right now. Please try again.")); }
-  if (signInError) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Unable to sign in with those credentials. Confirm your email first, then try again."));
+  if (signInError) redirect(continuation(name, code, person, currencyCode, localeCode, timeZone, false, "Unable to sign in with that email and password. Check your credentials or reset your password."));
   if (isExistingOperator) redirect("/operator");
   const result = await finalizeLibraryOnboarding(supabase, asOnboarding(name, code, person, currencyCode, localeCode, timeZone));
   redirectFinalization(result, name, code, person, currencyCode, localeCode, timeZone);
