@@ -50,7 +50,7 @@ The matrix is a policy baseline. Each route, server action, RPC, and database po
 - Tables in an exposed Supabase schema require RLS. Policies must express actual role and ownership rules, not merely `authenticated` access.
 - Future RLS should use trusted role assignments, not user-editable metadata. UPDATE policies require both row visibility and new-row checks.
 - Loan issue/return/renew, overdue fine assessment, settlement, waiver, role changes, settings changes, and archive/withdraw actions are trusted server-side operations with narrow inputs. Phase 5 circulation uses separate user-context RPCs and keeps direct authenticated table DML closed.
-- Privileged Supabase secret/service-role credentials remain server-only. No privileged value may use a `NEXT_PUBLIC_` name or enter browser bundles, logs, PRs, or Preview client code.
+- Privileged Supabase secret/service-role credentials remain server-only. No privileged value may use a `NEXT_PUBLIC_` name or enter browser bundles, logs, PRs, or CI client code.
 - Public catalogue reads may expose only deliberately approved bibliographic and availability fields. Member names, contact fields, loan history, fines, audit data, and settings are not public catalogue data.
 - Views used for exposed data must preserve RLS semantics or live in a protected schema with explicit grants; do not assume a view is automatically safe.
 
@@ -72,8 +72,8 @@ The matrix is a policy baseline. Each route, server action, RPC, and database po
 6. Archiving an entity never removes historical circulation or audit records.
 7. Every sensitive mutation has an attributable actor and audit event where the operation succeeds.
 8. Service-role/secret keys never cross the server/browser boundary.
-9. Preview and Development never connect to the Production school database.
-10. Real student/member data is never used as Preview seed data or committed to Git.
+9. Local Development and disposable CI never connect to the Production school database.
+10. Real student/member data is never used as seed data or committed to Git.
 
 ## Privacy and data classification
 
@@ -90,9 +90,9 @@ Collect only what the library genuinely needs. Do not add Aadhaar, passwords, un
 
 Record successful important mutations: catalogue edits/archive, copy creation/withdrawal, member changes, issue, return, renewal, fine adjustment, role changes, and policy/settings changes. Each event should include actor profile ID, action, target entity/type and ID, event timestamp, and minimal structured metadata. Before/after values may be captured for administrative changes after a privacy review. Never log passwords, tokens, full secrets, or unnecessary student data. Normal users cannot update or delete audit events.
 
-## Preview/Production isolation
+## Development/Production isolation
 
-Vercel Preview deployments must use a separate Development Supabase project and separate environment values. Production values are configured only in the Production environment and are never copied into `.env.local`, Preview, GitHub Actions logs, or documentation. A deployment check must fail closed if the intended environment is missing or mismatched. No Supabase project or environment value is created by this architecture task.
+Under the current Free-tier strategy, local Supabase and disposable GitHub Actions Supabase provide Development/CI isolation; no hosted development or Preview environment is part of the workflow. Production values are configured only in the Production environment and are never copied into `.env.local`, GitHub Actions logs, or documentation. No Supabase project or environment value is created by this architecture task.
 
 ## Deferred member self-service
 

@@ -4,7 +4,7 @@ The Development database baseline and Phase 4 operator authentication/authorizat
 
 - Real student/member data never belongs in Git.
 - Secrets never belong in Git.
-- Preview and production databases remain isolated.
+- Local/CI and production databases remain isolated.
 - Privileged Supabase keys are server-only and never use `NEXT_PUBLIC_` names.
 - Future authorization is enforced server-side; hiding a button is not authorization.
 - Row Level Security is enabled on every current application table, with no broad permissive browser policies.
@@ -17,10 +17,14 @@ The Development database baseline and Phase 4 operator authentication/authorizat
 - Future email operations run server-side.
 - Future circulation mutations are validated server-side.
 - Future audit logs are immutable from normal users.
-- Production data is never used casually in Preview deployments.
+- Production data is never used for development or CI validation.
 - Credentials and services follow least privilege.
 - Migrations are repeatable, reviewable, and reversible.
 - Every important workspace write includes a stable client logical-request UUID. The trusted database gateway validates actor and room, acquires a transaction advisory lock, and replays the canonical receipt result for retries. Receipt rows have RLS enabled and no direct browser privileges.
 - Room-local currency, locale, and timezone are non-sensitive public identity fields; member, operator, audit, and private setting data remain non-public.
 
-The current repository contains no real school data, Supabase secret, database password, or Production connection. The isolated `granthsetu-dev` project is the only Development database target, and Vercel Production must remain without Supabase credentials. Hosted Auth settings and an initial administrator require an independently verified authenticated setup step.
+The repository contains no real school data, Supabase secret, database password, or committed Production connection. `jyvvxseeytjyhuinyzgn` is the canonical GranthSetu Production Supabase project; its historical display name may still be `granthsetu-dev`. The project ref, not the display name, defines the target. Local Supabase is Development, GitHub Actions Supabase is disposable CI/staging, and hosted Supabase is Production. Vercel Production holds the approved project credentials; local development and CI must not receive them.
+
+`workspace_mutation_receipts` intentionally has RLS enabled with no browser policies and direct privileges revoked. This can appear as an advisor information finding; it is deliberate. Trusted security-definer RPCs and `service_role` access it only where required.
+
+Leaked-password protection is a platform Auth capability, not a SQL feature. If it is unavailable on the current Free plan, it is an accepted upgrade trigger before higher-risk institutional scaling; GranthSetu retains its application password minimum and does not emulate the provider feature in SQL.

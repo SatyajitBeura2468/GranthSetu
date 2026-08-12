@@ -3,6 +3,8 @@
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
 project_id = "granthsetu"
+# This file configures only the local stack. Never link/reset the hosted
+# Production project from ordinary development or CI workflows.
 
 [api]
 enabled = true
