@@ -38,7 +38,7 @@ async function localConfirmationLink(email: string) {
       for (const message of messages) {
         const messageResponse = await fetch(`http://127.0.0.1:54324/api/v1/message/${encodeURIComponent(message.ID)}/raw`);
         if (!messageResponse.ok) continue;
-        const body = (await messageResponse.text()).replace(/=\r?\n/g, "").replaceAll("&amp;", "&");
+        const body = (await messageResponse.text()).replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replaceAll("&amp;", "&");
         const link = body.match(/https?:\/\/[^\s"<>]+auth\/v1\/verify[^\s"<>]+/i)?.[0];
         if (link) return link.replaceAll("\\", "");
       }
