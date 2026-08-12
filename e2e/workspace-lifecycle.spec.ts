@@ -31,11 +31,15 @@ async function libraryId() {
 }
 
 async function localConfirmationLink(email: string) {
+  const mailbox = email.split("@", 1)[0];
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const response = await fetch("http://127.0.0.1:54324/api/v1/messages");
+    const response = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(mailbox)}`);
     if (response.ok) {
-      const body = JSON.stringify(await response.json()).replaceAll("\\u0026", "&");
-      if (body.includes(email)) {
+      const messages = await response.json() as Array<{ id: string }>;
+      for (const message of messages) {
+        const messageResponse = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(mailbox)}/${encodeURIComponent(message.id)}`);
+        if (!messageResponse.ok) continue;
+        const body = JSON.stringify(await messageResponse.json()).replaceAll("\\u0026", "&").replaceAll("&amp;", "&");
         const link = body.match(/https?:\/\/[^\s"<>]+auth\/v1\/verify[^\s"<>]+/i)?.[0];
         if (link) return link.replaceAll("\\\\", "");
       }
