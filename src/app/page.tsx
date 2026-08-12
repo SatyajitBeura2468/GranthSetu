@@ -5,6 +5,7 @@ import { LibraryCodeForm } from "@/components/library/library-code-form";
 import { RememberedLibrary } from "@/components/library/remembered-library";
 import { PageBridge } from "@/components/brand/page-bridge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { GatewayIllustration } from "@/components/home/gateway-illustration";
 
 export default function Home() {
   return (
@@ -15,8 +16,9 @@ export default function Home() {
       </header>
       <section className="gateway-stage" aria-labelledby="gateway-title">
         <div className="gateway-copy">
-          <h1 id="gateway-title">Your library,<br /><em>one code away.</em></h1>
-          <p>Enter the code shared by your institution to open its Library Room. No student account is required.</p>
+          <GatewayIllustration />
+          <h1 id="gateway-title"><span>Your library,</span><br /><em>one code away.</em></h1>
+          <p className="gateway-intro">Enter the code shared by your institution to open its Library Room. No student account is required.</p>
         </div>
         <div className="gateway-entry">
           <RememberedLibrary />
