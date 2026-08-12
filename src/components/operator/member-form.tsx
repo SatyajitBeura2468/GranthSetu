@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { Info } from "lucide-react";
 import { workspaceMutationAction } from "@/app/operator/[libraryCode]/actions";
 import { MutationRequestId, MutationSubmitButton } from "@/components/operator/mutation-controls";
 
@@ -19,14 +21,14 @@ export function MemberForm({ libraryCode, member, enrollment, sessions, grades, 
     <label>Display name<input name="displayName" defaultValue={member?.display_name} required maxLength={200} disabled={disabled} /></label>
     <label>Member kind<select name="memberKind" value={kind} onChange={(event) => setKind(event.target.value)} disabled={disabled}><option value="student">Student</option><option value="teacher">Teacher</option><option value="staff">Staff</option><option value="other">Other</option></select></label>
     <label>Member status<select name="status" defaultValue={member?.status ?? "active"} disabled={disabled}><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
-    {student ? <fieldset disabled={disabled}><legend>Current student enrollment <small>(optional until academic structure is ready)</small></legend>
-      <label>Academic session<select name="academicSessionId" defaultValue={enrollment?.academic_session_id ?? ""}><option value="">No session yet</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.display_label}</option>)}</select></label>
-      <label>Grade / class<select name="gradeLevelId" defaultValue={enrollment?.grade_level_id ?? ""}><option value="">No grade yet</option>{grades.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label>
-      <label>Section<select name="sectionId" defaultValue={enrollment?.section_id ?? ""}><option value="">No section yet</option>{sections.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label>
+    {student ? <fieldset disabled={disabled}><legend>Current student enrollment</legend>
+      <label>Academic session<select name="academicSessionId" required defaultValue={enrollment?.academic_session_id ?? ""}><option value="">Select a session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.display_label}</option>)}</select></label>
+      <label>Grade / class<select name="gradeLevelId" required defaultValue={enrollment?.grade_level_id ?? ""}><option value="">Select a grade / class</option>{grades.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label>
+      <label>Section<select name="sectionId" required defaultValue={enrollment?.section_id ?? ""}><option value="">Select a section</option>{sections.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}</select></label>
       <label>Roll number<input name="rollNumber" defaultValue={enrollment?.roll_number ?? ""} maxLength={40} /></label>
       <input type="hidden" name="enrollmentStatus" value={enrollment?.status ?? "active"} />
     </fieldset> : null}
-    {student && (!sessions.length || !grades.length || !sections.length) ? <p className="notice" role="status">Academic structure has not been set up yet. You can save this member now and add a complete enrollment later in Settings.</p> : null}
+    {student ? <p className={`academic-guidance${!sessions.length || !grades.length || !sections.length ? " is-incomplete" : ""}`} role="status"><Info aria-hidden="true" />{!sessions.length ? "No academic session yet. " : !grades.length || !sections.length ? "Add classes and sections in " : "Need a session, class, or section? Add them in "}<Link href={`/operator/${libraryCode}/settings#academic`}>Settings → Academic structure</Link>.</p> : null}
     <MutationRequestId /><MutationSubmitButton idleLabel={submitLabel} pendingLabel={member?.id ? "Saving…" : "Creating…"} disabled={disabled} />
   </form>;
 }

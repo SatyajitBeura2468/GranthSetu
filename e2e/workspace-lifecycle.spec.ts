@@ -31,17 +31,16 @@ async function libraryId() {
 }
 
 async function localConfirmationLink(email: string) {
-  const mailbox = email.split("@", 1)[0];
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const response = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(mailbox)}`);
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const response = await fetch(`http://127.0.0.1:54324/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
     if (response.ok) {
-      const messages = await response.json() as Array<{ id: string }>;
+      const { messages = [] } = await response.json() as { messages?: Array<{ ID: string }> };
       for (const message of messages) {
-        const messageResponse = await fetch(`http://127.0.0.1:54324/api/v1/mailbox/${encodeURIComponent(mailbox)}/${encodeURIComponent(message.id)}`);
+        const messageResponse = await fetch(`http://127.0.0.1:54324/api/v1/message/${encodeURIComponent(message.ID)}/raw`);
         if (!messageResponse.ok) continue;
-        const body = JSON.stringify(await messageResponse.json()).replaceAll("\\u0026", "&").replaceAll("&amp;", "&");
+        const body = (await messageResponse.text()).replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16))).replaceAll("&amp;", "&");
         const link = body.match(/https?:\/\/[^\s"<>]+auth\/v1\/verify[^\s"<>]+/i)?.[0];
-        if (link) return link.replaceAll("\\\\", "");
+        if (link) return link.replaceAll("\\", "");
       }
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -68,8 +67,7 @@ test("fresh signup confirms from the local email and creates one administrator r
   await Promise.all([page.waitForURL(/confirmation=1/), form.getByRole("button", { name: "Create Library Room" }).click()]);
   await expect(page.getByRole("heading", { name: "Verify your email" })).toBeVisible();
   await expect(page.getByLabel("Password")).toHaveCount(0);
-  await page.goto(await localConfirmationLink(email));
-  await page.waitForURL(/\/create-library\/success\?/);
+  await Promise.all([page.waitForURL(/\/create-library\/success\?/), page.goto(await localConfirmationLink(email))]);
   const admin = adminClient();
   const { count } = await admin.from("libraries").select("id", { count: "exact", head: true }).eq("public_code", code);
   expect(count).toBe(1);
