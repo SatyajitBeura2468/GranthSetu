@@ -82,7 +82,7 @@ language sql stable security definer set search_path = '' as $$
       coalesce((select array_agg(s.name order by s.name) from public.book_subjects bs join public.subjects s on s.id=bs.subject_id and s.library_id=bs.library_id where bs.book_id=b.id and bs.library_id=b.library_id),'{}'::text[]) subject_names,
       count(cp.id) filter(where cp.operational_state<>'withdrawn') total_copies,
       count(cp.id) filter(where cp.operational_state='active' and not exists(select 1 from public.loans lo where lo.library_id=cp.library_id and lo.book_copy_id=cp.id and lo.status='active')) available_copies,
-      min(lo.due_at)::date filter(where lo.status='active') expected_availability,b.cover_storage_path is not null has_cover,
+      (min(lo.due_at) filter(where lo.status='active'))::date expected_availability,b.cover_storage_path is not null has_cover,
       coalesce(jsonb_agg(distinct jsonb_build_object('code',l.location_code,'name',l.display_name,'totalCopies',sc.total_copies,'availableCopies',sc.available_copies)) filter(where l.id is not null),'[]'::jsonb) shelves
     from public.books b join room r on r.id=b.library_id left join public.publishers p on p.id=b.publisher_id and p.library_id=b.library_id
     left join public.book_copies cp on cp.book_id=b.id and cp.library_id=b.library_id
