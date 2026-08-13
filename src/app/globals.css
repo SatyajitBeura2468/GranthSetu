@@ -339,3 +339,40 @@ input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--subt
   .drawer-backdrop, .drawer-panel, .command-dialog, .confirmation-backdrop, .confirmation-dialog, .mobile-public-menu > div { animation: none !important; }
   .button, .icon-button, .operator-sidebar nav a, .drawer-close, .data-table tbody tr { transition-duration: .01ms !important; }
 }
+
+/* Public shelf discovery is a directory, not an unstructured list. */
+.shelf-page-heading { margin-bottom: 20px; }
+.shelf-directory-intro { margin: 28px 0 24px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid var(--line); border-radius: var(--radius-surface); background: color-mix(in srgb, var(--surface-2) 72%, transparent); }
+.shelf-directory-intro > div { display: grid; gap: 4px; }
+.shelf-directory-intro span { color: var(--accent); font-size: .68rem; font-weight: 780; letter-spacing: .11em; text-transform: uppercase; }
+.shelf-directory-intro strong { font-family: var(--font-editorial), serif; font-size: 1.35rem; font-weight: 560; letter-spacing: -.025em; }
+.shelf-directory-intro p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; text-align: right; }
+.shelf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.shelf-card { min-height: 244px; padding: 20px; position: relative; display: grid; grid-template-rows: auto 1fr auto auto; gap: 16px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-surface); background: var(--surface-raised); box-shadow: 0 1px 0 color-mix(in srgb, white 20%, transparent) inset; color: var(--ink); text-decoration: none; transition: transform var(--motion-standard) var(--ease), border-color var(--motion-standard) var(--ease), background-color var(--motion-standard) var(--ease), box-shadow var(--motion-standard) var(--ease); }
+.shelf-card::before { width: 54px; height: 4px; content: ""; position: absolute; top: 0; left: 20px; border-radius: 0 0 999px 999px; background: var(--accent); opacity: .85; }
+.shelf-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--brand) 48%, var(--line)); background: color-mix(in srgb, var(--surface-raised) 82%, var(--brand-soft)); box-shadow: var(--shadow-raised); }
+.shelf-card:active { transform: translateY(-1px) scale(.992); }
+.shelf-card.is-academic::before { background: var(--info); }
+.shelf-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.shelf-card-icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--line)); border-radius: 50%; background: var(--brand-soft); color: var(--brand); }
+.shelf-card-icon svg { width: 19px; }
+.shelf-card-code { min-width: 42px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-align: center; }
+.shelf-card-copy { align-self: end; }
+.shelf-card-copy h2 { max-width: 16ch; margin: 0; font-family: var(--font-editorial), serif; font-size: clamp(1.45rem, 2vw, 1.82rem); font-weight: 560; letter-spacing: -.035em; line-height: 1.02; }
+.shelf-card-copy p { margin: 8px 0 0; color: var(--muted); font-size: .75rem; }
+.shelf-card-stats { padding-top: 13px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border-top: 1px solid var(--line); }
+.shelf-card-stats span { min-width: 0; display: grid; gap: 2px; }
+.shelf-card-stats strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.shelf-card-stats small { overflow: hidden; color: var(--muted); font-size: .64rem; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-card-action { min-height: 34px; display: flex; align-items: center; gap: 7px; color: var(--brand); font-size: .76rem; font-weight: 760; }
+.shelf-card-action svg { width: 15px; }.shelf-card-action svg:last-child { margin-left: auto; transition: transform var(--motion-instant) var(--ease); }
+.shelf-card:hover .shelf-card-action svg:last-child { transform: translateX(3px); }
+
+@media (max-width: 980px) { .shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .shelf-directory-intro { margin: 22px 0 18px; padding: 16px; display: grid; gap: 8px; }
+  .shelf-directory-intro p { text-align: left; }
+  .shelf-grid { grid-template-columns: 1fr; gap: 13px; }
+  .shelf-card { min-height: 218px; padding: 18px; }
+  .shelf-card::before { left: 18px; }
+}
