@@ -40,7 +40,7 @@ export async function workspaceMutationAction(formData: FormData) {
   if (!requestIdPattern.test(requestId ?? "")) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This form is still preparing. Please try again.")}`);
 
   const payload: Record<string, string | string[] | null> = {};
-  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code","currencyCode","localeCode","timeZone"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
+  for (const key of ["id","memberId","copyId","loanId","fineId","amountMinor","note","reason","title","subtitle","author","isbn","edition","publicationYear","languageCode","publisherId","publisherName","description","bookId","accession","barcode","locationId","acquiredOn","acquisitionSource","replacementCostMinor","conditionStatus","operationalState","displayName","memberIdentifier","memberKind","status","academicSessionId","gradeLevelId","sectionId","rollNumber","enrollmentStatus","expectedUpdatedAt","settingKey","valueKind","settingValue","sessionCode","displayLabel","startsOn","endsOn","gradeCode","sectionCode","sortOrder","profileId","email","role","kind","name","code","currencyCode","localeCode","timeZone"]) payload[key === "settingValue" ? "value" : key] = value(formData, key);
   payload.categoryIds = formData.getAll("categoryIds").map(String); payload.subjectIds = formData.getAll("subjectIds").map(String);
   if (operation === "book_save") {
     const isbn = String(payload.isbn ?? "").replace(/[\s-]/g, "").toUpperCase();
@@ -54,6 +54,13 @@ export async function workspaceMutationAction(formData: FormData) {
       if (error) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent(rpcErrorMessage(new Error(error.message)))}`);
       const createdId = (data as { id?: string } | null)?.id; if (createdId) payload.categoryIds = [createdId];
     } else if (categoryId) payload.categoryIds = [categoryId];
+    const publisherName = value(formData, "publisherName"); const publisherId = value(formData, "publisherId");
+    if (publisherName) {
+      const publisherRequestId = crypto.randomUUID();
+      const { data, error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_workspace_mutation", { p_library_code: libraryCode, p_operation: "reference_save", p_payload: { kind: "publisher", name: publisherName, code: null }, p_request_id: publisherRequestId });
+      if (error) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent(rpcErrorMessage(new Error(error.message)))}`);
+      const createdId = (data as { id?: string } | null)?.id; if (createdId) payload.publisherId = createdId;
+    } else if (publisherId) payload.publisherId = publisherId;
   }
   if (operation === "copy_save" && payload.replacementCostMinor) {
     const minor = parseMoneyToMinorUnits(String(payload.replacementCostMinor), context.currencyCode); if (minor === null || minor < 0) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Enter a valid replacement cost.")}`);
