@@ -1,8 +1,9 @@
 import { Filter, Plus, Search } from "lucide-react";
 import type { ReactNode } from "react";
+import { Drawer } from "@/components/ui/drawer";
 
 export function OperatorToolbar({ query, addLabel, children }: { query?: string; addLabel?: string; children?: ReactNode }) {
-  return <div className="operator-toolbar"><form><label className="search-control"><Search aria-hidden="true" /><input name="q" defaultValue={query} placeholder="Search this view" /></label><button className="button button-small button-secondary" type="submit"><Filter aria-hidden="true" />Filter</button></form>{addLabel ? <details className="create-popover"><summary className="button button-primary"><Plus aria-hidden="true" />{addLabel}</summary><div>{children}</div></details> : null}</div>;
+  return <div className="operator-toolbar"><form><label className="search-control"><Search aria-hidden="true" /><input name="q" defaultValue={query} placeholder="Search this view" /></label><button className="button button-small button-secondary" type="submit"><Filter aria-hidden="true" />Filter</button></form>{addLabel ? <Drawer title={addLabel} trigger={<><Plus aria-hidden="true" />{addLabel}</>}>{children}</Drawer> : null}</div>;
 }
 
 export function TableState({ error, empty, children }: { error?: string; empty: string; children: ReactNode }) {

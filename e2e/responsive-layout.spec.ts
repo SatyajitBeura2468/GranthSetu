@@ -27,3 +27,32 @@ test("operator shell, tables, popovers, and navigation fit small viewports", asy
     await page.goto("/operator/OAVMUSI/members"); await page.getByRole("button", { name: "Open navigation" }).click(); await expect(page.getByRole("complementary", { name: "Operator navigation" })).toBeVisible(); await page.getByRole("button", { name: "Close navigation" }).first().click(); await expect(page.getByRole("complementary", { name: "Operator navigation" })).not.toHaveClass(/is-open/);
   }
 });
+
+test("Shelf creation opens in a viewport-level drawer across desktop and mobile", async ({ page }) => {
+  await page.goto("/l/OAVMUSI/login");
+  await page.getByLabel("Email").fill(admin.email);
+  await page.getByLabel("Password").fill(admin.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/operator\/OAVMUSI/);
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/operator/OAVMUSI/inventory/shelves");
+  await page.getByRole("button", { name: "Add shelf", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Add shelf" });
+  await expect(drawer).toBeVisible();
+  await expect(page.getByLabel("Shelf name")).toBeFocused();
+  const desktopBounds = await drawer.boundingBox();
+  expect(desktopBounds?.x, "desktop drawer should be right-aligned to the viewport").toBeGreaterThan(0);
+  expect(Math.round((desktopBounds?.x ?? 0) + (desktopBounds?.width ?? 0))).toBeGreaterThanOrEqual(1439);
+  await page.keyboard.press("Escape");
+  await expect(drawer).toHaveCount(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Add shelf", exact: true }).click();
+  await expect(drawer).toBeVisible();
+  const mobileBounds = await drawer.boundingBox();
+  expect(mobileBounds?.width, "mobile drawer should become an edge-to-edge sheet").toBeGreaterThanOrEqual(389);
+  await expectNoPageOverflow(page, "mobile Shelf drawer");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toHaveCount(0);
+});
