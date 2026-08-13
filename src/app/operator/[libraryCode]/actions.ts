@@ -69,13 +69,14 @@ export async function workspaceMutationAction(formData: FormData) {
     payload.value = String(minor);
   }
 
+  if (operation === "shelf_save") {
+    const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_shelf_save", { p_library_code: libraryCode, p_id: payload.id, p_name: payload.name, p_code: payload.code, p_status: payload.status, p_request_id: requestId });
+    if (error) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent(rpcErrorMessage(error))}`);
+    revalidatePath(`/operator/${libraryCode}/inventory`); revalidatePath(`/operator/${libraryCode}/inventory/shelves`);
+    redirect(`/operator/${libraryCode}/inventory/shelves?success=${encodeURIComponent("Shelf saved successfully")}`);
+  }
+
   try {
-    if (operation === "shelf_save") {
-      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_shelf_save", { p_library_code: libraryCode, p_id: payload.id, p_name: payload.name, p_code: payload.code, p_status: payload.status, p_request_id: requestId });
-      if (error) throw new Error(error.message);
-      revalidatePath(`/operator/${libraryCode}/inventory`); revalidatePath(`/operator/${libraryCode}/inventory/shelves`);
-      redirect(`/operator/${libraryCode}/inventory/shelves?success=${encodeURIComponent("Shelf saved successfully")}`);
-    }
     if (operation === "operator_assign") {
       if (!context.roles.includes("administrator")) throw new Error("GS_ADMIN_REQUIRED");
       const email = String(payload.email ?? "").toLowerCase();
