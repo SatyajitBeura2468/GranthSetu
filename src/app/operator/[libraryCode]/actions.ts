@@ -22,6 +22,7 @@ function destination(operation: string) {
   if (["issue","renew","return","fine_settle","fine_waive"].includes(operation)) return "circulation";
   if (operation.startsWith("book") || operation === "reference_save") return "catalogue";
   if (operation.startsWith("copy")) return "inventory";
+  if (operation.startsWith("shelf")) return "inventory/shelves";
   if (operation.startsWith("member")) return "members";
   if (operation.startsWith("setting") || operation.includes("_save") && ["academic_session_save","grade_save","section_save"].includes(operation) || ["library_update", "library_localization_update"].includes(operation)) return "settings";
   return "admin/operators";
@@ -33,7 +34,7 @@ export async function workspaceMutationAction(formData: FormData) {
   const operation = String(formData.get("operation") ?? ""); const section = destination(operation);
   const context = await getLibraryOperatorContext(libraryCode);
   if (!context || context.demo) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This mutation is unavailable in the local demonstration workspace.")}`);
-  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","book_cover","copy_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","library_localization_update","operator_assign","operator_status","reference_save"]);
+  const allowed = new Set(["issue","renew","return","fine_settle","fine_waive","book_save","book_status","book_cover","copy_save","shelf_save","member_save","setting_update","academic_session_save","grade_save","section_save","library_update","library_localization_update","operator_assign","operator_status","reference_save"]);
   if (!allowed.has(operation)) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("Unsupported operation.")}`);
   const requestId = value(formData, operation === "fine_settle" ? "requestIdFineSettle" : operation === "fine_waive" ? "requestIdFineWaive" : "requestId");
   if (!requestIdPattern.test(requestId ?? "")) redirect(`/operator/${libraryCode}/${section}?error=${encodeURIComponent("This form is still preparing. Please try again.")}`);
@@ -69,6 +70,12 @@ export async function workspaceMutationAction(formData: FormData) {
   }
 
   try {
+    if (operation === "shelf_save") {
+      const { error } = await asOperatorRpcClient(await createSupabaseServerClient()).rpc("operator_shelf_save", { p_library_code: libraryCode, p_id: payload.id, p_name: payload.name, p_code: payload.code, p_status: payload.status, p_request_id: requestId });
+      if (error) throw new Error(error.message);
+      revalidatePath(`/operator/${libraryCode}/inventory`); revalidatePath(`/operator/${libraryCode}/inventory/shelves`);
+      redirect(`/operator/${libraryCode}/inventory/shelves?success=${encodeURIComponent("Shelf saved successfully")}`);
+    }
     if (operation === "operator_assign") {
       if (!context.roles.includes("administrator")) throw new Error("GS_ADMIN_REQUIRED");
       const email = String(payload.email ?? "").toLowerCase();
