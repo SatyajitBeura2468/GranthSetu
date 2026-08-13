@@ -34,26 +34,26 @@ export function GatewayIllustration() {
       <span className="gateway-illustration-halo" />
       <svg viewBox="0 0 720 420" fill="none">
         <g className="gateway-network">
-          <path d="M72 164C180 120 262 158 352 246C446 154 536 112 650 158" />
-          <path d="M96 214C194 176 268 200 352 282C440 196 514 172 624 208" />
-          <path d="M138 104C226 82 286 126 352 206C418 122 490 82 586 104" />
-          <path d="M352 306V72" className="gateway-axis" />
-          <path d="M341 88L352 72L363 88" className="gateway-axis" />
+          <path d="M72 164C178 120 272 158 360 246C448 158 542 120 648 164" />
+          <path d="M96 214C194 176 278 200 360 282C442 200 526 176 624 214" />
+          <path d="M138 104C228 82 294 126 360 206C426 126 492 82 582 104" />
+          <path d="M360 306V72" className="gateway-axis" />
+          <path d="M349 88L360 72L371 88" className="gateway-axis" />
           <circle cx="72" cy="164" r="4" /><circle cx="138" cy="104" r="4" /><circle cx="96" cy="214" r="4" />
-          <circle cx="650" cy="158" r="4" /><circle cx="586" cy="104" r="4" /><circle cx="624" cy="208" r="4" />
-          <circle cx="256" cy="148" r="3" /><circle cx="466" cy="142" r="3" /><circle cx="222" cy="222" r="3" /><circle cx="502" cy="218" r="3" />
+          <circle cx="648" cy="164" r="4" /><circle cx="582" cy="104" r="4" /><circle cx="624" cy="214" r="4" />
+          <circle cx="256" cy="148" r="3" /><circle cx="464" cy="148" r="3" /><circle cx="222" cy="222" r="3" /><circle cx="498" cy="222" r="3" />
         </g>
         <g className="gateway-book-bridge">
-          <path d="M52 330C154 292 252 292 352 344C452 292 550 292 668 330" />
-          <path d="M52 350C160 320 256 320 352 364C448 320 544 320 668 350" />
-          <path d="M52 370C162 346 258 346 352 384C446 346 542 346 668 370" />
-          <path d="M142 328C192 236 260 236 312 328M392 328C446 236 516 236 568 328" className="gateway-bridge-arch" />
-          <path d="M166 296V340M286 296V340M418 296V340M542 296V340" />
-          <path d="M352 344V394" />
+          <path d="M52 330C154 292 260 292 360 344C460 292 566 292 668 330" />
+          <path d="M52 350C160 320 262 320 360 364C458 320 560 320 668 350" />
+          <path d="M52 370C162 346 264 346 360 384C456 346 558 346 668 370" />
+          <path d="M142 328C194 236 266 236 320 328M400 328C454 236 526 236 578 328" className="gateway-bridge-arch" />
+          <path d="M166 296V340M286 296V340M434 296V340M554 296V340" />
+          <path d="M360 344V394" />
         </g>
         <g className="gateway-discovery-star">
-          <path d="M352 44V58M352 20V34M330 46H344M360 46H374" />
-          <path d="M352 34L356 42L364 46L356 50L352 58L348 50L340 46L348 42L352 34Z" />
+          <path d="M360 44V58M360 20V34M338 46H352M368 46H382" />
+          <path d="M360 34L364 42L372 46L364 50L360 58L356 50L348 46L356 42L360 34Z" />
         </g>
       </svg>
     </div>
